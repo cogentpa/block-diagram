@@ -1,0 +1,14 @@
+<svg width="640" height="512" xmlns="http://www.w3.org/2000/svg" class="svg-inline--fa fa-project-diagram fa-w-20">
+
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="402" width="582" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <path id="svg_1" d="m384,320l-128,0c-17.67,0 -32,14.33 -32,32l0,128c0,17.67 14.33,32 32,32l128,0c17.67,0 32,-14.33 32,-32l0,-128c0,-17.67 -14.33,-32 -32,-32zm-192,-288c0,-17.67 -14.33,-32 -32,-32l-128,0c-17.67,0 -32,14.33 -32,32l0,128c0,17.67 14.33,32 32,32l95.72,0l73.16,128.04c11.1,-19.06 31.52,-32.04 55.12,-32.04l0.28,0l-64.28,-112.49l0,-47.51l224,0l0,-64l-224,0l0,-32zm416,-32l-128,0c-17.67,0 -32,14.33 -32,32l0,128c0,17.67 14.33,32 32,32l128,0c17.67,0 32,-14.33 32,-32l0,-128c0,-17.67 -14.33,-32 -32,-32z" fill="#ffffff"/>
+  <text stroke="null" transform="matrix(6.806661605834961,0,0,6.806661605834961,-2032.0593747794628,-900.3047361671925) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" id="svg_4" y="154.911511" x="304.00298" stroke-opacity="null" stroke-width="0" fill="#595959">H</text>
+  <text stroke="null" transform="matrix(6.806661605834961,0,0,6.806661605834961,-2032.0593747794628,-900.3047361671925) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" id="svg_5" y="154.992288" x="371.652667" stroke-opacity="null" stroke-width="0" fill="#595959">T</text>
+  <text stroke="null" transform="matrix(6.806661605834961,0,0,6.806661605834961,-2032.0593747794628,-900.3047361671925) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" id="svg_6" y="202.247392" x="337.564372" stroke-opacity="null" stroke-width="0" fill="#595959">S</text>
+ </g>
+</svg>
