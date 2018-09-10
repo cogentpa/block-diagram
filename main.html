@@ -450,7 +450,8 @@
         function dragended(d) {
             d3.select(this).classed("active", false);
         }
-*/
+        */
+
         /* Common */
         function cfn_setSelect(s,v){
             var opt = [];
@@ -473,7 +474,6 @@
             var block = [{"code":"bl0","name":"Block0"},{"code":"bl1","name":"Block1"},{"code":"bl2","name":"Block2"}];
             var select = cfn_setSelect("#prop_inBlockSelect", block);
         }
-        getBlockProp();
         
         function rmCalType(el){
             console.log($(el).parents("a").attr("cal"));
@@ -503,8 +503,6 @@
             $("#prop_calTypeList").html("");
             $("#prop_calTypeList").append(itemHtmls);
         }
-        
-        setCalTypeList();
 
         $("#prop_calTypeAddBtn").bind("click", function(){
             var calType = $("#prop_calTypeSelect option:selected").text();
@@ -515,6 +513,12 @@
             
             $("#prop_calTypeList").append(makeCalTypeItem(itemObj));                    
         });
+
+        function blockSelect(bId){
+            alert(bId)
+            getBlockProp();
+            setCalTypeList();
+        }
     </script>
     </body>
     <script>

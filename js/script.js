@@ -264,6 +264,7 @@ function nodeClick(d){
 
         //d3.select(this).selectAll("*").attr("height", 200)
     }
+    blockSelect(d.id);
 }
 
 function makeSizeCircle(el){
