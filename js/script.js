@@ -3,38 +3,49 @@ var Diagrams = function (){
 
     var data = {
         nodes: [{
-        id:0,
-        name: "A",
-        type:"rect",
-        x: 200,
-        y: 150,
-        width : 100,
-        height : 100
-        }, {
-        id:1,
-        name: "B",
-        type:"rect",
-        x: 140,
-        y: 300,
-        width : 100,
-        height : 100
-        }, {
-        name: "C",
-        id:2,
-        type:"rect",
-        x: 300,
-        y: 300,
-        width : 100,
-        height : 100
-        }, {
-        name: "D",
-        id:3,
-        type:"rect",
-        x: 300,
-        y: 180,
-        width : 100,
-        height : 100
-        }],
+                id:0,
+                name: "A",
+                type:"rect",
+                x: 200,
+                y: 150,
+                width : 100,
+                height : 100
+            }, {
+                id:1,
+                name: "B",
+                type:"rect",
+                x: 140,
+                y: 300,
+                width : 100,
+                height : 100
+            }, {
+                name: "C",
+                id:2,
+                type:"rect",
+                x: 300,
+                y: 300,
+                width : 100,
+                height : 100
+            }, {
+                name: "D",
+                id:3,
+                type:"rect",
+                x: 300,
+                y: 180,
+                width : 100,
+                height : 100
+            }, {
+                name: "MB",
+                id:4,
+                type:"mb",
+                x: 300,
+                y: 180,
+                width : 100,
+                height : 30,
+                mb : [1,2,3,4,5]
+            }
+
+        ],
         links: [{
         source: 0,
         target: 1,
@@ -64,14 +75,34 @@ var Diagrams = function (){
 
     var links = linksG.selectAll("link");
     var nodes = nodeG.selectAll("node");
-    /* 
-    var circle = svg.append("circle")
-            .attr("r", 7)
-            .attr("fill", "none")
-            .style("opacity", "0")
-            .attr("pointer-events", "none")
-            .attr("stroke-width", "2.5")
-            .attr("stroke", "rgb(205,23,25)"); */
+
+    var shapes = {
+        rect : function(nd){
+            var e = document.createElementNS(d3.namespace("svg"), "rect");
+            var rect = d3.select(e)
+                .attr("width", 100)
+                .attr("height", 100)
+                .attr("x", nd.x)
+                .attr("y", nd.y)
+                .attr("fill", "#ffffff")
+                .attr("stroke-width", 3)
+                .attr("stroke", "#000")
+            return rect;
+        },
+        mb : function(nd){
+            var e = document.createElementNS(d3.namespace("svg"),'g');
+            var g = d3.select(e)
+                .attr('class', "mb")
+                .selectAll("rect")
+                .data(nd.mb)
+                .enter()
+                .append("rect")
+                .attr("width", nd.width)
+                .attr("width", nd.height)
+            return g
+        }
+
+    }
 
     var drag = function(){
         var sourceLink = [];
@@ -82,6 +113,8 @@ var Diagrams = function (){
                     console.log("node drag start");
                     clearTemp();
                     nodeG.selectAll(".size-point").remove();
+
+
 
                     links.each(function(l, li) {
                         if (l.source == d.id) {
@@ -537,21 +570,94 @@ var Diagrams = function (){
             .call(drag);
             ;
 
-            ng.append("rect")
+            ng.each(function(d){
+                if(d.type == "rect"){
+                    d3.select(this).selectAll("rect.box")
+                        .data([d])
+                        .enter()
+                        .append("rect")
+                        .attr("class", "box")
+                        .attr("width", 100)
+                        .attr("height", 100)
+                        .attr("x", d.x)
+                        .attr("y", d.y)
+                        .attr("fill", "#ffffff")
+                        .attr("stroke-width", 3)
+                        .attr("stroke", "#000")
+                } else if(d.type == "mb"){
+                    d3.select(this).selectAll("rect.mb")
+                        .data(d.mb)
+                        .enter()
+                        .append("rect")
+                        .attr("class", "mb")
+                        .attr("width", d.width)
+                        .attr("height", d.height)
+                        .attr("x", function(e,i){
+                            return d.x + (i%2*d.width);
+                        })
+                        .attr("y", function(e,i){
+                            return d.y + Math.floor(i/2)*d.height;
+                        })
+                        //.attr("x", d.x + (i%2*d.width))
+                        //.attr("y", d.y + Math.floor(i/2)*d.height)
+                        .attr("fill", "#ffffff")
+                        .attr("stroke-width", 2)
+                        .attr("stroke", "#333")
+                }
+            })
+
+            /* ng.append(function(d){
+                var v = shapes[d.type](d);
+                console.log(v);
+                return v.node();
+            }) */
+
+            /*
+            .filter(function(d){ return d.type  == "rect"; })
             //.attr("href", "#rectangle")
             .attr("width", 100)
             .attr("height", 100)
             .attr("x", function(d) {
-            return d.x
+                return d.x
             })
             .attr("y", function(d) {
-            return d.y
+                return d.y
             })
             .attr("fill", "#ffffff")
             .attr("stroke-width", 3)
             .attr("stroke", "#000")
             //.attr("fill", function(d, i) {return c10(i);})
+            */
             
+            //ng.append("rect")
+            //.filter(function(d){ return d.type  == "gr"; })
+            //.data(function(d){console.log(d)})
+            /*
+            .data(function(d){
+                console.log(d);
+                return d.gr
+            })
+            .enter()
+            .append("rect")
+            .attr("width", function(d){
+                console.log(arguments);
+            })
+            /* .each(function(d,i){
+                var d3This = d3.select(this);
+                if(d.gr){
+                    d.gr.forEach(function(v, i){
+                        d3This.append("rect")
+                            .attr("width", d.width)
+                            .attr("height", d.height)
+                            .attr("x", d.x + (i%2*d.width))
+                            .attr("y", d.y + Math.floor(i/2)*d.height)
+                            .attr("fill", "#ffffff")
+                            .attr("stroke-width", 2)
+                            .attr("stroke", "#333")
+                    })
+                }
+            }) */
+
             nodes = nodeG.selectAll(".node");
     }
 
@@ -618,6 +724,16 @@ var Diagrams = function (){
     updateLink(data.links);
     updateNode(data.nodes);
 
+    function getData(){
+        return data;
+    }
+
+    function setData(d){
+        data = d;
+        updateLink(data.links);
+        updateNode(data.nodes);
+    }
+    
     function addBox(){
 
         data.nodes.push(
@@ -635,6 +751,9 @@ var Diagrams = function (){
         updateNode(data.nodes);
     }
 
+
+    diagrams.getData = getData;
+    diagrams.setData = setData;
     diagrams.addBox = addBox;
 
     return diagrams;
