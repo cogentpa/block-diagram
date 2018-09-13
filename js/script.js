@@ -675,7 +675,7 @@ var Diagrams = function (){
                 });
         }
 
-        nodes.exit().remove();
+        linksG.exit().remove();
     }
 
     arrow.on("click", function(){
@@ -707,12 +707,14 @@ var Diagrams = function (){
     
     function addBox(node){
 
-        node.width = 100;
-        node.height = 100;
         node.id = new Date().getTime();
+        if(!node.width)node.width = 100;
+        if(!node.height)node.height = 100;
         if(!node.type)node.type = "rect";
         if(!node.x)node.x = 10;
         if(!node.y)node.y = 10;
+
+        data.nodes.push(node);
 
         updateNode(data.nodes);
     }
