@@ -179,8 +179,8 @@ var Diagrams = function (){
                             link.d3this.selectAll("polyline").attr("points", link.points.concat(point));
                         });
                     });
-                    arrow.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')')
-                    //TmpVar.startNode = d.id;  //선택된 노드 체크
+                    if(TmpVar.startNode == d.id)arrow.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')')
+                      //선택된 노드 체크
                 })
                 .on("end", function(){
                     sourceLink = [];
@@ -292,7 +292,6 @@ var Diagrams = function (){
 
         console.log("click");
         //if (d3.event.defaultPrevented) return;
-        console.log(d.id, TmpVar.startNode);
         
         if(TmpVar.bDrawing){
             var isExist = false;
@@ -316,7 +315,7 @@ var Diagrams = function (){
                 .style("visibility", "visible");
             TmpVar.startNode = d.id;  //선택된 노드 체크
 
-            makeSizeCircle(this);
+            if(d.type != "mb")makeSizeCircle(this);
 
             //d3.select(this).selectAll("*").attr("height", 200)
         }
@@ -626,57 +625,7 @@ var Diagrams = function (){
                 }
             })
 
-            /* ng.append(function(d){
-                var v = shapes[d.type](d);
-                console.log(v);
-                return v.node();
-            }) */
-
-            /*
-            .filter(function(d){ return d.type  == "rect"; })
-            //.attr("href", "#rectangle")
-            .attr("width", 100)
-            .attr("height", 100)
-            .attr("x", function(d) {
-                return d.x
-            })
-            .attr("y", function(d) {
-                return d.y
-            })
-            .attr("fill", "#ffffff")
-            .attr("stroke-width", 3)
-            .attr("stroke", "#000")
-            //.attr("fill", function(d, i) {return c10(i);})
-            */
-            
-            //ng.append("rect")
-            //.filter(function(d){ return d.type  == "gr"; })
-            //.data(function(d){console.log(d)})
-            /*
-            .data(function(d){
-                console.log(d);
-                return d.gr
-            })
-            .enter()
-            .append("rect")
-            .attr("width", function(d){
-                console.log(arguments);
-            })
-            /* .each(function(d,i){
-                var d3This = d3.select(this);
-                if(d.gr){
-                    d.gr.forEach(function(v, i){
-                        d3This.append("rect")
-                            .attr("width", d.width)
-                            .attr("height", d.height)
-                            .attr("x", d.x + (i%2*d.width))
-                            .attr("y", d.y + Math.floor(i/2)*d.height)
-                            .attr("fill", "#ffffff")
-                            .attr("stroke-width", 2)
-                            .attr("stroke", "#333")
-                    })
-                }
-            }) */
+            nodes.exit().remove();
 
             nodes = nodeG.selectAll(".node");
     }
@@ -725,6 +674,8 @@ var Diagrams = function (){
                     }
                 });
         }
+
+        nodes.exit().remove();
     }
 
     arrow.on("click", function(){
@@ -754,19 +705,14 @@ var Diagrams = function (){
         updateNode(data.nodes);
     }
     
-    function addBox(){
+    function addBox(node){
 
-        data.nodes.push(
-            {
-                id:parseInt(Math.random()*1000),
-                name : "",
-                x:parseInt(Math.random()*600),
-                y:parseInt(Math.random()*600),
-                type : "rect",
-                width : 100,
-                height : 100
-            }
-        );
+        node.width = 100;
+        node.height = 100;
+        node.id = new Date().getTime();
+        if(!node.type)node.type = "rect";
+        if(!node.x)node.x = 10;
+        if(!node.y)node.y = 10;
 
         updateNode(data.nodes);
     }
