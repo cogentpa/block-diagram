@@ -108,14 +108,19 @@ var Diagrams = function (){
         var sourceLink = [];
         var targetLink = [];
 
+        var bChildmove = false;
+        var d3this;
+        var rTarget;
+        var tmpx,tmpy;
+
         return d3.drag()
                 .on("start",function(d, i){
                     console.log("node drag start");
                     clearTemp();
                     nodeG.selectAll(".size-point").remove();
 
-
-
+                    bChildmove = d.type == "mb" ? true : false;
+                    d3this = d3.select(this);
                     links.each(function(l, li) {
                         if (l.source == d.id) {
                             var targetNode = data.nodes.filter(function(d, i) {
@@ -147,7 +152,22 @@ var Diagrams = function (){
                     d.x = (d3.event.x/10).toFixed(0)*10;
                     d.y = (d3.event.y/10).toFixed(0)*10;
 
-                    d3.select(this).selectAll("*").attr("x", d.x).attr("y", d.y);
+                    
+                    if(bChildmove){
+                        rTarget = d3this.select("rect");
+                        tmpx = d.x - parseInt(rTarget.attr("x"));
+                        tmpy = d.y - parseInt(rTarget.attr("y"));
+
+                        d3this.selectAll("*")
+                            .attr("x", function(){
+                                return parseInt(d3.select(this).attr("x")) + tmpx;
+                            })
+                            .attr("y", function(){
+                                return parseInt(d3.select(this).attr("y")) + tmpy;
+                            });
+                    }else{
+                        d3this.selectAll("*").attr("x", d.x).attr("y", d.y);
+                    }
 
                     links.each(function(l, li) {
                         //var points;
@@ -166,7 +186,7 @@ var Diagrams = function (){
                     sourceLink = [];
                     targetLink = [];
 
-                    makeSizeCircle(this);
+                    if(!bChildmove)makeSizeCircle(this);
                 });
             }();
 
