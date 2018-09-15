@@ -514,7 +514,30 @@ var Diagrams = function (){
     }
 
     function updateLink(){
+
+        function makePoints(l){
+            var sourceNode = data.nodes.filter(function(d, i) {
+                return d.id == l.source
+            })[0];
+            var targetNode = data.nodes.filter(function(d, i) {
+                return d.id == l.target
+            })[0];
+            var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
+            var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
+
+            var points;
+            if(l.waypoints.length > 0){
+                points = [startPoint,l.waypoints,endPoint];
+            } else {
+                points = [startPoint,endPoint];
+            }
+            return points;
+        }
+
         var links = linksG.selectAll(".link").data(data.links);
+
+        links.exit().remove();
+
         var lg = links.enter()
             .append("g")
             .attr("class", "link")
@@ -524,54 +547,16 @@ var Diagrams = function (){
             })
             .on("mouseleave", function(){
                 d3.select(this).select(".line_back").attr("stroke", null);
-            })
+            });
         
         lg.append("polyline")
             .attr("class", "line_back")
-            .attr("points", function(l){
-                var sourceNode = data.nodes.filter(function(d, i) {
-                    return d.id == l.source
-                })[0];
-                var targetNode = data.nodes.filter(function(d, i) {
-                    return d.id == l.target
-                })[0];
-                var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
-                var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
-
-                var points;
-                if(l.waypoints.length > 0){
-                    points = [startPoint,l.waypoints,endPoint];
-                } else {
-                    points = [startPoint,endPoint];
-                }
-                return points;
-                
-            })
             .attr("fill", "none")
             .attr("stroke-width", "6px");
 
         lg.append("polyline")
             //.attr("class", "link")
             .attr("class", "line")
-            .attr("points", function(l){
-                var sourceNode = data.nodes.filter(function(d, i) {
-                    return d.id == l.source
-                })[0];
-                var targetNode = data.nodes.filter(function(d, i) {
-                    return d.id == l.target
-                })[0];
-                var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
-                var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
-
-                var points;
-                if(l.waypoints.length > 0){
-                    points = [startPoint,l.waypoints,endPoint];
-                } else {
-                    points = [startPoint,endPoint];
-                }
-                return points;
-                
-            })
             //.on("mousemove", lineMousepoint)
             //.on("mouseover", lineMouseover)
             .attr("fill", "none")
@@ -579,8 +564,17 @@ var Diagrams = function (){
             .attr("stroke-width", "2px")
             ;
 
-        links.exit().remove();
+        lg = lg.merge(links);
 
+        lg.select(".line_back").datum(function(d){
+            return d;
+        })
+        .attr("points", makePoints);
+
+        lg.select(".line").datum(function(d){
+            return d;
+        })
+        .attr("points", makePoints);
     }
 
     function updateNode(){
@@ -594,45 +588,53 @@ var Diagrams = function (){
             .call(drag);
             ;
             
-            ng.each(function(d){
-                if(d.type == "rect"){
-                    d3.select(this).selectAll("rect.box")
-                        .data([d])
-                        .enter()
-                        .append("rect")
-                        .attr("class", "box")
-                        .attr("width", d.width)
-                        .attr("height", d.height)
-                        .attr("x", d.x)
-                        .attr("y", d.y)
-                        .attr("fill", "#ffffff")
-                        .attr("stroke-width", 3)
-                        .attr("stroke", "#000");
-                } else if(d.type == "mb"){
-                    d3.select(this).selectAll("rect.mb")
-                        .data(d.mb)
-                        .enter()
-                        .append("rect")
-                        .attr("class", "mb")
-                        .attr("width", d.width)
-                        .attr("height", d.height)
-                        .attr("x", function(e,i){
-                            return d.x + (i%2*d.width);
-                        })
-                        .attr("y", function(e,i){
-                            return d.y + Math.floor(i/2)*d.height;
-                        })
-                        //.attr("x", d.x + (i%2*d.width))
-                        //.attr("y", d.y + Math.floor(i/2)*d.height)
-                        .attr("fill", "#ffffff")
-                        .attr("stroke-width", 2)
-                        .attr("stroke", "#333");
-                }
-            })
-            
-            console.log(ng.exit());
+        ng.each(function(d){
+            if(d.type == "rect"){
+                d3.select(this).selectAll("rect.box")
+                    .data([d])
+                    .enter()
+                    .append("rect")
+                    .attr("class", "box");
+            } else if(d.type == "mb"){
+                d3.select(this).selectAll("rect.mb")
+                    .data(d.mb)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "mb");
+            }
+        })
 
-            nodes.exit().remove();
+        nodeG.selectAll(".node").each(function(d){
+            if(d.type == "rect"){
+                d3.select(this).selectAll("rect.box")
+                    .attr("width", d.width)
+                    .attr("height", d.height)
+                    .attr("x", d.x)
+                    .attr("y", d.y)
+                    .attr("fill", "#ffffff")
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "#000");
+            } else if(d.type == "mb"){
+                d3.select(this).selectAll("rect.mb")
+                    .attr("width", d.width)
+                    .attr("height", d.height)
+                    .attr("x", function(e,i){
+                        return d.x + (i%2*d.width);
+                    })
+                    .attr("y", function(e,i){
+                        return d.y + Math.floor(i/2)*d.height;
+                    })
+                    //.attr("x", d.x + (i%2*d.width))
+                    //.attr("y", d.y + Math.floor(i/2)*d.height)
+                    .attr("fill", "#ffffff")
+                    .attr("stroke-width", 2)
+                    .attr("stroke", "#333");
+            }
+        })
+
+        
+
+        nodes.exit().remove();
     }
 
     function lineDrawEvent(){
@@ -687,14 +689,36 @@ var Diagrams = function (){
     }
 
     function removeNode(){
+
+        console.log(TmpVar.startNode);
+
         var newNodes = data.nodes.filter(function(d){
             return d.id !== TmpVar.startNode;
-        })
+        });
+        var newLinks = data.links.filter(function(d){
+            
+            return (d.source !== TmpVar.startNode && d.target !== TmpVar.startNode);
+        });
+        data.nodes = newNodes;
+        data.links = newLinks;
+        console.log(data);
 
+        //데이터로 삭제(exit().remove() 시 갯수로 삭제해서 잘안됨... 일단 이렇게 지우고 추후 수정)
+        nodeG.selectAll(".node").each(function(d){
+            if(d.id == TmpVar.startNode){
+                d3.select(this).remove();
+            }
+        });
+
+        draw();
     }
 
     function clearTemp(){
         console.log("clearTemp");
+
+        data.links.forEach(function(v){
+            delete v.circlePoints;
+        });
         linksG.selectAll(".temp-point")
         .remove();
     }
