@@ -1,6 +1,7 @@
 var Diagrams = function (){
     var diagrams = {};
-
+    //var data  = {nodes:[],links:[]};
+    
     var data = {
         nodes: [{
                 id:0,
@@ -60,7 +61,7 @@ var Diagrams = function (){
         waypoints : []
         }, ]
     };
-
+    
     var TmpVar = {
         bDrawing : false,
         startNode : null
@@ -73,8 +74,8 @@ var Diagrams = function (){
     var linksG = svg.append("g").attr("class", "link-group");
     var nodeG = svg.append("g").attr("class", "node-group");
 
-    var links = linksG.selectAll("link");
-    var nodes = nodeG.selectAll("node");
+    //var links = linksG.selectAll("link");
+    //var nodes = nodeG.selectAll("node");
 
     var shapes = {
         rect : function(nd){
@@ -121,7 +122,7 @@ var Diagrams = function (){
 
                     bChildmove = d.type == "mb" ? true : false;
                     d3this = d3.select(this);
-                    links.each(function(l, li) {
+                    linksG.selectAll(".link").each(function(l, li) {
                         if (l.source == d.id) {
                             var targetNode = data.nodes.filter(function(d, i) {
                                 return d.id == l.target;
@@ -169,7 +170,7 @@ var Diagrams = function (){
                         d3this.selectAll("*").attr("x", d.x).attr("y", d.y);
                     }
 
-                    links.each(function(l, li) {
+                    //links.each(function(l, li) {
                         //var points;
                         var point = [d.x+(d.width/2),d.y+(d.height/2)];
                         sourceLink.forEach(function(link){
@@ -178,7 +179,7 @@ var Diagrams = function (){
                         targetLink.forEach(function(link){
                             link.d3this.selectAll("polyline").attr("points", link.points.concat(point));
                         });
-                    });
+                    //});
                     if(TmpVar.startNode == d.id)arrow.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')')
                       //선택된 노드 체크
                 })
@@ -420,7 +421,7 @@ var Diagrams = function (){
                 nodeG.selectAll(".size-point").remove();
                 makeSizeCircle(d3Parent.node());
                 console.log(pData);
-                links.each(function(ld){
+                linksG.selectAll(".link").each(function(ld){
                     var link = d3.select(this);
                     var points = [];
                     var newPoints;
@@ -511,76 +512,79 @@ var Diagrams = function (){
         //circle.transition().duration(200).style("opacity", "1");
     }
 
-    function updateLink(linkData){
-        var lg = links.data(linkData).enter()
-        .append("g")
-        .attr("class", "link")
-        .on("click", lineClick)
-        .on("mouseenter", function(){
-            d3.select(this).select(".line_back").attr("stroke", "#ccc");
-        })
-        .on("mouseleave", function(){
-            d3.select(this).select(".line_back").attr("stroke", null);
-        })
+    function updateLink(){
+        var links = linksG.selectAll(".link").data(data.links);
+        var lg = links.enter()
+            .append("g")
+            .attr("class", "link")
+            .on("click", lineClick)
+            .on("mouseenter", function(){
+                d3.select(this).select(".line_back").attr("stroke", "#ccc");
+            })
+            .on("mouseleave", function(){
+                d3.select(this).select(".line_back").attr("stroke", null);
+            })
         
         lg.append("polyline")
-        .attr("class", "line_back")
-        .attr("points", function(l){
-            var sourceNode = data.nodes.filter(function(d, i) {
-                return d.id == l.source
-            })[0];
-            var targetNode = data.nodes.filter(function(d, i) {
-                return d.id == l.target
-            })[0];
-            var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
-            var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
+            .attr("class", "line_back")
+            .attr("points", function(l){
+                var sourceNode = data.nodes.filter(function(d, i) {
+                    return d.id == l.source
+                })[0];
+                var targetNode = data.nodes.filter(function(d, i) {
+                    return d.id == l.target
+                })[0];
+                var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
+                var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
 
-            var points;
-            if(l.waypoints.length > 0){
-                points = [startPoint,l.waypoints,endPoint];
-            } else {
-                points = [startPoint,endPoint];
-            }
-            return points;
-            
-        })
-        .attr("fill", "none")
-        .attr("stroke-width", "6px")
+                var points;
+                if(l.waypoints.length > 0){
+                    points = [startPoint,l.waypoints,endPoint];
+                } else {
+                    points = [startPoint,endPoint];
+                }
+                return points;
+                
+            })
+            .attr("fill", "none")
+            .attr("stroke-width", "6px");
 
         lg.append("polyline")
-        //.attr("class", "link")
-        .attr("class", "line")
-        .attr("points", function(l){
-            var sourceNode = data.nodes.filter(function(d, i) {
-                return d.id == l.source
-            })[0];
-            var targetNode = data.nodes.filter(function(d, i) {
-                return d.id == l.target
-            })[0];
-            var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
-            var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
+            //.attr("class", "link")
+            .attr("class", "line")
+            .attr("points", function(l){
+                var sourceNode = data.nodes.filter(function(d, i) {
+                    return d.id == l.source
+                })[0];
+                var targetNode = data.nodes.filter(function(d, i) {
+                    return d.id == l.target
+                })[0];
+                var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
+                var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
 
-            var points;
-            if(l.waypoints.length > 0){
-                points = [startPoint,l.waypoints,endPoint];
-            } else {
-                points = [startPoint,endPoint];
-            }
-            return points;
-            
-        })
-        //.on("mousemove", lineMousepoint)
-        //.on("mouseover", lineMouseover)
-        .attr("fill", "none")
-        .attr("stroke", "#000000")
-        .attr("stroke-width", "2px")
-        ;
+                var points;
+                if(l.waypoints.length > 0){
+                    points = [startPoint,l.waypoints,endPoint];
+                } else {
+                    points = [startPoint,endPoint];
+                }
+                return points;
+                
+            })
+            //.on("mousemove", lineMousepoint)
+            //.on("mouseover", lineMouseover)
+            .attr("fill", "none")
+            .attr("stroke", "#000000")
+            .attr("stroke-width", "2px")
+            ;
 
-        links = linksG.selectAll(".link");
+        links.exit().remove();
+
     }
 
-    function updateNode(nodeData){
-        var ng = nodes.data(nodeData)
+    function updateNode(){
+        var nodes = nodeG.selectAll(".node").data(data.nodes);
+        var ng = nodes
             .enter()
             .append("g")
             .attr("class", "node")
@@ -588,7 +592,7 @@ var Diagrams = function (){
             .on("click", nodeClick)
             .call(drag);
             ;
-
+            
             ng.each(function(d){
                 if(d.type == "rect"){
                     d3.select(this).selectAll("rect.box")
@@ -596,13 +600,13 @@ var Diagrams = function (){
                         .enter()
                         .append("rect")
                         .attr("class", "box")
-                        .attr("width", 100)
-                        .attr("height", 100)
+                        .attr("width", d.width)
+                        .attr("height", d.height)
                         .attr("x", d.x)
                         .attr("y", d.y)
                         .attr("fill", "#ffffff")
                         .attr("stroke-width", 3)
-                        .attr("stroke", "#000")
+                        .attr("stroke", "#000");
                 } else if(d.type == "mb"){
                     d3.select(this).selectAll("rect.mb")
                         .data(d.mb)
@@ -621,13 +625,13 @@ var Diagrams = function (){
                         //.attr("y", d.y + Math.floor(i/2)*d.height)
                         .attr("fill", "#ffffff")
                         .attr("stroke-width", 2)
-                        .attr("stroke", "#333")
+                        .attr("stroke", "#333");
                 }
             })
+            
+            console.log(ng.exit());
 
             nodes.exit().remove();
-
-            nodes = nodeG.selectAll(".node");
     }
 
     function lineDrawEvent(){
@@ -643,8 +647,8 @@ var Diagrams = function (){
                 return d.id == TmpVar.startNode;
             })[0];
 
-            var lx = startNode.x + (100/2); 
-            var ly = startNode.y + (100/2);
+            var lx = startNode.x + (startNode.width/2); 
+            var ly = startNode.y + (startNode.height/2);
 
             line = linksG.append("line")
                 .attr("stroke", "#000000")
@@ -662,8 +666,6 @@ var Diagrams = function (){
 
             svg.on("mousemove", mousemove)
                 .on("click", function(){
-
-
                     if(TmpVar.bDrawing){
                         console.log("svg click");
                         line.remove();
@@ -678,51 +680,63 @@ var Diagrams = function (){
         linksG.exit().remove();
     }
 
-    arrow.on("click", function(){
-        lineDrawEvent();
-    });
-
     function clearTemp(){
         console.log("clearTemp");
         linksG.selectAll(".temp-point")
         .remove();
     }
 
-    svg.on("click",function(){
-        clearTemp();
-    })
-
-    updateLink(data.links);
-    updateNode(data.nodes);
-
     function getData(){
         return data;
     }
-
+    
     function setData(d){
+        console.log("setData");
+        data.links = [];
+        data.nodes = [];
+        updateLink();
+        updateNode();
+        
         data = d;
-        updateLink(data.links);
-        updateNode(data.nodes);
+        updateLink();
+        updateNode();
     }
     
     function addBox(node){
-
-        node.id = new Date().getTime();
+        if(!node) node = {};
         if(!node.width)node.width = 100;
         if(!node.height)node.height = 100;
         if(!node.type)node.type = "rect";
         if(!node.x)node.x = 10;
         if(!node.y)node.y = 10;
-
+        node.id = new Date().getTime();
+        
+        if(node.type == "mb"){
+            node.mb = [1];
+        }
+        
         data.nodes.push(node);
-
+        
         updateNode(data.nodes);
     }
+    
+    function init(){
+        svg.on("click",function(){
+            clearTemp();
+        })
 
+        arrow.on("click", function(){
+            lineDrawEvent();
+        });
+
+        updateLink();
+        updateNode();
+    }
 
     diagrams.getData = getData;
     diagrams.setData = setData;
     diagrams.addBox = addBox;
 
+    init();
     return diagrams;
 }();
