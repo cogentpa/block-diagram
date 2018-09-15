@@ -714,11 +714,6 @@ var Diagrams = function (){
     }
 
     function clearTemp(){
-        console.log("clearTemp");
-
-        data.links.forEach(function(v){
-            delete v.circlePoints;
-        });
         linksG.selectAll(".temp-point")
         .remove();
     }
@@ -729,6 +724,9 @@ var Diagrams = function (){
 
     }
     function getData(){
+        data.links.forEach(function(v){
+            delete v.circlePoints;
+        });
         return data;
     }
     
