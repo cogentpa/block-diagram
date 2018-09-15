@@ -69,6 +69,7 @@ var Diagrams = function (){
     
     var c10 = d3.scaleOrdinal(d3.schemeCategory10);;
     var svg = d3.select("#diagram").select(".viewport");
+    var toolbox = d3.select("#node_toolbox");
     var arrow = d3.select("#arrow");
 
     var linksG = svg.append("g").attr("class", "link-group");
@@ -179,7 +180,7 @@ var Diagrams = function (){
                     });
 
                     if(TmpVar.startNode == d.id){
-                        arrow.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')');
+                        toolbox.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')');
                     }    
                 })
                 .on("end", function(){
@@ -311,7 +312,7 @@ var Diagrams = function (){
             }
 
         }else{
-            arrow.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')')
+            toolbox.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')')
                 .style("visibility", "visible");
             TmpVar.startNode = d.id;  //선택된 노드 체크
 
