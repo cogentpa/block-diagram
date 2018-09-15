@@ -743,7 +743,6 @@ var Diagrams = function (){
         });
         data.nodes = newNodes;
         data.links = newLinks;
-        console.log(data);
 
         //데이터로 삭제(exit().remove() 시 갯수로 삭제해서 잘안됨... 일단 이렇게 지우고 추후 수정)
         nodeG.selectAll(".node").each(function(d){
@@ -753,6 +752,7 @@ var Diagrams = function (){
         });
 
         draw();
+        toolbox.style("visibility", "hidden");
     }
 
     function clearTemp(){
