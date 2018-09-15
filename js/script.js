@@ -170,18 +170,17 @@ var Diagrams = function (){
                         d3this.selectAll("*").attr("x", d.x).attr("y", d.y);
                     }
 
-                    //links.each(function(l, li) {
-                        //var points;
-                        var point = [d.x+(d.width/2),d.y+(d.height/2)];
-                        sourceLink.forEach(function(link){
-                            link.d3this.selectAll("polyline").attr("points", point.concat(link.points));
-                        });
-                        targetLink.forEach(function(link){
-                            link.d3this.selectAll("polyline").attr("points", link.points.concat(point));
-                        });
-                    //});
-                    if(TmpVar.startNode == d.id)arrow.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')')
-                      //선택된 노드 체크
+                    var point = [d.x+(d.width/2),d.y+(d.height/2)];
+                    sourceLink.forEach(function(link){
+                        link.d3this.selectAll("polyline").attr("points", point.concat(link.points));
+                    });
+                    targetLink.forEach(function(link){
+                        link.d3this.selectAll("polyline").attr("points", link.points.concat(point));
+                    });
+
+                    if(TmpVar.startNode == d.id){
+                        arrow.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')');
+                    }    
                 })
                 .on("end", function(){
                     sourceLink = [];
@@ -680,26 +679,37 @@ var Diagrams = function (){
         linksG.exit().remove();
     }
 
+    function draw(){
+        updateLink();
+        updateNode();
+    }
+
+    function removeNode(){
+        data.nodes.forEach(function(){
+            console.log(arguments);
+        })
+    }
+
     function clearTemp(){
         console.log("clearTemp");
         linksG.selectAll(".temp-point")
         .remove();
     }
+    function clearAll(){
+        data.links = [];
+        data.nodes = [];
+        draw();
 
+    }
     function getData(){
         return data;
     }
     
     function setData(d){
-        console.log("setData");
-        data.links = [];
-        data.nodes = [];
-        updateLink();
-        updateNode();
-        
-        data = d;
-        updateLink();
-        updateNode();
+        clearAll();
+        data.nodes = d.nodes || [];
+        data.links = d.links || [];
+        draw();
     }
     
     function addBox(node){
@@ -736,6 +746,7 @@ var Diagrams = function (){
     diagrams.getData = getData;
     diagrams.setData = setData;
     diagrams.addBox = addBox;
+    diagrams.clearAll = clearAll;
 
     init();
     return diagrams;
