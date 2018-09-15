@@ -43,7 +43,7 @@ var Diagrams = function (){
                 y: 180,
                 width : 100,
                 height : 30,
-                mb : [1,2,3,4,5]
+                mb : [0,1,2,3,4]
             }
 
         ],
@@ -187,8 +187,6 @@ var Diagrams = function (){
                 .on("end", function(){
                     sourceLink = [];
                     targetLink = [];
-
-                    if(!bChildmove)makeSizeCircle(this);
                 });
             }();
 
@@ -318,10 +316,36 @@ var Diagrams = function (){
             TmpVar.startNode = d.id;  //선택된 노드 체크
 
             if(d.type != "mb")makeSizeCircle(this);
+            if(d.type == "mb"){
+                toolbox.select("#mb_tool").remove();
+                var tg = toolbox.append("g").attr("id", "mb_tool");
+                tg.append("text")
+                    .text("+")
+                    .attr("font-size", "20px")
+                    .attr("fill", "red")
+                    .on("click", function(){
+                        d.mb.push(d.mb.length);
+                        updateNode();
+                    })
+                    .style("cursor", "pointer");
+                tg.append("text")
+                    .attr("x",15)
+                    .text("-")
+                    .attr("font-size", "20px")
+                    .attr("fill", "blue")
+                    .on("click", function(){
+                        if(d.mb.length == 1)return;
+                        d.mb = d.mb.slice(0, d.mb.length-1)
+                        updateNode();
+                    })
+                    .style("cursor", "pointer");
+            } else {
+                toolbox.select("#mb_tool").remove();
+            }
 
             //d3.select(this).selectAll("*").attr("height", 200)
         }
-        blockSelect(d.id);
+        blockSelect(d);
     }
 
     function makeSizeCircle(el){
@@ -489,7 +513,6 @@ var Diagrams = function (){
                 )
             }
         }
-        console.log(circlePoints);
         d.circlePoints = circlePoints;
 
         linksG.selectAll("temp-point")
@@ -579,6 +602,8 @@ var Diagrams = function (){
 
     function updateNode(){
         var nodes = nodeG.selectAll(".node").data(data.nodes);
+        nodes.exit().remove();
+
         var ng = nodes
             .enter()
             .append("g")
@@ -587,6 +612,8 @@ var Diagrams = function (){
             .on("click", nodeClick)
             .call(drag);
             ;
+           
+        ng = ng.merge(nodes);
             
         ng.each(function(d){
             if(d.type == "rect"){
@@ -594,17 +621,36 @@ var Diagrams = function (){
                     .data([d])
                     .enter()
                     .append("rect")
-                    .attr("class", "box");
+                    .attr("class", "box")
+                    .attr("width", d.width)
+                    .attr("height", d.height)
+                    .attr("x", d.x)
+                    .attr("y", d.y)
+                    .attr("fill", "#ffffff")
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "#000");
             } else if(d.type == "mb"){
-                d3.select(this).selectAll("rect.mb")
-                    .data(d.mb)
-                    .enter()
+                var mb = d3.select(this).selectAll("rect.mb") .data(d.mb);
+                    mb.exit().remove();
+
+                    mb.enter()
                     .append("rect")
-                    .attr("class", "mb");
+                    .attr("class", "mb")
+                    .attr("width", d.width)
+                    .attr("height", d.height)
+                    .attr("x", function(e,i){
+                        return d.x + (i%2*d.width);
+                    })
+                    .attr("y", function(e,i){
+                        return d.y + Math.floor(i/2)*d.height;
+                    })
+                    .attr("fill", "#ffffff")
+                    .attr("stroke-width", 2)
+                    .attr("stroke", "#333");
             }
         })
 
-        nodeG.selectAll(".node").each(function(d){
+        /* nodeG.selectAll(".node").each(function(d){
             if(d.type == "rect"){
                 d3.select(this).selectAll("rect.box")
                     .attr("width", d.width)
@@ -624,17 +670,13 @@ var Diagrams = function (){
                     .attr("y", function(e,i){
                         return d.y + Math.floor(i/2)*d.height;
                     })
-                    //.attr("x", d.x + (i%2*d.width))
-                    //.attr("y", d.y + Math.floor(i/2)*d.height)
                     .attr("fill", "#ffffff")
                     .attr("stroke-width", 2)
                     .attr("stroke", "#333");
+
+                
             }
-        })
-
-        
-
-        nodes.exit().remove();
+        }) */
     }
 
     function lineDrawEvent(){
@@ -752,7 +794,7 @@ var Diagrams = function (){
         
         data.nodes.push(node);
         
-        updateNode(data.nodes);
+        updateNode();
     }
     
     function init(){
@@ -775,6 +817,7 @@ var Diagrams = function (){
     diagrams.setData = setData;
     diagrams.addBox = addBox;
     diagrams.clearAll = clearAll;
+    diagrams.updateNode = updateNode;
 
     init();
     return diagrams;
