@@ -71,6 +71,7 @@ var Diagrams = function (){
     var svg = d3.select("#diagram").select(".viewport");
     var toolbox = d3.select("#node_toolbox");
     var arrow = d3.select("#arrow");
+    var removeNodeIcon = d3.select("#removeNode");
 
     var linksG = svg.append("g").attr("class", "link-group");
     var nodeG = svg.append("g").attr("class", "node-group");
@@ -686,9 +687,10 @@ var Diagrams = function (){
     }
 
     function removeNode(){
-        data.nodes.forEach(function(){
-            console.log(arguments);
+        var newNodes = data.nodes.filter(function(d){
+            return d.id !== TmpVar.startNode;
         })
+
     }
 
     function clearTemp(){
@@ -739,6 +741,9 @@ var Diagrams = function (){
         arrow.on("click", function(){
             lineDrawEvent();
         });
+        removeNodeIcon.on("click", function(){
+            removeNode();
+        })
 
         updateLink();
         updateNode();
