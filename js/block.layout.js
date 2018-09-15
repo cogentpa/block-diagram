@@ -1,3 +1,67 @@
+var Layout = function (){
+    var api = {};
+    var info = {
+        block : {
+            selectId:"",
+            inBlocks:[],
+            outBlocks:[],
+            names:{}
+        }
+    }
+    function setName(id, nm){
+        info.block.names[id] = nm;
+    }
+    function getName(id){
+        return info.block.names[id];
+    }
+    function setBlockId(id){
+        info.block.selectId = id;
+        info.block.inBlocks = [];
+        info.block.outBlocks = [];
+
+        var diagramData = Diagrams.getData();
+        diagramData.links.map(function(d, i){
+            if(d.target == id){
+                var nm = getBlockNm(d.target);
+                info.block.inBlocks.push(d.source);
+            }
+            if(d.source == id){
+                var nm = getBlockNm(d.source);
+                info.block.outBlocks.push(d.target);
+            }
+        });
+    }
+    function getBlockNm(id){
+        return info.block.names[id];
+        /*
+        var diagramData = Diagrams.getData();
+        var nm = "";
+        diagramData.nodes.map(function(d, i){
+            if(d.id == id){
+                nm = d.name;
+            }
+        });
+        */
+        return nm;
+    }
+    function getBlockInfo(){
+        return info.block;
+    }
+    function getBlockId(id){
+        return info.block.selectId;
+    }
+    function getId(t){
+        return t+"_"+parseInt(Math.random()*1000);
+    }
+    api.setName = setName;
+    api.getName = getName;
+    api.getBlockInfo = getBlockInfo;
+    api.setBlockId = setBlockId;
+    api.getBlockId = getBlockId;
+    api.getId = getId;
+    return api;
+}();
+
 $("#propModal").on("show.bs.modal", function (e) {
     $("#bgWidth").get(0).value = $("#svg-container").width();
     $("#bgHeight").get(0).value = $("#svg-container").height();
@@ -30,7 +94,13 @@ var blockItems = {
 };
 
 function drawBlock(ty){
-    Diagrams.addBox();
+    if(ty == "item0"){
+        Diagrams.addBox({type:"rect",x:"50",y:"50",width:"200",height:"50"});
+    }else if(ty == "item1"){
+        Diagrams.addBox({type:"rect",x:"200",y:"50",width:"100",height:"100"});
+    }else if(ty == "item2"){
+        Diagrams.addBox({type:"mb",x:"150",y:"50",width:"200",height:"50"});
+    }
     /*
     var blockItem = [blockItems[ty]];
     var draw = svg.selectAll("use").data(blockItem).enter();
@@ -80,9 +150,9 @@ function dragended(d) {
 /* Common */
 function cfn_setSelect(s,v){
     var opt = [];
-    v.map(function(d,i){
-        opt.push("<option value='"+d.code+"'>"+d.name+"</option>");
-    });
+    for(var key in v){
+        opt.push("<option value='"+key+"'>"+v[key]["nm"]+"</option>");
+    }
     $(s).html("<option value=''>Select</option>");
     $(s).append(opt);
     return $(s);
@@ -127,12 +197,12 @@ function makeCalTypeItem(obj){
     */
     var itemHtml = '<a href="javascript:void(0)" class="list-group-item list-group-item-action flex-column align-items-start" cal="'+obj.calId+'" bl="'+obj.bl+'">'
                  + '<div class="d-flex w-100 justify-content-between">'
-                 + '<h5 class="mb-1">'+obj.calNm+'</h5>'
+                 + '<h5 class="mb-1">'+CalData.getName(obj.calId)+'</h5>'
                  + '<small><i class="far fa-trash-alt remove" onclick="rmCalType(this)"></i></small>'
                  + '</div>'
-                 + '<p class="mb-1">In Block : '+obj.inBlNm+'</p>'
-                 + '<p class="mb-1">Out Block : '+obj.outBlNm+'</p>'
-                 + '<small>In : '+obj.in+', Out : '+obj.out+'</small>'
+                 + '<p class="mb-1">In : '+Layout.getName(obj.inBlId)+' ('+obj.in+')</p>'
+                 + '<p class="mb-1">Out : '+Layout.getName(obj.outBlId)+' ('+obj.out+')</p>'
+                 //+ '<small>In : '+obj.in+', Out : </small>'
                  + '</a>'
     return itemHtml;
 }
@@ -147,11 +217,8 @@ function setCalTypeList(cals){
 }
 
 function addCalTypeItem(bid){
-    var calTypeNm = $("#prop_calTypeSelect option:selected").text();
     var calTypeId = $("#prop_calTypeSelect").val();
-    var inBlockNm = $("#prop_inBlockSelect option:selected").text();
     var inBlockId = $("#prop_inBlockSelect").val();
-    var outBlockNm = $("#prop_outBlockSelect option:selected").text();
     var outBlockId = $("#prop_outBlockSelect").val();
 
     var itemObj = {
@@ -161,11 +228,7 @@ function addCalTypeItem(bid){
             inBl:inBlockId,
             bl:bid,
             outBl:outBlockId,
-            inBlNm:inBlockNm,
-            blNm:"Block",
-            outBlNm:outBlockNm,
             calTy:calTypeId,
-            calNm:calTypeNm,
             in:200,
             out:180
     }
@@ -177,52 +240,17 @@ function addCalTypeItem(bid){
 $("#prop_calTypeAddBtn").bind("click", function(){
     addCalTypeItem(Layout.getBlockId());                 
 });
-
-var Layout = function (){
-    var api = {};
-    var info = {
-        block : {
-            selectId:"",
-            inBlockIds:[],
-            outBlockIds:[]
-        }
-    }
-    function setBlockId(id){
-        info.block.selectId = id;
-        info.block.inBlockIds = [];
-        info.block.outBlockIds = [];
-
-        var diagramData = Diagrams.getData();
-        diagramData.links.map(function(d, i){
-            if(d.target == id){
-                info.block.inBlockIds.push(d.source);
-            }
-            if(d.source == id){
-                info.block.outBlockIds.push(d.target);
-            }
-        });
-    }
-    function getBlockInfo(){
-        return info.block;
-    }
-    function getBlockId(id){
-        return info.block.selectId;
-    }
-    function getId(t){
-        return t+"_"+parseInt(Math.random()*1000);
-    }
-    api.getBlockInfo = getBlockInfo;
-    api.setBlockId = setBlockId;
-    api.getBlockId = getBlockId;
-    api.getId = getId;
-    return api;
-}();
+$("#prop_blockNmInput").bind("keyup", function(){
+    Layout.setName(Layout.getBlockId(), $("#prop_blockNmInput").val());
+});
 
 function blockSelect(bid){
     Layout.setBlockId(bid);
     var arrCal = CalData.getBlockById(bid);
     setCalTypeList(arrCal);
     getBlockProp();
+    $("#prop_blockNmInput").val(Layout.getName(bid)||"");
+    console.log(Layout.getBlockInfo())
     
     /*
     $.ajax({

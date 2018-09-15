@@ -104,6 +104,8 @@
         height:100%;
         border:1px solid #595959
     }
+    .form-group{margin-bottom:1px;}
+    label{margin-bottom:1px;}
     </style>
   </head>
   <body>
@@ -162,19 +164,11 @@
                         </defs>
                         <g class="viewport">
                             <rect fill="url(#grid)" x="0" y="0" width="100%" height="100%"/>
-                            <g id="node_toolbox" transform="translate(200,200)" style="visibility:hidden">
-                                <g id="arrow">
+                            <g id="arrow" transform="translate(200,200)" style="visibility:hidden">
                                 <rect x="0" y="0" width="20px" height="20px" style="fill:#eee"></rect>
-                                    <g transform="translate(25,7) scale(0.3 0.3) rotate(150)" id="Ebene_1">
-                                        <polygon points="90.225049,22.298633 23.317773,22.298633 23.317773,36.471875 0,18.235938 23.317773,0 23.317773,14.173242 90.225049,14.173242 90.225049,22.298633 " id="path2050" />
-                                    </g>
+                                <g transform="translate(25,7) scale(0.3 0.3) rotate(150)" id="Ebene_1">
+                                    <polygon points="90.225049,22.298633 23.317773,22.298633 23.317773,36.471875 0,18.235938 23.317773,0 23.317773,14.173242 90.225049,14.173242 90.225049,22.298633 " id="path2050" />
                                 </g>
-                                <g id="removeNode" transform="translate(0,23)">
-                                    <rect x="0" y="0" width="20px" height="20px" style="fill:#eee"></rect>
-                                    <g transform="translate(2,1) scale(1.2 1.2)"c >
-                                        <path fill-rule="evenodd" d="M11 2H9c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H2c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1v9c0 .55.45 1 1 1h7c.55 0 1-.45 1-1V5c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 12H3V5h1v8h1V5h1v8h1V5h1v8h1V5h1v9zm1-10H2V3h9v1z"/>
-                                    </g> 
-                                </g>   
                             </g>
                         </g>
                     </svg>
@@ -218,15 +212,53 @@
             <div class="right">
                 <div class="row" style="margin:10px 0px">
                     <div class="col-lg-12 col-md-12 mx-auto" id="prop_calTypeAdd">
-                        <form>
+                         <form>
+                            <legend class="text-light">Block Info</legend>
                             <div class="form-group">
-                                <label class="text-light">In Block<span class="text-danger">*</span></label>
+                                <label class="text-light">Id <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" id="prop_blockIdInput" readonly/>
+                            </div>
+                            <div class="form-group">
+                                <label class="text-light">Name <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" id="prop_blockNmInput"/>
+                            </div>
+                            <div class="form-group">
+                                <label class="text-light">Size <span class="text-danger">*</span></label>
+                                <div class="form-row">
+                                    <div class="col">
+                                        <input class="form-control form-control-sm" id="prop_blockWidthInput" placeholder="Width"/> 
+                                    </div>
+                                    <span class="text-light">x</span>
+                                    <div class="col">
+                                        <input class="form-control form-control-sm" id="prop_blockHeightInput" placeholder="Height"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="text-light">Position<span class="text-danger">*</span></label>
+                                <div class="form-row">
+                                    <div class="col">
+                                        <input class="form-control form-control-sm" id="prop_blockXInput" placeholder="X"/> 
+                                    </div>
+                                    <span class="text-light">,</span>
+                                    <div class="col">
+                                        <input class="form-control form-control-sm" id="prop_blockYInput" placeholder="Y"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-12 col-md-12 mx-auto" id="prop_calTypeAdd">
+                        <form>
+                            <legend class="text-light">Calcaulation</legend>
+                            <div class="form-group">
+                                <label class="text-light">In Block <span class="text-danger">*</span></label>
                                 <select class="form-control form-control-sm" id="prop_inBlockSelect">
                                     <option value="">Select</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="text-light">Out Block<span class="text-danger">*</span></label>
+                                <label class="text-light">Out Block <span class="text-danger">*</span></label>
                                 <select class="form-control form-control-sm" id="prop_outBlockSelect">
                                     <option value="">Select</option>
                                 </select>
@@ -237,13 +269,13 @@
                                     <option value="">Select</option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" style="margin:10px 0;">
                                 <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calTypeAddBtn">Add</button>
                             </div>
                         </form>
                     </div>
                     <div class="col-lg-12 col-md-12 mx-auto">
-                        <div class="list-group" id="prop_calTypeList"></div>
+                        <div class="list-group" id="prop_calTypeList" style="height:250px;width:100%;overflow:auto"></div>
                     </div>
                 </div>   
             </div>           

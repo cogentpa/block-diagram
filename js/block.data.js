@@ -1,7 +1,8 @@
 var CalData = function(){
     var api = {};
     var data = {
-        types : [{"code":"cal0","name":"DI Tank"},{"code":"cal1","name":"UV-ox-2"},{"code":"cal2","name":"UDI Tank"}],
+        //types : [{"code":"cal0","name":"DI Tank"},{"code":"cal1","name":"UV-ox-2"},{"code":"cal2","name":"UDI Tank"}],
+        types : {cal0:{nm:"DI Tank"},cal1:{nm:"UV-ox-2"},cal3:{nm:"UDI Tank"}},
         cals : {
             3 : [
                 {
@@ -11,9 +12,6 @@ var CalData = function(){
                     inBl:"0",
                     bl:"3",
                     outBl:"2",
-                    inBlNm:"Block0",
-                    blNm:"Block1",
-                    outBlNm:"Block2",
                     calTy:"cal0",
                     calNm:"UV-ox-2",
                     in:200,
@@ -21,6 +19,9 @@ var CalData = function(){
                 }
             ]
         }
+    }
+    function getName(id){
+        return data.types[id];
     }
     function getTypes(){
         return data.types;
@@ -53,6 +54,7 @@ var CalData = function(){
             delete data.cals[bid];
         }
     }
+    api.getName = getName;
     api.getTypes = getTypes;
     api.setTypes = setTypes;
     api.getCals = getCals;
