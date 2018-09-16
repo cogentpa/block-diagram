@@ -1,3 +1,81 @@
+var Layout = function (){
+    var api = {};
+    var info = {
+        page : {
+            id:"page_123456",
+            name:"",
+            width:2000,
+            height:800
+        },
+        block : {
+            selectId:"",
+            selectNode:"",
+            inBlocks:[],
+            outBlocks:[],
+            names:{}
+        }
+    }
+    function setPageInfo(ty, val){
+        info.page[ty] = val;
+    }
+    function getPageInfo(ty){
+        if(ty){
+            return info.page[ty];
+        }else{
+            return info.page;
+        }
+    }
+    function setBlockNm(id, nm){
+        info.block.names[id] = nm;
+    }
+    function getBlockNm(id){
+        return info.block.names[id]||"";
+    }
+    function setBlockId(id){
+        info.block.selectId = id;
+        info.block.inBlocks = [];
+        info.block.outBlocks = [];
+
+        var diagramData = Diagrams.getData();
+        diagramData.links.map(function(d, i){
+            if(d.target == id){
+                var nm = getBlockNm(d.target);
+                info.block.inBlocks.push(d.source);
+            }
+            if(d.source == id){
+                var nm = getBlockNm(d.source);
+                info.block.outBlocks.push(d.target);
+            }
+        });
+    }
+    function getBlockInfo(){
+        return info.block;
+    }
+    function getBlockId(id){
+        return info.block.selectId;
+    }
+    function setBlock(obj){
+        info.block.selectNode = obj;
+    }
+    function getBlock(){
+        return info.block.selectNode;
+    }
+    function getId(t){
+        return t+"_"+parseInt(Math.random()*1000);
+    }
+    api.setPageInfo = setPageInfo;
+    api.getPageInfo = getPageInfo;
+    api.setBlockNm = setBlockNm;
+    api.getBlockNm = getBlockNm;
+    api.getBlockInfo = getBlockInfo;
+    api.setBlockId = setBlockId;
+    api.getBlockId = getBlockId;
+    api.setBlock = setBlock;
+    api.getBlock = getBlock;
+    api.getId = getId;
+    return api;
+}();
+
 var CalData = function(){
     var api = {};
     var data = {
