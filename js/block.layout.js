@@ -1,88 +1,23 @@
-var Layout = function (){
-    var api = {};
-    var info = {
-        page : {
-            id:"page_123456",
-            name:"page_name",
-            width:2000,
-            height:800
-        },
-        block : {
-            selectId:"",
-            selectNode:"",
-            inBlocks:[],
-            outBlocks:[],
-            names:{}
-        }
-    }
-    function setPageInfo(ty, val){
-        info.page[ty] = val;
-    }
-    function getPageInfo(){
-        return info.page;
-    }
-    function setBlockNm(id, nm){
-        info.block.names[id] = nm;
-    }
-    function getBlockNm(id){
-        return info.block.names[id]||"";
-    }
-    function setBlockId(id){
-        info.block.selectId = id;
-        info.block.inBlocks = [];
-        info.block.outBlocks = [];
-
-        var diagramData = Diagrams.getData();
-        diagramData.links.map(function(d, i){
-            if(d.target == id){
-                var nm = getBlockNm(d.target);
-                info.block.inBlocks.push(d.source);
-            }
-            if(d.source == id){
-                var nm = getBlockNm(d.source);
-                info.block.outBlocks.push(d.target);
-            }
-        });
-    }
-    function getBlockInfo(){
-        return info.block;
-    }
-    function getBlockId(id){
-        return info.block.selectId;
-    }
-    function setBlock(obj){
-        info.block.selectNode = obj;
-    }
-    function getBlock(){
-        return info.block.selectNode;
-    }
-    function getId(t){
-        return t+"_"+parseInt(Math.random()*1000);
-    }
-    api.setPageInfo = setPageInfo;
-    api.getPageInfo = getPageInfo;
-    api.setBlockNm = setBlockNm;
-    api.getBlockNm = getBlockNm;
-    api.getBlockInfo = getBlockInfo;
-    api.setBlockId = setBlockId;
-    api.getBlockId = getBlockId;
-    api.setBlock = setBlock;
-    api.getBlock = getBlock;
-    api.getId = getId;
-    return api;
-}();
-
 $("#propModal").on("show.bs.modal", function (e) {
-    $("#bgWidth").get(0).value = $("#svg-container").width();
-    $("#bgHeight").get(0).value = $("#svg-container").height();
+    $("#propPageNm").val(Layout.getPageInfo("name"));
+    $("#bgWidth").val($("#svg-container").width());
+    $("#bgHeight").val($("#svg-container").height());
+    Layout.setPageInfo("width",$("#svg-container").width());
+    Layout.setPageInfo("height", $("#svg-container").height());
 });
 $("#newModal_newBtn").bind("click", function(){
-    $("#svg-container").find("g").html("");
+    Diagrams.setData("");
+    Diagrams.updateNode();
+    $("#newModal").modal('hide');
 });
 $("#propModal_applyBtn").bind("click", function(){
-    $("#svg-container").width($("#bgWidth").get(0).value);
-    $("#svg-container").height($("#bgHeight").get(0).value);
+    $("#svg-container").width($("#bgWidth").val());
+    $("#svg-container").height($("#bgHeight").val());
+    Layout.setPageInfo("width", $("#bgWidth").val());
+    Layout.setPageInfo("height", $("#bgHeight").val());
+    Layout.setPageInfo("name",  $("#propPageNm").val());
     $("#propModal").modal('hide');
+    console.log(Layout.getPageInfo());
 });
 $("#leftMenus").find("li.item-menu").each(function(){
     $(this).bind("click", function(){
@@ -248,20 +183,24 @@ $("#prop_blockNmInput").bind("blur", function(){
 });
 $("#prop_blockWidthInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    console.log(selectNode);
     selectNode.width = parseInt(this.value);
-    console.log(JSON.stringify(Diagrams.getData()));
     Diagrams.updateNode();
 
 });
 $("#prop_blockHeightInput").bind("blur", function(){
-
+    var selectNode = Layout.getBlock();
+    selectNode.height = parseInt(this.value);
+    Diagrams.updateNode();
 });
 $("#prop_blockXInput").bind("blur", function(){
-
+    var selectNode = Layout.getBlock();
+    selectNode.x = parseInt(this.value);
+    Diagrams.updateNode();
 });
 $("#prop_blockYInput").bind("blur", function(){
-
+    var selectNode = Layout.getBlock();
+    selectNode.y = parseInt(this.value);
+    Diagrams.updateNode();
 });
 
 function getDiagramNodeData(bid){
