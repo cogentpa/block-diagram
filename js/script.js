@@ -1,7 +1,7 @@
 var Diagrams = function (){
     var diagrams = {};
-    //var data  = {nodes:[],links:[]};
-    
+    var data  = {nodes:[],links:[]};
+    /*
     var data = {
         nodes: [{
                 id:0,
@@ -61,7 +61,7 @@ var Diagrams = function (){
         waypoints : []
         }, ]
     };
-    
+    */
     var TmpVar = {
         bDrawing : false,
         startNode : null
@@ -131,7 +131,7 @@ var Diagrams = function (){
                             })[0];
                             sourceLink.push({
                                 d3this:d3.select(this),
-                                points : (l.waypoints || []).concat([targetNode.x+(100/2), targetNode.y+(100/2)])
+                                points : (l.waypoints || []).concat([targetNode.x+(targetNode.width/2), targetNode.y+(targetNode.height/2)])
                             });
                         } else if (l.target == d.id) {
                             var sourceNode = data.nodes.filter(function(d, i) {
@@ -139,7 +139,7 @@ var Diagrams = function (){
                             })[0];
                             targetLink.push({
                                 d3this:d3.select(this),
-                                points : [sourceNode.x+(100/2), sourceNode.y+(100/2)].concat(l.waypoints || [])
+                                points : [sourceNode.x+(sourceNode.width/2), sourceNode.y+(sourceNode.height/2)].concat(l.waypoints || [])
                             });
                         }
                     })
@@ -608,6 +608,9 @@ var Diagrams = function (){
             .enter()
             .append("g")
             .attr("class", "node")
+            .attr("id", function(d){
+                return "nd-" + d.id;
+            })
             .attr("transform", "translate(" + 0 + "," + 0 + ")")
             .on("click", nodeClick)
             .call(drag);
@@ -622,18 +625,20 @@ var Diagrams = function (){
                     .enter()
                     .append("rect")
                     .attr("class", "box")
+                    .attr("fill", "#ffffff")
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "#000")
+
+                d3.select(this).select("rect.box")
                     .attr("width", d.width)
                     .attr("height", d.height)
                     .attr("x", d.x)
                     .attr("y", d.y)
-                    .attr("fill", "#ffffff")
-                    .attr("stroke-width", 3)
-                    .attr("stroke", "#000");
             } else if(d.type == "mb"){
-                var mb = d3.select(this).selectAll("rect.mb") .data(d.mb);
-                    mb.exit().remove();
+                var mb = d3.select(this).selectAll("rect.mb").data(d.mb);
+                mb.exit().remove();
 
-                    mb.enter()
+                mb.enter()
                     .append("rect")
                     .attr("class", "mb")
                     .attr("width", d.width)
@@ -798,19 +803,28 @@ var Diagrams = function (){
     }
     
     function init(){
+        /*
         svg.on("click",function(){
             clearTemp();
         })
-
+        */
         arrow.on("click", function(){
             lineDrawEvent();
         });
         removeNodeIcon.on("click", function(){
             removeNode();
         })
+        svg.select("#grid-bg").on("click",function(){
+            clearTemp();
+        })
 
         updateLink();
         updateNode();
+    }
+
+    function updateNodeEx(){
+        updateNode();
+        document.getElementById("nd-" + TmpVar.startNode).click();
     }
 
     diagrams.getData = getData;
