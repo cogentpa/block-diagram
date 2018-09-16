@@ -1,7 +1,6 @@
 var Diagrams = function (){
     var diagrams = {};
     //var data  = {nodes:[],links:[]};
-    
     var data = {
         nodes: [{
                 id:0,
@@ -48,20 +47,25 @@ var Diagrams = function (){
 
         ],
         links: [{
-        source: 0,
-        target: 1,
-        waypoints : [[30,30],[30,60],[90,60]]
+            source: 0,
+            target: 1,
+            tOffsetX: 0,
+            tOffsetY: 0,
+            waypoints: [[30,30],[30,60],[90,60]]
         }, {
-        source: 1,
-        target: 2,
-        waypoints : []
+            source: 1,
+            target: 2,
+            tOffsetX: 0,
+            tOffsetY: 0,
+            waypoints : []
         }, {
-        source: 2,
-        target: 3,
-        waypoints : []
+            source: 2,
+            target: 3,
+            tOffsetX: 0,
+            tOffsetY: 0,
+            waypoints : []
         }, ]
     };
-    
     var TmpVar = {
         bDrawing : false,
         startNode : null
@@ -131,7 +135,7 @@ var Diagrams = function (){
                             })[0];
                             sourceLink.push({
                                 d3this:d3.select(this),
-                                points : (l.waypoints || []).concat([targetNode.x+(100/2), targetNode.y+(100/2)])
+                                points : (l.waypoints || []).concat([targetNode.x+l.tOffsetX, targetNode.y+l.tOffsetY])
                             });
                         } else if (l.target == d.id) {
                             var sourceNode = data.nodes.filter(function(d, i) {
@@ -139,7 +143,9 @@ var Diagrams = function (){
                             })[0];
                             targetLink.push({
                                 d3this:d3.select(this),
-                                points : [sourceNode.x+(100/2), sourceNode.y+(100/2)].concat(l.waypoints || [])
+                                tOffsetX : l.tOffsetX,
+                                tOffsetY : l.tOffsetY,
+                                points : [sourceNode.x+(sourceNode.width/2), sourceNode.y+(sourceNode.height/2)].concat(l.waypoints || [])
                             });
                         }
                     })
@@ -172,12 +178,12 @@ var Diagrams = function (){
                         d3this.selectAll("*").attr("x", d.x).attr("y", d.y);
                     }
 
-                    var point = [d.x+(d.width/2),d.y+(d.height/2)];
+                    var sPoint = [d.x+(d.width/2),d.y+(d.height/2)];
                     sourceLink.forEach(function(link){
-                        link.d3this.selectAll("polyline").attr("points", point.concat(link.points));
+                        link.d3this.selectAll("polyline").attr("points", sPoint.concat(link.points));
                     });
                     targetLink.forEach(function(link){
-                        link.d3this.selectAll("polyline").attr("points", link.points.concat(point));
+                        link.d3this.selectAll("polyline").attr("points", link.points.concat([d.x+link.tOffsetX, d.y+link.tOffsetY]));
                     });
 
                     if(TmpVar.startNode == d.id){
@@ -193,58 +199,86 @@ var Diagrams = function (){
     var tempCircleDrag = function(){
         var d3this;
         var link;
-        var linkData;
         var targetIndex;
+        var isLast;
+        var linkData;
+        var startPoint, endPoint, waypoints;
+        var tx,ty,tx2,ty2;
         return d3.drag()
                 .on("start", function(d){
                     var before;
                     var after;
+
+                    isLast = d.isLast;
                     d3this = d3.select(this);
                     link = d3.select(d.line).selectAll("polyline");
                     linkData = link.datum();
 
-                    before = linkData.waypoints.slice(0, d.index);
-                    after = linkData.waypoints.slice(d.index);
-                    targetIndex = before.length;
+                    var sourceNode = data.nodes.filter(function(d) {
+                        return d.id == linkData.source;
+                    })[0];
+                    var targetNode = data.nodes.filter(function(d) {
+                        return d.id == linkData.target;
+                    })[0];
 
-                    if(d.isNew){
-                        before.push(d3.mouse(this));
+                    if(isLast){
+                        tx = targetNode.x;
+                        ty = targetNode.y;
+                        tx2 = tx + targetNode.width;
+                        ty2 = ty + targetNode.height;
+                    } else {
+                        before = linkData.waypoints.slice(0, d.index);
+                        after = linkData.waypoints.slice(d.index);
+                        targetIndex = before.length;
+                        if(d.isNew){
+                            before.push(d3.mouse(this));
+                        }
+                        linkData.waypoints = before.concat(after);
                     }
 
-                    linkData.waypoints = before.concat(after);
+                    startPoint = [sourceNode.x+(sourceNode.width/2), sourceNode.y+(sourceNode.height/2)];
+                    endPoint = [targetNode.x+linkData.tOffsetX, targetNode.y+linkData.tOffsetY];
+                    waypoints = linkData.waypoints;
                 })
                 .on("drag", function(d){
-                    var m = d3.mouse(this);
-                    //console.log(d3.mouse(this));
-                    //console.log(d3.event)
-                    //var x = m[0];
-                    //var y = m[1];
                     var x = (d3.event.x/10).toFixed(0)*10;
                     var y = (d3.event.y/10).toFixed(0)*10;
+                    if(isLast){
+                        if(x > tx && x < tx2 && y > ty && y < ty2){
+                            if(d3.event.dx > d3.event.dy){
+                                endPoint[0] = x;
+                                endPoint[1] = (y-ty) > (ty2-y) ? ty2 : ty;
+                            } else {
+                                endPoint[0] = (x-tx) > (tx2-x) ? tx2 : tx;
+                                endPoint[1] = y;
+                            }
+                        }else{
+                            if(x < tx || x > tx2){
+                                x = endPoint[0];
+                            } else {
+                                endPoint[0] = x;
+                            }
+                            if(y < ty || y > ty2){
+                                y = endPoint[1];
+                            } else {
+                                endPoint[1] = y;
+                            }
+                        }
+                    } else {
+                        waypoints[targetIndex] = [x,y];
+                    }
                     d3this.attr("cx", x)
                         .attr("cy", y);
-                    linkData.waypoints[targetIndex] = [x,y];
                     link.attr("points", function(l){
-                        var sourceNode = data.nodes.filter(function(d, i) {
-                            return d.id == l.source
-                        })[0];
-                        var targetNode = data.nodes.filter(function(d, i) {
-                            return d.id == l.target
-                        })[0];
-                        var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
-                        var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
-                        
-                        var points;
-                        if(l.waypoints.length > 0){
-                            points = [startPoint,l.waypoints,endPoint];
-                        } else {
-                            points = [startPoint,endPoint];
-                        }
-                        return points;
+                        return startPoint.concat(waypoints).concat(endPoint);
                         
                     })
                 })
                 .on("end", function(){
+                    if(isLast){
+                        linkData.tOffsetX = endPoint[0] - tx;
+                        linkData.tOffsetY = endPoint[1] - ty;;
+                    }
                     clearTemp();
                 })
     }();
@@ -306,6 +340,8 @@ var Diagrams = function (){
                 data.links.push({
                     source: TmpVar.startNode,
                     target: d.id,
+                    tOffsetX : 0,
+                    tOffsetY : 0,
                     waypoints : []
                 });
             }
@@ -500,12 +536,13 @@ var Diagrams = function (){
             )
         }
         //기존점
-        if(length > 4){
-            for(i=2;i<length-2;i=i+2){
+        if(length > 3){
+            for(i=2;i<length;i=i+2){
                 circlePoints.push(
                     {
                         index:i/2-1,
                         isNew:false,
+                        isLast: (i == length-2),
                         line:this,
                         x:points[i]*1,
                         y:points[i+1]*1,
@@ -515,7 +552,7 @@ var Diagrams = function (){
         }
         d.circlePoints = circlePoints;
 
-        linksG.selectAll("temp-point")
+        linksG.selectAll(".temp-point")
             .data(circlePoints)
             .enter()
             .append("circle")
@@ -523,10 +560,12 @@ var Diagrams = function (){
             .attr("r", 3)
             .attr("cx", function(d){return d.x})
             .attr("cy", function(d){return d.y})
-            .attr("fill", "#aaa")
+            .attr("fill", "#FC3")
             //.attr("pointer-events", "none")
-            .attr("stroke-width", "2")
-            .attr("stroke", "rgb(205,23,25)")
+            .attr("stroke-width", function(d,i,a){
+                return (a.length-1 == i) ? 4 : 2;
+            })
+            .attr("stroke", "#FC3")
             .call(tempCircleDrag)
             .style("opacity", "0")
             .transition().duration(100).style("opacity", "1")
@@ -545,8 +584,8 @@ var Diagrams = function (){
             var targetNode = data.nodes.filter(function(d, i) {
                 return d.id == l.target
             })[0];
-            var startPoint = [sourceNode.x+(100/2), sourceNode.y+(100/2)];
-            var endPoint = [targetNode.x+(100/2), targetNode.y+(100/2)];
+            var startPoint = [sourceNode.x+(sourceNode.width/2), sourceNode.y+(sourceNode.height/2)];
+            var endPoint = [targetNode.x+l.tOffsetX, targetNode.y+l.tOffsetY];
 
             var points;
             if(l.waypoints.length > 0){
@@ -585,6 +624,7 @@ var Diagrams = function (){
             .attr("fill", "none")
             .attr("stroke", "#000000")
             .attr("stroke-width", "2px")
+            .attr("marker-end", "url(#arrowhead)");
             ;
 
         lg = lg.merge(links);
@@ -608,6 +648,9 @@ var Diagrams = function (){
             .enter()
             .append("g")
             .attr("class", "node")
+            .attr("id", function(d){
+                return "nd-" + d.id;
+            })
             .attr("transform", "translate(" + 0 + "," + 0 + ")")
             .on("click", nodeClick)
             .call(drag);
@@ -622,18 +665,20 @@ var Diagrams = function (){
                     .enter()
                     .append("rect")
                     .attr("class", "box")
+                    .attr("fill", "#ffffff")
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "#000")
+
+                d3.select(this).select("rect.box")
                     .attr("width", d.width)
                     .attr("height", d.height)
                     .attr("x", d.x)
                     .attr("y", d.y)
-                    .attr("fill", "#ffffff")
-                    .attr("stroke-width", 3)
-                    .attr("stroke", "#000");
             } else if(d.type == "mb"){
-                var mb = d3.select(this).selectAll("rect.mb") .data(d.mb);
-                    mb.exit().remove();
+                var mb = d3.select(this).selectAll("rect.mb").data(d.mb);
+                mb.exit().remove();
 
-                    mb.enter()
+                mb.enter()
                     .append("rect")
                     .attr("class", "mb")
                     .attr("width", d.width)
@@ -701,12 +746,13 @@ var Diagrams = function (){
                 .attr("x1", lx)
                 .attr("y1", ly)
                 .attr("x2", lx)
-                .attr("y2", ly); 
+                .attr("y2", ly)
+                .attr("marker-end", "url(#arrowhead)");
 
             function mousemove(){
                 var m = d3.mouse(this);
-                line.attr("x2", m[0]-1)
-                    .attr("y2", m[1]-1);
+                line.attr("x2", m[0]-5)
+                    .attr("y2", m[1]-5);
             }
 
             svg.on("mousemove", mousemove)
@@ -743,7 +789,6 @@ var Diagrams = function (){
         });
         data.nodes = newNodes;
         data.links = newLinks;
-        console.log(data);
 
         //데이터로 삭제(exit().remove() 시 갯수로 삭제해서 잘안됨... 일단 이렇게 지우고 추후 수정)
         nodeG.selectAll(".node").each(function(d){
@@ -753,6 +798,7 @@ var Diagrams = function (){
         });
 
         draw();
+        toolbox.style("visibility", "hidden");
     }
 
     function clearTemp(){
@@ -776,6 +822,12 @@ var Diagrams = function (){
         clearAll();
         data.nodes = d.nodes || [];
         data.links = d.links || [];
+
+        //데이터 정제(tOffset 필수값.)
+        data.lenks.forEach(function(v){
+            if(!v.tOffsetX) v.tOffsetX = 0;
+            if(!v.tOffsetY) v.tOffsetY = 0;
+        });
         draw();
     }
     
@@ -798,9 +850,24 @@ var Diagrams = function (){
     }
     
     function init(){
+        /*
         svg.on("click",function(){
             clearTemp();
         })
+        */
+
+                //arrow
+        svg.append("svg:defs")
+            .append("svg:marker")
+            .attr("id", "arrowhead")
+            .attr("refX", 6)
+            .attr("refY", 3)
+            .attr("markerWidth", 15)
+            .attr("markerHeight", 15)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M 0 0 6 3 0 6 1.5 3")
+            .style("fill", "black");
 
         arrow.on("click", function(){
             lineDrawEvent();
@@ -808,16 +875,25 @@ var Diagrams = function (){
         removeNodeIcon.on("click", function(){
             removeNode();
         })
+        svg.select("#grid-bg").on("click",function(){
+            clearTemp();
+        })
 
         updateLink();
         updateNode();
+    }
+
+    function updateNodeEx(){
+        updateNode();
+        console.log( document.getElementById("nd-" + TmpVar.startNode));
+       //.click();
     }
 
     diagrams.getData = getData;
     diagrams.setData = setData;
     diagrams.addBox = addBox;
     diagrams.clearAll = clearAll;
-    diagrams.updateNode = updateNode;
+    diagrams.updateNode = updateNodeEx;
 
     init();
     return diagrams;
