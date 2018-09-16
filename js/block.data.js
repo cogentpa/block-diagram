@@ -1,7 +1,6 @@
 var CalData = function(){
     var api = {};
     var data = {
-        //types : [{"code":"cal0","name":"DI Tank"},{"code":"cal1","name":"UV-ox-2"},{"code":"cal2","name":"UDI Tank"}],
         types : {cal0:{nm:"DI Tank"},cal1:{nm:"UV-ox-2"},cal3:{nm:"UDI Tank"}},
         cals : {
             3 : [
@@ -21,7 +20,11 @@ var CalData = function(){
         }
     }
     function getName(id){
-        return data.types[id];
+        console.log(id)
+        if(data.types[id]){
+            return data.types[id].nm;
+        }
+        return "";
     }
     function getTypes(){
         return data.types;
