@@ -404,8 +404,6 @@ var Diagrams = function (){
                     var tp = lineIntersect(lp1, lp2, p, a[(i+1)%4]);
                     ip = (tp) ? tp : ip;
                 })
-                console.log(ip,d.x,d.y);
-
 
                 data.links.push({
                     source: TmpVar.startNode,
@@ -551,7 +549,7 @@ var Diagrams = function (){
             .on("end", function(){
                 nodeG.selectAll(".size-point").remove();
                 makeSizeCircle(d3Parent.node());
-                console.log(pData);
+                //console.log(pData);
                 linksG.selectAll(".link").each(function(ld){
                     var link = d3.select(this);
                     var points = [];
@@ -957,7 +955,7 @@ var Diagrams = function (){
 
     function updateNodeEx(){
         updateNode();
-        console.log( document.getElementById("nd-" + TmpVar.startNode));
+        //console.log( document.getElementById("nd-" + TmpVar.startNode));
        //.click();
     }
 
