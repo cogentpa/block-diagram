@@ -1,4 +1,37 @@
 var Diagrams = function (){
+
+    /** UtilFunction */
+    function lineIntersect(p1, p2, p3, p4) {
+        var tp;
+        // Check if none of the lines are of length 0
+        if ((p1[0] === p2[0] && p1[1] === p2[1]) || (p3[0] === p4[0] && p3[1] === p4[1])) {
+            return false
+        }
+      
+        var denominator = ((p4[1] - p3[1]) * (p2[0] - p1[0]) - (p4[0] - p3[0]) * (p2[1] - p1[1]))
+      
+        // Lines are parallel
+        if (denominator === 0) {
+            return false
+        }
+
+        var ua = ((p4[0] - p3[0]) * (p1[1] - p3[1]) - (p4[1] - p3[1]) * (p1[0] - p3[0])) / denominator
+        var ub = ((p2[0] - p1[0]) * (p1[1] - p3[1]) - (p2[1] - p1[1]) * (p1[0] - p3[0])) / denominator
+      
+        // is the intersection along the segments
+        if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+              return false
+        }
+      
+        // Return a object with the x and y coordinates of the intersection
+        var x = p1[0] + ua * (p2[0] - p1[0])
+        var y = p1[1] + ua * (p2[1] - p1[1])
+      
+        return {x, y}
+      }
+
+
+    /** diagrams start */
     var diagrams = {};
     //var data  = {nodes:[],links:[]};
     var data = {
@@ -211,9 +244,9 @@ var Diagrams = function (){
 
                     isLast = d.isLast;
                     d3this = d3.select(this);
-                    link = d3.select(d.line).selectAll("polyline");
+                    var lg = d3.select(d.line);
+                    link = lg.selectAll("polyline");
                     linkData = link.datum();
-
                     var sourceNode = data.nodes.filter(function(d) {
                         return d.id == linkData.source;
                     })[0];
@@ -239,6 +272,15 @@ var Diagrams = function (){
                     startPoint = [sourceNode.x+(sourceNode.width/2), sourceNode.y+(sourceNode.height/2)];
                     endPoint = [targetNode.x+linkData.tOffsetX, targetNode.y+linkData.tOffsetY];
                     waypoints = linkData.waypoints;
+
+                    lg.append("polyline")
+                        .attr("class", "temp-line")
+                        .attr("points", startPoint.concat(waypoints).concat(endPoint))
+                        .attr("fill", "none")
+                        .attr("stroke", "#999")
+                        .attr("stroke-width", "2px")
+                        .attr("marker-end", "url(#arrowhead)")
+                        .attr("opacity", 0.5);
                 })
                 .on("drag", function(d){
                     var x = (d3.event.x/10).toFixed(0)*10;
@@ -329,6 +371,7 @@ var Diagrams = function (){
         
         if(TmpVar.bDrawing){
             var isExist = false;
+            //기존 연결 체크
             data.links.forEach(function(link){
                 if(link.source == TmpVar.startNode && link.target == d.id){
                     isExist = true;
@@ -337,11 +380,38 @@ var Diagrams = function (){
             })
 
             if(!isExist){
+                //방향 계산
+                var sourceNode = data.nodes.filter(function(d) {
+                    return d.id == TmpVar.startNode;
+                })[0];
+                
+                d.x = parseInt(d.x);
+                d.y = parseInt(d.y);
+                d.width = parseInt(d.width);
+                d.height = parseInt(d.height);
+
+                var ip;               
+                var lp1 = [sourceNode.x + (sourceNode.width/2), sourceNode.y + (sourceNode.height/2)];
+                var lp2 = [d.x + (d.width/2), d.y + (d.height/2)];
+
+                var rectPoints = [[d.x, d.y],
+                                  [d.x+d.width, d.y],
+                                  [d.x+d.width, d.y+d.height],
+                                  [d.x, d.y+d.height]
+                                ];
+
+                rectPoints.forEach(function(p,i,a){
+                    var tp = lineIntersect(lp1, lp2, p, a[(i+1)%4]);
+                    ip = (tp) ? tp : ip;
+                })
+                console.log(ip,d.x,d.y);
+
+
                 data.links.push({
                     source: TmpVar.startNode,
                     target: d.id,
-                    tOffsetX : 0,
-                    tOffsetY : 0,
+                    tOffsetX : Math.round(ip.x/10)*10 - d.x,
+                    tOffsetY : Math.round(ip.y/10)*10 - d.y,
                     waypoints : []
                 });
             }
@@ -551,7 +621,6 @@ var Diagrams = function (){
             }
         }
         d.circlePoints = circlePoints;
-
         linksG.selectAll(".temp-point")
             .data(circlePoints)
             .enter()
@@ -570,6 +639,8 @@ var Diagrams = function (){
             .style("opacity", "0")
             .transition().duration(100).style("opacity", "1")
             ;
+
+
 
 
         //circle.transition().duration(200).style("opacity", "1");
@@ -802,8 +873,9 @@ var Diagrams = function (){
     }
 
     function clearTemp(){
-        linksG.selectAll(".temp-point")
-        .remove();
+        linksG.selectAll(".temp-point").remove();
+        linksG.selectAll(".temp-line").remove();
+        
     }
     function clearAll(){
         data.links = [];
