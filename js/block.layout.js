@@ -36,11 +36,11 @@ var svg = d3.select("#diagram");
 
 function drawBlock(ty){
     if(ty == "item0"){
-        Diagrams.addBox({type:"rect",x:"50",y:"50",width:"200",height:"50"});
+        Diagrams.addBox({type:"rect",x:50,y:50,width:200,height:50});
     }else if(ty == "item1"){
-        Diagrams.addBox({type:"rect",x:"200",y:"50",width:"100",height:"100"});
+        Diagrams.addBox({type:"rect",x:200,y:50,width:100,height:100});
     }else if(ty == "item2"){
-        Diagrams.addBox({type:"mb",x:"150",y:"50",width:"200",height:"50"});
+        Diagrams.addBox({type:"mb",x:150,y:50,width:200,height:50});
     }
     /*
     var blockItem = [blockItems[ty]];
@@ -184,6 +184,7 @@ $("#prop_blockNmInput").bind("blur", function(){
 $("#prop_blockWidthInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
     selectNode.width = parseInt(this.value);
+    console.log(Diagrams.getData())
     Diagrams.updateNode();
 
 });
