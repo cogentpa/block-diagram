@@ -110,8 +110,8 @@ var Diagrams = function (){
     var arrow = d3.select("#arrow");
     var removeNodeIcon = d3.select("#removeNode");
 
-    var linksG = svg.append("g").attr("class", "link-group");
-    var nodeG = svg.append("g").attr("class", "node-group");
+    var linksG = svg.select("#link-group");
+    var nodeG = svg.select("#node-group");
 
     //var links = linksG.selectAll("link");
     //var nodes = nodeG.selectAll("node");
@@ -214,18 +214,47 @@ var Diagrams = function (){
                     var sPoint = [d.x+(d.width/2),d.y+(d.height/2)];
                     sourceLink.forEach(function(link){
                         link.d3this.selectAll("polyline").attr("points", sPoint.concat(link.points));
+
+                        link.d3this.select(".out-value")
+                        .attr("x", function(l){
+                            return l.sd.x;
+                        })
+                        .attr("y", function(l){
+                            return l.sd.y;
+                        });
+
                     });
                     targetLink.forEach(function(link){
                         link.d3this.selectAll("polyline").attr("points", link.points.concat([d.x+link.tOffsetX, d.y+link.tOffsetY]));
+
+                        link.d3this.select(".in-value")
+                        .attr("x", function(l){
+                            var px;
+                            var tx = l.td.x + l.tOffsetX;
+                            if(l.waypoints.length > 0){
+                                px = l.waypoints[l.waypoints.length-1][0];
+                            } else {
+                                px = l.sd.x;
+                            }
+                            return (px > tx) ? tx + 25  : tx - 25;
+                        })
+                        .attr("y", function(l){
+                            return l.td.y+l.tOffsetY-15;
+                        });
+
                     });
 
+
+
+
                     if(TmpVar.startNode == d.id){
-                        toolbox.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')');
+                        toolbox.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x + 5)+' '+(d.y+5)+')');
                     }    
                 })
                 .on("end", function(){
                     sourceLink = [];
                     targetLink = [];
+                    updateLink();
                 });
             }();
 
@@ -321,6 +350,7 @@ var Diagrams = function (){
                         linkData.tOffsetX = endPoint[0] - tx;
                         linkData.tOffsetY = endPoint[1] - ty;;
                     }
+                    updateLink();
                     clearTemp();
                 })
     }();
@@ -415,7 +445,7 @@ var Diagrams = function (){
             }
 
         }else{
-            toolbox.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x)+' '+d.y+')')
+            toolbox.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x + 5)+' '+(d.y+5)+')')
                 .style("visibility", "visible");
             TmpVar.startNode = d.id;  //선택된 노드 체크
 
@@ -638,27 +668,30 @@ var Diagrams = function (){
             .transition().duration(100).style("opacity", "1")
             ;
 
-
-
-
         //circle.transition().duration(200).style("opacity", "1");
     }
 
     function updateLink(){
 
         function makePoints(l){
-            var sourceNode = data.nodes.filter(function(d, i) {
-                return d.id == l.source
-            })[0];
-            var targetNode = data.nodes.filter(function(d, i) {
-                return d.id == l.target
-            })[0];
-            var startPoint = [sourceNode.x+(sourceNode.width/2), sourceNode.y+(sourceNode.height/2)];
-            var endPoint = [targetNode.x+l.tOffsetX, targetNode.y+l.tOffsetY];
-
+            var startPoint = [l.sd.x+(l.sd.width/2), l.sd.y+(l.sd.height/2)];
+            var endPoint = [l.td.x+l.tOffsetX, l.td.y+l.tOffsetY];
+            var i,length;
             var points;
             if(l.waypoints.length > 0){
-                points = [startPoint,l.waypoints,endPoint];
+                var tPoints = [startPoint].concat(l.waypoints).concat([endPoint]);
+                l.waypoints = [];
+                length = tPoints.length-1;
+                for(i=1;i<length;i++){
+                    //같은 선이면 포인트 삭제
+                    if(!(tPoints[i-1][0] === tPoints[i][0] && tPoints[i-1][0] === tPoints[i+1][0])
+                        && !(tPoints[i-1][1] === tPoints[i][1] && tPoints[i-1][1] === tPoints[i+1][1]))
+                    {
+                        l.waypoints.push(tPoints[i]);
+                    }
+                }
+                points = [startPoint].concat(l.waypoints).concat([endPoint]);
+                
             } else {
                 points = [startPoint,endPoint];
             }
@@ -671,6 +704,17 @@ var Diagrams = function (){
 
         var lg = links.enter()
             .append("g")
+            .datum(function(d,i){
+                var sourceNode = data.nodes.filter(function(n, i) {
+                    return n.id == d.source
+                })[0];
+                var targetNode = data.nodes.filter(function(n, i) {
+                    return n.id == d.target
+                })[0];
+                d.sd = sourceNode;
+                d.td = targetNode;
+                return d;
+            })
             .attr("class", "link")
             .on("click", lineClick)
             .on("mouseenter", function(){
@@ -695,6 +739,24 @@ var Diagrams = function (){
             .attr("stroke-width", "2px")
             .attr("marker-end", "url(#arrowhead)");
             ;
+        
+        lg.append("text")
+            .attr("class", "out-value")
+            .attr("id", function(d){
+                return "txt-out-"+d.source+"-"+d.target;
+            })
+            .text(function(d,i){
+                return parseInt(Math.random()*1000);
+            });
+
+        lg.append("text")
+            .attr("class", "in-value")
+            .attr("id", function(d){
+                return "txt-in-"+d.source+"-"+d.target;
+            })
+            .text(function(d,i){
+                return parseInt(Math.random()*1000);
+            });    
 
         lg = lg.merge(links);
 
@@ -707,6 +769,40 @@ var Diagrams = function (){
             return d;
         })
         .attr("points", makePoints);
+
+        //text 위치
+        lg.select(".out-value")
+            .attr("x", function(l){
+                //방향계산
+                var px;
+                if(l.waypoints.length > 0){
+                    px = l.waypoints[0][0];
+                } else {
+                    px = l.td.x+l.tOffsetX;
+                }
+                // -> 면 ? : 
+                //return (px > l.sd.x) ? l.sd.x + l.sd.width + 15 : l.sd.x + (l.sd.width/2) - 15;
+                return l.sd.x;
+            })
+            .attr("y", function(l){
+                return l.sd.y;
+            });
+        lg.select(".in-value")
+            .attr("x", function(l){
+                //방향계산
+                var px;
+                var tx = l.td.x + l.tOffsetX;
+                if(l.waypoints.length > 0){
+                    px = l.waypoints[l.waypoints.length-1][0];
+                } else {
+                    px = l.sd.x;
+                }
+                return (px > tx) ? tx + 25  : tx - 25;
+            })
+            .attr("y", function(l){
+                return l.td.y+l.tOffsetY-15;
+            });
+
     }
 
     function updateNode(){
@@ -800,7 +896,6 @@ var Diagrams = function (){
             isFirstClick = true;
 
             var line;
-            console.log(TmpVar.startNode);
 
             var startNode = data.nodes.filter(function(d, i) {
                 return d.id == TmpVar.startNode;
@@ -846,9 +941,6 @@ var Diagrams = function (){
     }
 
     function removeNode(){
-
-        console.log(TmpVar.startNode);
-
         var newNodes = data.nodes.filter(function(d){
             return d.id !== TmpVar.startNode;
         });
@@ -871,6 +963,10 @@ var Diagrams = function (){
     }
 
     function clearTemp(){
+        console.log("clearTemp")
+        //TmpVar.bDrawing = false;
+        //nodeG.selectAll(".size-point").remove();
+
         linksG.selectAll(".temp-point").remove();
         linksG.selectAll(".temp-line").remove();
         
@@ -881,10 +977,14 @@ var Diagrams = function (){
         draw();
 
     }
-    function getData(){
-        data.links.forEach(function(v){
-            delete v.circlePoints;
-        });
+    function getData(mode){
+        if("save" === mode){
+            data.links.forEach(function(v){
+                delete v.circlePoints;
+                delete v.sd;
+                delete v.td;
+            });
+        }
         return data;
     }
     
@@ -894,7 +994,7 @@ var Diagrams = function (){
         data.links = d.links || [];
 
         //데이터 정제(tOffset 필수값.)
-        data.lenks.forEach(function(v){
+        data.links.forEach(function(v){
             if(!v.tOffsetX) v.tOffsetX = 0;
             if(!v.tOffsetY) v.tOffsetY = 0;
         });
@@ -949,12 +1049,11 @@ var Diagrams = function (){
             clearTemp();
         })
 
-        updateLink();
-        updateNode();
+        draw();
     }
 
     function updateNodeEx(){
-        updateNode();
+        draw();
         //console.log( document.getElementById("nd-" + TmpVar.startNode));
        //.click();
     }
