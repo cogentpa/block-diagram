@@ -236,10 +236,19 @@ var Diagrams = function (){
                             } else {
                                 px = l.sd.x;
                             }
-                            return (px > tx) ? tx + 25  : tx - 25;
+                            return (px > tx) ? tx + 15  : tx - 35;
                         })
                         .attr("y", function(l){
-                            return l.td.y+l.tOffsetY-15;
+                            var py;
+                            var ty = l.td.y + l.tOffsetY;
+                            if(l.waypoints.length > 0){
+                                py = l.waypoints[l.waypoints.length-1][1];
+                            } else {
+                                py = l.sd.y;
+                            }
+                            //전이 크면, 아래서 위로
+                            return (py > ty) ? ty + 25 : ty - 10; 
+                            //return l.td.y+l.tOffsetY-15;
                         });
 
                     });
@@ -732,6 +741,7 @@ var Diagrams = function (){
         lg.append("polyline")
             //.attr("class", "link")
             .attr("class", "line")
+            //.classed("flowline", true)
             //.on("mousemove", lineMousepoint)
             //.on("mouseover", lineMouseover)
             .attr("fill", "none")
@@ -797,10 +807,18 @@ var Diagrams = function (){
                 } else {
                     px = l.sd.x;
                 }
-                return (px > tx) ? tx + 25  : tx - 25;
+                return (px > tx) ? tx + 15  : tx - 35;
             })
             .attr("y", function(l){
-                return l.td.y+l.tOffsetY-15;
+                var py;
+                var ty = l.td.y + l.tOffsetY;
+                if(l.waypoints.length > 0){
+                    py = l.waypoints[l.waypoints.length-1][1];
+                } else {
+                    py = l.sd.y;
+                }
+                //전이 크면, 아래서 위로
+                return (py > ty) ? ty + 25 : ty - 10; 
             });
 
     }
