@@ -86,8 +86,8 @@
         width:200px;
         height:100%;
         margin-right: -200px;
-        background: #2f2f2f;
         float: left;
+        background: #2f2f2f;
         position: relative;
     }
     .footer {
@@ -107,6 +107,31 @@
     }
     .form-group{margin-bottom:1px;}
     label{margin-bottom:1px;}
+
+    #rightTab .nav-pills {
+        background:#5f5f5f;
+    }
+    #rightTab .nav-pills > li {
+        position:relative;
+        display:block;
+    }
+
+    #rightTab .nav-pills > li > a.active {
+        background:#2f2f2f;
+        color:#fff;
+        
+    }
+
+    #rightTab .nav-pills > li > a {
+        border-radius: 4px 4px 0 0;
+        padding:5px;
+        color:#aaa;
+    }
+
+    #rightTab .tab-content {
+        color : white;
+        height:100%;
+    }
     </style>
   </head>
   <body>
@@ -186,114 +211,128 @@
                 </div>
             </div>
             <div class="left">
-                    <ul id="leftMenus">
-                        <a href="javascript:void(0)">
-                            <li class="item-menu item0">
-                                <i class="fas fa-vector-square"></i>
-                                <span class="menu">Block1</span>
-                            </li>
-                        </a> 
-                        <a href="javascript:void(0)">
-                            <li class="item-menu item1">
-                                <i class="far fa-circle"></i> 
-                                <span class="menu">Block2</span>
-                            </li>
-                        </a>
-                        <a href="javascript:void(0)">
-                            <li class="item-menu item2">
-                                <i class="far fa-window-restore"></i>
-                                <span class="menu">Block3</span>
-                            </li>
-                        </a>
-                        <a href="javascript:void(0)">
-                            <li class="item-menu item3">
-                                <i class="far fa-window-restore"></i>
-                                <span class="menu">Block4</span>
-                            </li>
-                        </a>
-                        <a href="javascript:void(0)">
-                            <li class="item-menu item4">
-                                <i class="far fa-window-restore"></i>
-                                <span class="menu">Block5</span>
-                            </li>
-                        </a>
-                    </ul>
+                <ul id="leftMenus">
+                    <a href="javascript:void(0)">
+                        <li class="item-menu item0">
+                            <i class="fas fa-vector-square"></i>
+                            <span class="menu">Block1</span>
+                        </li>
+                    </a> 
+                    <a href="javascript:void(0)">
+                        <li class="item-menu item1">
+                            <i class="far fa-circle"></i> 
+                            <span class="menu">Block2</span>
+                        </li>
+                    </a>
+                    <a href="javascript:void(0)">
+                        <li class="item-menu item2">
+                            <i class="far fa-window-restore"></i>
+                            <span class="menu">Block3</span>
+                        </li>
+                    </a>
+                    <a href="javascript:void(0)">
+                        <li class="item-menu item3">
+                            <i class="far fa-window-restore"></i>
+                            <span class="menu">Block4</span>
+                        </li>
+                    </a>
+                    <a href="javascript:void(0)">
+                        <li class="item-menu item4">
+                            <i class="far fa-window-restore"></i>
+                            <span class="menu">Block5</span>
+                        </li>
+                    </a>
+                </ul>
                                 
-                </div> <!-- end left -->
+            </div> <!-- end left -->
             <div class="right">
-                <div class="row" style="margin:10px 0px">
-                    <div class="col-lg-12 col-md-12 mx-auto" id="prop_blockInfo">
-                         <form>
-                            <legend class="text-light">Block Info</legend>
-                            <div class="form-group">
-                                <label class="text-light">Id <span class="text-danger">*</span></label>
-                                <input class="form-control form-control-sm" id="prop_blockIdInput" readonly/>
-                            </div>
-                            <div class="form-group">
-                                <label class="text-light">Name <span class="text-danger">*</span></label>
-                                <input class="form-control form-control-sm" id="prop_blockNmInput"/>
-                            </div>
-                            <div class="form-group">
-                                <label class="text-light">Size <span class="text-danger">*</span></label>
-                                <div class="form-row">
-                                    <div class="col">
-                                        <input class="form-control form-control-sm" id="prop_blockWidthInput" placeholder="Width"/> 
+                <div id="rightTab" class="tab-container">	
+                    <ul class="nav nav-pills">
+                        <li>
+                            <a  href="#right-tab0" data-toggle="tab" class="active">Block Info</a>
+                        </li>
+                        <li>
+                            <a href="#right-tab1" data-toggle="tab">Calcaulation</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content clearfix">
+                        <div class="tab-pane active" id="right-tab0">
+                                <div class="col-lg-12 col-md-12 mx-auto" id="prop_blockInfo">
+                                        <form>
+                                           <legend class="text-light"></legend>
+                                           <div class="form-group">
+                                               <label class="text-light">Id <span class="text-danger">*</span></label>
+                                               <input class="form-control form-control-sm" id="prop_blockIdInput" readonly/>
+                                           </div>
+                                           <div class="form-group">
+                                               <label class="text-light">Name <span class="text-danger">*</span></label>
+                                               <input class="form-control form-control-sm" id="prop_blockNmInput"/>
+                                           </div>
+                                           <div class="form-group">
+                                               <label class="text-light">Size <span class="text-danger">*</span></label>
+                                               <div class="form-row">
+                                                   <div class="col">
+                                                       <input class="form-control form-control-sm" id="prop_blockWidthInput" placeholder="Width"/> 
+                                                   </div>
+                                                   <span class="text-light">x</span>
+                                                   <div class="col">
+                                                       <input class="form-control form-control-sm" id="prop_blockHeightInput" placeholder="Height"/>
+                                                   </div>
+                                               </div>
+                                           </div>
+                                           <div class="form-group">
+                                               <label class="text-light">Position<span class="text-danger">*</span></label>
+                                               <div class="form-row">
+                                                   <div class="col">
+                                                       <input class="form-control form-control-sm" id="prop_blockXInput" placeholder="X"/> 
+                                                   </div>
+                                                   <span class="text-light">,</span>
+                                                   <div class="col">
+                                                       <input class="form-control form-control-sm" id="prop_blockYInput" placeholder="Y"/>
+                                                   </div>
+                                               </div>
+                                           </div>
+                                       </form>
+                                   </div>
+                        </div>
+                        <div class="tab-pane" id="right-tab1">
+                            <div class="col-lg-12 col-md-12 mx-auto" id="prop_calTypeAdd">
+                                <form>
+                                    <legend class="text-light"></legend>
+                                    <div class="form-group">
+                                        <label class="text-light">In Block <span class="text-danger">*</span></label>
+                                        <select class="form-control form-control-sm" id="prop_inBlockSelect">
+                                            <option value="">Select</option>
+                                        </select>
                                     </div>
-                                    <span class="text-light">x</span>
-                                    <div class="col">
-                                        <input class="form-control form-control-sm" id="prop_blockHeightInput" placeholder="Height"/>
+                                    <div class="form-group">
+                                        <label class="text-light">Out Block <span class="text-danger">*</span></label>
+                                        <select class="form-control form-control-sm" id="prop_outBlockSelect">
+                                            <option value="">Select</option>
+                                        </select>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="text-light">Position<span class="text-danger">*</span></label>
-                                <div class="form-row">
-                                    <div class="col">
-                                        <input class="form-control form-control-sm" id="prop_blockXInput" placeholder="X"/> 
+                                    <div class="form-group">
+                                        <label class="text-light">Calcaulation <span class="text-danger">*</span></label>
+                                        <select class="form-control form-control-sm" id="prop_calTypeSelect">
+                                            <option value="">Select</option>
+                                        </select>
                                     </div>
-                                    <span class="text-light">,</span>
-                                    <div class="col">
-                                        <input class="form-control form-control-sm" id="prop_blockYInput" placeholder="Y"/>
+                                    <div class="form-group" style="margin:10px 0;">
+                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calTypeAddBtn">Add</button>
                                     </div>
-                                </div>
+                                </form>
                             </div>
-                        </form>
-                    </div>
-                    <div class="col-lg-12 col-md-12 mx-auto" id="prop_calTypeAdd">
-                        <form>
-                            <legend class="text-light">Calcaulation</legend>
-                            <div class="form-group">
-                                <label class="text-light">In Block <span class="text-danger">*</span></label>
-                                <select class="form-control form-control-sm" id="prop_inBlockSelect">
-                                    <option value="">Select</option>
-                                </select>
+                            <div class="col-lg-12 col-md-12 mx-auto">
+                                <div class="list-group" id="prop_calTypeList" style="height:250px;width:100%;overflow:auto"></div>
                             </div>
-                            <div class="form-group">
-                                <label class="text-light">Out Block <span class="text-danger">*</span></label>
-                                <select class="form-control form-control-sm" id="prop_outBlockSelect">
-                                    <option value="">Select</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="text-light">Calcaulation <span class="text-danger">*</span></label>
-                                <select class="form-control form-control-sm" id="prop_calTypeSelect">
-                                    <option value="">Select</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="margin:10px 0;">
-                                <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calTypeAddBtn">Add</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-lg-12 col-md-12 mx-auto">
-                        <div class="list-group" id="prop_calTypeList" style="height:250px;width:100%;overflow:auto"></div>
-                    </div>
-                </div>   
-            </div>           
-        </div> 
+                        </div>
+                    </div>   
+                </div>           
+            </div> 
             <!-- Content here -->
-        <div class="footer"></div>
-    </div>
+            <div class="footer"></div>
+        </div>
     <!-- New -->
     <div class="modal fade" id="newModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">

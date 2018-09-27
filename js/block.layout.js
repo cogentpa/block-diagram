@@ -6,7 +6,7 @@ $("#propModal").on("show.bs.modal", function (e) {
     Layout.setPageInfo("height", $("#svg-container").height());
 });
 $("#newModal_newBtn").bind("click", function(){
-    Diagrams.setData("");
+    Diagrams.setData({});
     Diagrams.updateNode();
     $("#newModal").modal('hide');
 });
@@ -40,7 +40,7 @@ function drawBlock(ty){
     }else if(ty == "item1"){
         Diagrams.addBox({type:"rect",x:200,y:50,width:100,height:100});
     }else if(ty == "item2"){
-        Diagrams.addBox({type:"mb",x:150,y:50,width:200,height:50});
+        Diagrams.addBox({type:"mb",x:150,y:50,width:200,height:50,mb:[1]});
     }
     /*
     var blockItem = [blockItems[ty]];
