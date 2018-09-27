@@ -214,7 +214,7 @@ var Diagrams = function (){
                     var sPoint = [d.x+(d.width/2),d.y+(d.height/2)];
                     sourceLink.forEach(function(link){
                         link.d3this.selectAll("polyline").attr("points", sPoint.concat(link.points));
-
+/*
                         link.d3this.select(".out-value")
                         .attr("x", function(l){
                             return l.sd.x;
@@ -222,7 +222,7 @@ var Diagrams = function (){
                         .attr("y", function(l){
                             return l.sd.y;
                         });
-
+*/
                     });
                     targetLink.forEach(function(link){
                         link.d3this.selectAll("polyline").attr("points", link.points.concat([d.x+link.tOffsetX, d.y+link.tOffsetY]));
@@ -252,9 +252,6 @@ var Diagrams = function (){
                         });
 
                     });
-
-
-
 
                     if(TmpVar.startNode == d.id){
                         toolbox.attr('transform', 'translate('+(this.getBoundingClientRect().width + d.x + 5)+' '+(d.y+5)+')');
@@ -551,6 +548,17 @@ var Diagrams = function (){
                 } else {
                     isX = false;
                 }
+
+                d3Parent.append("rect")
+                    .attr("class", "temp-box")
+                    .attr("fill", "#ffffff")
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "#000")
+                    .attr("width", tempWidth)
+                    .attr("height", tempHeight)
+                    .attr("x", tempX)
+                    .attr("y", tempY)
+                    .attr("opacity", 0.5);
             })
             .on("drag", function(){
                 var event = d3.event;
@@ -587,9 +595,11 @@ var Diagrams = function (){
             })
             .on("end", function(){
                 nodeG.selectAll(".size-point").remove();
+                nodeG.selectAll(".temp-box").remove();
                 makeSizeCircle(d3Parent.node());
+                updateLink();
                 //console.log(pData);
-                linksG.selectAll(".link").each(function(ld){
+                /* linksG.selectAll(".link").each(function(ld){
                     var link = d3.select(this);
                     var points = [];
                     var newPoints;
@@ -607,7 +617,7 @@ var Diagrams = function (){
                         link.selectAll("polyline")
                             .attr("points", newPoints);
                     }
-                })
+                }) */
                 
             })
     }();
@@ -663,7 +673,7 @@ var Diagrams = function (){
             .enter()
             .append("circle")
             .attr("class", "temp-point")
-            .attr("r", 3)
+            .attr("r", 4)
             .attr("cx", function(d){return d.x})
             .attr("cy", function(d){return d.y})
             .attr("fill", "#FC3")
@@ -782,20 +792,32 @@ var Diagrams = function (){
 
         //text 위치
         lg.select(".out-value")
-            .attr("x", function(l){
-                //방향계산
-                var px;
-                if(l.waypoints.length > 0){
-                    px = l.waypoints[0][0];
+            .datum(function(d){
+                var sx,sy,np;
+                sx = d.sd.x + (d.sd.width/2);
+                sy = d.sd.y + (d.sd.height/2);
+                if(d.waypoints.length > 0){
+                    np = d.waypoints[0];
                 } else {
-                    px = l.td.x+l.tOffsetX;
+                    np = [d.td.x+d.tOffsetX, d.td.y + d.tOffsetY];
                 }
-                // -> 면 ? : 
-                //return (px > l.sd.x) ? l.sd.x + l.sd.width + 15 : l.sd.x + (l.sd.width/2) - 15;
-                return l.sd.x;
+                
+                //좌우 차 가 더 크면
+                if(Math.abs(sx - np[0]) > Math.abs(sy - np[1])){
+                    d.ox = (sx > np[0]) ? d.sd.x - 35  : d.sd.x + d.sd.width + 15;
+                    d.oy = (sy > np[1]) ? sy + 15 : sy - 15; 
+                } else {
+                    d.ox = (sx > np[0]) ? sx - 35  : sx+ 15;
+                    d.oy = (sy > np[1]) ? d.sd.y - 20 : d.sd.y + d.sd.height + 25; 
+                }
+
+                return d;
+            })
+            .attr("x", function(l){
+                return l.ox;
             })
             .attr("y", function(l){
-                return l.sd.y;
+                return l.oy;
             });
         lg.select(".in-value")
             .attr("x", function(l){
