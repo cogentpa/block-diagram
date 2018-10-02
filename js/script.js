@@ -195,7 +195,7 @@ var Diagrams = function (){
                     d.y = (d3.event.y/10).toFixed(0)*10;
 
                     
-                    if(bChildmove){
+                    //if(true || bChildmove){
                         rTarget = d3this.select("rect");
                         tmpx = d.x - parseInt(rTarget.attr("x"));
                         tmpy = d.y - parseInt(rTarget.attr("y"));
@@ -207,9 +207,9 @@ var Diagrams = function (){
                             .attr("y", function(){
                                 return parseInt(d3.select(this).attr("y")) + tmpy;
                             });
-                    }else{
-                        d3this.selectAll("*").attr("x", d.x).attr("y", d.y);
-                    }
+                    //}else{
+                    //    d3this.selectAll("*").attr("x", d.x).attr("y", d.y);
+                    //}
 
                     var sPoint = [d.x+(d.width/2),d.y+(d.height/2)];
                     sourceLink.forEach(function(link){
@@ -260,7 +260,7 @@ var Diagrams = function (){
                 .on("end", function(){
                     sourceLink = [];
                     targetLink = [];
-                    updateLink();
+                    draw();//updateLink();
                 });
             }();
 
@@ -356,7 +356,7 @@ var Diagrams = function (){
                         linkData.tOffsetX = endPoint[0] - tx;
                         linkData.tOffsetY = endPoint[1] - ty;;
                     }
-                    updateLink();
+                    draw();//updateLink();
                     clearTemp();
                 })
     }();
@@ -402,7 +402,7 @@ var Diagrams = function (){
             clearTemp();
         } */
 
-        console.log("click");
+        //console.log("click");
         //if (d3.event.defaultPrevented) return;
         
         if(TmpVar.bDrawing){
@@ -597,7 +597,7 @@ var Diagrams = function (){
                 nodeG.selectAll(".size-point").remove();
                 nodeG.selectAll(".temp-box").remove();
                 makeSizeCircle(d3Parent.node());
-                updateLink();
+                draw();//updateLink();
                 //console.log(pData);
                 /* linksG.selectAll(".link").each(function(ld){
                     var link = d3.select(this);
@@ -889,15 +889,19 @@ var Diagrams = function (){
                     .attr("x", d.x)
                     .attr("y", d.y);
                 
-                d3.select(this)
+                d3.select(this).selectAll("text.label")
+                    .data([d])
+                    .enter()
                     .append("text")
                     .attr("class", function(d){
                         return "label";
                     })
                     .attr("text-anchor", "middle")
+                    .attr("dy", ".35em");
+                 
+                d3.select(this).selectAll("text.label")    
                     .attr("x", function(d) { return d.x + (d.width/2) })
                     .attr("y", function(d) { return d.y+15})
-                    .attr("dy", ".35em")
                     .text(function(d) { return d.name; });
 
             } else if(d.type == "mb"){
@@ -983,7 +987,7 @@ var Diagrams = function (){
             svg.on("mousemove", mousemove)
                 .on("click", function(){
                     if(TmpVar.bDrawing){
-                        console.log("svg click");
+                        //console.log("svg click");
                         line.remove();
                         updateLink(data.links);
                         svg.on("mousemove", null)
@@ -1024,7 +1028,7 @@ var Diagrams = function (){
     }
 
     function clearTemp(){
-        console.log("clearTemp")
+        //console.log("clearTemp")
         //TmpVar.bDrawing = false;
         //nodeG.selectAll(".size-point").remove();
 
