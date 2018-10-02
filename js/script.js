@@ -42,7 +42,8 @@ var Diagrams = function (){
                 x: 200,
                 y: 150,
                 width : 100,
-                height : 100
+                height : 100,
+                isStart : true
             }, {
                 id:1,
                 name: "B",
@@ -66,7 +67,8 @@ var Diagrams = function (){
                 x: 300,
                 y: 180,
                 width : 100,
-                height : 100
+                height : 100,
+                isEnd : true
             }, {
                 name: "MB",
                 id:4,
@@ -144,7 +146,7 @@ var Diagrams = function (){
 
     }
 
-    var drag = function(){
+    var nodeDrag = function(){
         var sourceLink = [];
         var targetLink = [];
 
@@ -516,11 +518,11 @@ var Diagrams = function (){
             .style("cursor", function(d){
                 return d.position + "-resize"
             })
-            .call(dragSizeCircle)
+            .call(sizeCircleDrag)
             .transition().duration(100).style("opacity", "1")
     }
 
-    var dragSizeCircle = function(){
+    var sizeCircleDrag = function(){
         var d3this;
         var d3Target;
         var d3Parent;
@@ -563,30 +565,39 @@ var Diagrams = function (){
             .on("drag", function(){
                 var event = d3.event;
                 if(isX){
-                    d3this.attr("cx", (event.x/10).toFixed(0)*10);
                     if(position == "e"){
                         tempWidth += event.dx;
+                        if(tempWidth < 10) tempWidth = 10;
                         pData.width = (tempWidth/10).toFixed(0)*10;
+                        d3this.attr("cx", pData.x + pData.width);
                     }else{
                         tempWidth += event.dx*-1;
+                        /* if(tempWidth < 10) {
+                            tempWidth = 10;
+                            tempX = pData.x + 10;
+                        }else{
+                        } */
+                        tempX += event.dx; 
                         pData.width = (tempWidth/10).toFixed(0)*10;
                         
-                        tempX += event.dx; 
                         pData.x = (tempX/10).toFixed(0)*10;
+                        d3this.attr("cx", pData.x);
                     }
                     d3Target.attr("x", pData.x)
                         .attr("width", pData.width)
                 }else{
-                    d3this.attr("cy", (event.y/10).toFixed(0)*10);
                     if(position == "s"){
                         tempHeight += event.dy;
+                        if(tempHeight < 10) tempHeight = 10;
                         pData.height = (tempHeight/10).toFixed(0)*10;
+                        d3this.attr("cy", pData.y + pData.height);
                     }else{
                         tempHeight += event.dy*-1;
                         pData.height = (tempHeight/10).toFixed(0)*10;
-
+                        
                         tempY += event.dy; 
                         pData.y = (tempY/10).toFixed(0)*10;
+                        d3this.attr("cy", (event.y/10).toFixed(0)*10);
                     }
                     d3Target.attr("y", pData.y)
                         .attr("height", pData.height)
@@ -858,7 +869,7 @@ var Diagrams = function (){
             })
             .attr("transform", "translate(" + 0 + "," + 0 + ")")
             .on("click", nodeClick)
-            .call(drag);
+            .call(nodeDrag);
             ;
 
         /* ng.append("text")
@@ -874,14 +885,42 @@ var Diagrams = function (){
             
         ng.each(function(d){
             if(d.type == "rect"){
-                d3.select(this).selectAll("rect.box")
-                    .data([d])
-                    .enter()
-                    .append("rect")
+                var _thisG = d3.select(this).selectAll("*").data([d]).enter();
+
+                _thisG.append("rect")
                     .attr("class", "box")
                     .attr("fill", "#ffffff")
                     .attr("stroke-width", 3)
                     .attr("stroke", "#000")  
+
+                if(d.isStart){
+                    _thisG
+                        .append("polyline")
+                        //.attr('d',triangle)
+                        .attr("class", "tri")
+                        .attr('fill',"#ffffff")
+                        .attr('stroke','#000')
+                        .attr('stroke-width',3);
+
+                    d3.select(this).select("polyline.tri")
+                        .attr("points", [d.x-3+d.width,d.y, d.x+2+d.width,d.y, d.x+d.width+(d.width/4), d.y+(d.height/2), d.x+2+d.width,d.y+d.height, d.x-3+d.width,d.y+d.height ])
+                    ;
+                }
+
+                if(d.isEnd){
+                    _thisG
+                        .append("polyline")
+                        //.attr('d',triangle)
+                        .attr("class", "tri")
+                        .attr('fill',"#ffffff")
+                        .attr('stroke','#000')
+                        .attr('stroke-width',3);
+
+                    d3.select(this).select("polyline.tri")
+                        .attr("points", 
+                        [d.x+3,d.y, d.x-2,d.y, d.x-(d.width/4),d.y+(d.height/2), d.x-2,d.y+d.height, d.x+3,d.y+d.height ])
+                    ;
+                }
 
                 d3.select(this).select("rect.box")
                     .attr("width", d.width)
@@ -889,9 +928,7 @@ var Diagrams = function (){
                     .attr("x", d.x)
                     .attr("y", d.y);
                 
-                d3.select(this).selectAll("text.label")
-                    .data([d])
-                    .enter()
+                _thisG
                     .append("text")
                     .attr("class", function(d){
                         return "label";
