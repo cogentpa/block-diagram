@@ -27,7 +27,7 @@ $("#leftMenus").find("li.item-menu").each(function(){
         }else if(_item.hasClass("item1")){
             drawBlock("item1");
         }else if(_item.hasClass("item2")){
-
+            drawBlock("item2");
         }
     });
 });
@@ -40,7 +40,7 @@ function drawBlock(ty){
     }else if(ty == "item1"){
         Diagrams.addBox({type:"rect",x:200,y:50,width:100,height:100});
     }else if(ty == "item2"){
-        Diagrams.addBox({type:"mb",x:150,y:50,width:200,height:50,mb:[1]});
+        Diagrams.addBox({type:"mb",x:150,y:50,width:100,height:30,mb:[1,1,1]});
     }
     /*
     var blockItem = [blockItems[ty]];
@@ -202,6 +202,20 @@ $("#prop_blockYInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
     selectNode.y = parseInt(this.value);
     Diagrams.updateNode();
+});
+$("#prop_inBlockSelect").bind("change", function(){
+    var selectId = Layout.getBlockId();
+    if(this.value != ""){
+        var calId = "#txt-in-"+this.value+"-"+selectId;
+        $("#prop_inValue").val($(calId).text());
+    }
+});
+$("#prop_outBlockSelect").bind("change", function(){
+    var selectId = Layout.getBlockId();
+    if(this.value != ""){
+        var calId = "#txt-out-"+selectId+"-"+this.value;
+        $("#prop_outValue").val($(calId).text());
+    }
 });
 
 function getDiagramNodeData(bid){
