@@ -860,7 +860,16 @@ var Diagrams = function (){
             .on("click", nodeClick)
             .call(drag);
             ;
-           
+
+        /* ng.append("text")
+            .attr(function(d){
+                console.log(d);
+                return 0;
+            })
+            .text(function(){
+                return "a";
+            });
+        */
         ng = ng.merge(nodes);
             
         ng.each(function(d){
@@ -872,13 +881,25 @@ var Diagrams = function (){
                     .attr("class", "box")
                     .attr("fill", "#ffffff")
                     .attr("stroke-width", 3)
-                    .attr("stroke", "#000")
+                    .attr("stroke", "#000")  
 
                 d3.select(this).select("rect.box")
                     .attr("width", d.width)
                     .attr("height", d.height)
                     .attr("x", d.x)
-                    .attr("y", d.y)
+                    .attr("y", d.y);
+                
+                d3.select(this)
+                    .append("text")
+                    .attr("class", function(d){
+                        return "label";
+                    })
+                    .attr("text-anchor", "middle")
+                    .attr("x", function(d) { return d.x + (d.width/2) })
+                    .attr("y", function(d) { return d.y+15})
+                    .attr("dy", ".35em")
+                    .text(function(d) { return d.name; });
+
             } else if(d.type == "mb"){
                 var mb = d3.select(this).selectAll("rect.mb").data(d.mb);
                 mb.exit().remove();
@@ -1055,7 +1076,6 @@ var Diagrams = function (){
         }
         
         data.nodes.push(node);
-        
         updateNode();
     }
     
