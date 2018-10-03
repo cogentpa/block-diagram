@@ -1,0 +1,154 @@
+.left ul{
+    padding: 0;
+    list-style-type: none;
+    text-align: left;
+}
+.left li {
+    width: auto;
+    height: 40px;
+    line-height: 40px;  
+    padding-left: 17px;
+}
+.left li:hover {
+    background: black; 
+}
+
+.left:hover {
+    width: 150px; 
+}  
+
+.left .item-menu {
+    height:40px;
+    overflow:hidden;
+    color:#fff;
+}  
+
+.left a{
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+.left .item-menu i {
+    padding-left: 0px;
+}
+span.menu{
+    padding-left: 12px;
+}
+
+body {
+    margin:0;
+    height:0;
+    width:100%;
+    height:100%;
+    min-width:600px;
+}
+#container {
+    padding-left: 50px;   /* LC width */
+    padding-right: 200px;  /* RC width */
+    height:800px;
+}
+.center {
+    width:100%;
+    height:100%;
+    padding-top:5px;
+    position: relative;
+    float:left;
+    overflow:auto;
+}
+.left{
+    width: 48px;
+    background: #2f2f2f;
+    white-space: nowrap; 
+    transition: width 0.5s ;
+    margin-left: -100%;
+    position: relative;
+    float: left;
+    right:50px;
+    height:100%;
+}
+.right {
+    width:200px;
+    height:100%;
+    margin-right: -200px;
+    float: left;
+    background: #2f2f2f;
+    position: relative;
+}
+.footer {
+    clear: both;
+    background: #2f2f2f;
+    height:20px;
+}
+#svg-container{
+    width:100%;
+    height:100%;
+    padding:0 5px 5px 5px;
+}
+#diagram{
+    width:100%;
+    height:100%;
+    border:1px solid #595959
+}
+.form-group{margin-bottom:1px;}
+label{margin-bottom:1px;}
+
+#rightTab .nav-pills {
+    background:#5f5f5f;
+}
+#rightTab .nav-pills > li {
+    position:relative;
+    display:block;
+}
+
+#rightTab .nav-pills > li > a.active {
+    background:#2f2f2f;
+    color:#fff;
+    
+}
+
+#rightTab .nav-pills > li > a {
+    border-radius: 4px 4px 0 0;
+    padding:5px;
+    color:#aaa;
+}
+
+#rightTab .tab-content {
+    color : white;
+    height:100%;
+}
+#cal-group {
+    background:transparent;position:absolute;top:0;left:0;
+}
+
+
+.calDiv {
+    position:absolute;
+    left:100px;
+    top:10px;
+    z-index:100;
+    width:150px;
+    background:#595959;
+    float:left;
+}
+.calDiv input {
+    border:1px dotted #595959;
+    width:80%;
+    float:right;
+    padding-left:5px;
+}
+.calDiv .calNo {
+    float:left;
+    margin:0 4px;
+    color:#fff;
+}
+
+#cal-group.view .calDiv {
+    background:transparent;
+}
+
+#cal-group.view .calDiv input {
+    border:0px;
+}
+#cal-group.view .calDiv .calNo {
+   display:none;
+}

@@ -28,11 +28,66 @@ $("#leftMenus").find("li.item-menu").each(function(){
             drawBlock("item1");
         }else if(_item.hasClass("item2")){
             drawBlock("item2");
+        }else if(_item.hasClass("item3")){
+            drawBlock("item3");
+            console.log(CalData.getCals());
         }
     });
 });
 
 var svg = d3.select("#diagram");
+
+var rules = new ruleJS("cal-group");
+rules.init();
+
+function calClick(id){
+    var d = CalData.getCalById(id);
+    CalData.setSelect(d);
+    $("#prop_calFormula").val(d.fm);
+    $("#prop_calValue").val(d.val);
+}
+
+$("#prop_calFormula").bind("keyup", function(e){
+    /*
+    var val = this.value;
+    var selectCal = CalData.getSelect();
+    var calObj = {id:selectCal.id, val:selectCal.val,fm:val,no:selectCal.no};
+    CalData.setCalById(selectCal.id, calObj);
+    //var calGroup = d3.select("#diagram").select(".viewport").select("#cal-group");
+    $("#"+selectCal.id).find(".cal_fm").val(val);
+    var input = this;
+    if(e.keyCode == "13"){
+        var formula = val;
+        console.log(input)
+        var parsed = rules.parse(formula, input);
+        if (parsed.result !== null) {
+            $("#prop_calValue").val(parsed.result);
+            //$("#"+selectCal.id).find(".cal_text").text(parsed.result);
+        }
+
+        if (parsed.error) {
+            alert(parsed.error);
+        }
+    }
+    */
+});
+
+$("#prop_calValue").bind("keyup", function(){
+    /*
+    var val = this.value;
+    var selectCal = CalData.getSelect();
+    var calObj = {id:selectCal.id, val:val,fm:selectCal.fm,no:selectCal.no};
+    CalData.setCalById(selectCal.id, calObj);
+    //var calGroup = d3.select("#diagram").select(".viewport").select("#cal-group");
+    $("#"+selectCal.id).find(".cal_text").text(val);
+    //$("#"+selectCal.id).find(".cal_val").val(val);
+    */
+});
+
+
+
+
+
 
 function drawBlock(ty){
     if(ty == "item0"){
@@ -41,29 +96,84 @@ function drawBlock(ty){
         Diagrams.addBox({type:"rect",x:200,y:50,width:100,height:100});
     }else if(ty == "item2"){
         Diagrams.addBox({type:"mb",x:150,y:50,width:100,height:30,mb:[1,1,1]});
+    }else if(ty == "item3"){
+        var calNo = CalData.getCalNo();
+            var calId = "cal_"+calNo;
+            /*
+            var calGroup = d3.select("#diagram").select(".viewport").select("#cal-group");
+            var calG = calGroup.append("g").attr("class", "cal_node").attr("id",calId);
+            
+            var cnt = $("#cal-group").find(".cal_node").length;
+            
+            calG.attr("transform", 'translate('+(110*cnt)+' 50)')
+            
+            var rect = calG.append("rect")
+                .attr("width", 100)
+                .attr("height", 30)
+                .attr("x", 0)
+                .attr("y",0)
+                //.attr("y", 50)
+                .attr("fill", "transparent")
+                .attr("stroke-width", 1)
+                .attr("stroke", "#595959");
+
+            var text = calG.append("text")
+                .text("Cal Input")
+                .attr("class","cal_text")
+                .attr("x", 5)
+                .attr("y", 20);
+                
+            var fm = calG.append("input")
+                .attr("value", "")
+                .attr("class", "cal_fm")
+                .attr("data-formula","")
+                .attr("id", calNo);
+            
+            var input = calG.append("input")
+                .attr("value", "")
+                .attr("class", "cal_val")
+                .attr("id", "calVal_"+calNo);
+            
+            var noGroup = calG.append("g").attr("transform", 'translate(100 0)');
+
+            var circle = noGroup.append("circle")
+                .attr("class", "cal_no")
+                .attr("fill", "red")
+                .attr("stroke-width", 3)
+                .attr("stroke", "red")
+                .attr("r", 15)
+                .attr("cx", 0)
+                .attr("cy", 0)
+            
+            var circle_no = noGroup.append("text")
+                .text(calNo)
+                .attr("fill", "#fff")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("text-anchor", "middle")
+                .attr("alignment-baseline", "middle");
+            */
+            CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
+            
+            var calDiv = $("<div/>").attr("class","calDiv");
+            var calNoDiv = $("<div/>").attr("class","calNo").html(calNo);
+            var calInput = $("<input/>").attr("id", calNo).attr("type", "text");
+            calDiv.append(calNoDiv)
+            calDiv.append(calInput);
+            calDiv.draggable();
+            $("#cal-group").append(calDiv);
+            rules.addItem(calInput.get(0))
+            //rules.parse("=C1", calInput.get(0));
+            
+            calInput.bind("blur", function(){
+                CalData.setCalById(calNo, {id:calNo,val:this.value,fm:this.getAttribute("data-formula")});
+            });
+            calDiv.bind("click", function(){
+                var selectCal = CalData.getCalById(calNo);
+                $("#prop_calFormula").text("="+selectCal.fm);
+                $("#prop_calValue").val(selectCal.val);
+            });
     }
-    /*
-    var blockItem = [blockItems[ty]];
-    var draw = svg.selectAll("use").data(blockItem).enter();
-    if(blockItems[ty].t == "rect"){
-        draw.append("rect")
-        .attr("x", function(d) { return d.x; })
-        .attr("y", function(d) { return d.y; })
-        .attr("width", function(d) { return d.w; })
-        .attr("height", function(d) { return d.h; })
-        .attr("fill", "#ffffff")
-        .attr("stroke", "#000000")
-        .attr("stroke-width", "1px").call(drag);
-    }else if(blockItems[ty].t == "circle"){
-        draw.append("circle")
-        .attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; })
-        .attr("r", function(d) { return d.r; })
-        .attr("fill", "#ffffff")
-        .attr("stroke", "#000000")
-        .attr("stroke-width", "1px").call(drag);
-    }
-    */
 }
 /*
 var drag = d3.drag()
@@ -178,13 +288,41 @@ function addCalTypeItem(bid){
 $("#prop_calTypeAddBtn").bind("click", function(){
     addCalTypeItem(Layout.getBlockId());                 
 });
+$("#prop_inBlockSelect").bind("change", function(){
+    var selectId = Layout.getBlockId();
+    if(this.value != ""){
+        var calId = "#txt-in-"+this.value+"-"+selectId;
+        $("#prop_inValue").val($(calId).text());
+    }
+});
+$("#prop_outBlockSelect").bind("change", function(){
+    var selectId = Layout.getBlockId();
+    if(this.value != ""){
+        var calId = "#txt-out-"+selectId+"-"+this.value;
+        $("#prop_outValue").val($(calId).text());
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 $("#prop_blockNmInput").bind("blur", function(){
-    Layout.setBlockNm(Layout.getBlockId(), $("#prop_blockNmInput").val());
+    var selectNode = Layout.getBlock();
+    selectNode.name = this.value;
+    Diagrams.updateNode();
 });
 $("#prop_blockWidthInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
     selectNode.width = parseInt(this.value);
-    console.log(Diagrams.getData())
     Diagrams.updateNode();
 
 });
@@ -203,20 +341,6 @@ $("#prop_blockYInput").bind("blur", function(){
     selectNode.y = parseInt(this.value);
     Diagrams.updateNode();
 });
-$("#prop_inBlockSelect").bind("change", function(){
-    var selectId = Layout.getBlockId();
-    if(this.value != ""){
-        var calId = "#txt-in-"+this.value+"-"+selectId;
-        $("#prop_inValue").val($(calId).text());
-    }
-});
-$("#prop_outBlockSelect").bind("change", function(){
-    var selectId = Layout.getBlockId();
-    if(this.value != ""){
-        var calId = "#txt-out-"+selectId+"-"+this.value;
-        $("#prop_outValue").val($(calId).text());
-    }
-});
 
 function getDiagramNodeData(bid){
     var dgData = Diagrams.getData();
@@ -232,18 +356,20 @@ function getDiagramNodeData(bid){
 function blockSelect(obj){
     var bid = obj.id;
     Layout.setBlock(obj);
-    Layout.setBlockId(bid);
-    if(Layout.getBlockNm(bid) == ""){
-        Layout.setBlockNm(bid, bid);
-    }
-    var arrCal = CalData.getBlockById(bid);
-    setCalTypeList(arrCal);
-    getBlockProp(bid);
+    //Layout.setBlockId(bid);
+    //if(Layout.getBlockNm(bid) == ""){
+        //Layout.setBlockNm(bid, bid);
+    //}
+    //var arrCal = CalData.getBlockById(bid);
+    //setCalTypeList(arrCal);
+    //getBlockProp(bid);
+
+    var nodeObj = obj;
 
     $("#prop_blockIdInput").val(bid||"");
-    $("#prop_blockNmInput").val(Layout.getBlockNm(bid)||"");
+    $("#prop_blockNmInput").val(nodeObj.name||"");
 
-    var nodeObj = getDiagramNodeData(bid);
+    
     $("#prop_blockWidthInput").val(nodeObj.width||"");
     $("#prop_blockHeightInput").val(nodeObj.height||"");
     $("#prop_blockXInput").val(nodeObj.x||"");
@@ -281,6 +407,7 @@ function blockSelect(obj){
 console.log(Layout.getPageInfo())
 
 setCalType();
+
 $("#firstLoading").hide();
 function window_resize(){
     var winHeight = window.innerHeight||document.body.clientHeight;

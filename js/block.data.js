@@ -79,24 +79,46 @@ var Layout = function (){
 var CalData = function(){
     var api = {};
     var data = {
+        cnt : 0,
+        no : makeCalName(),
+        selectCal : {},
         types : {cal0:{nm:"DI Tank"},cal1:{nm:"UV-ox-2"},cal3:{nm:"UDI Tank"}},
-        cals : {
-            3 : [
-                {
-                    calId:"c202020",
-                    calInId:"cal_123456",
-                    calOutId:"cal_123456",
-                    inBl:"0",
-                    bl:"3",
-                    outBl:"2",
-                    calTy:"cal0",
-                    calNm:"UV-ox-2",
-                    in:200,
-                    out:180
-                }
-            ]
-        }
+        cals : {}
     }
+    function makeCalName(){
+        var cell = String.fromCharCode(65);
+        var rtnNm = [];
+        for(var i=65;i<80;i++){
+            cell = String.fromCharCode(i);
+            for(var j=1;j<10;j++){
+                rtnNm.push(cell+""+j);
+            }
+        }
+        return rtnNm;
+    } 
+    function getCalNo(){
+        var rtnNo = data.no[data.cnt];
+        data.cnt++;
+        return rtnNo;
+    }
+    function getCalById(id){
+        return data.cals[id];
+    }
+    function setCalById(id, d){
+        data.cals[id] = d;
+    }
+    function getSelect(){
+        return data.selectCal;
+    }
+    function setSelect(d){
+        data.selectCal = d;
+    }
+
+
+
+
+
+
     function getName(id){
         console.log(id)
         if(data.types[id]){
@@ -135,6 +157,11 @@ var CalData = function(){
             delete data.cals[bid];
         }
     }
+    api.getSelect = getSelect;
+    api.setSelect = setSelect;
+    api.getCalNo = getCalNo;
+    api.getCalById = getCalById;
+    api.setCalById = setCalById;
     api.getName = getName;
     api.getTypes = getTypes;
     api.setTypes = setTypes;

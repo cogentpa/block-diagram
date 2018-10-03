@@ -11,128 +11,9 @@
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/all.min.css"/>
     <link rel="stylesheet" href="css/loading.css"/>
+    <link rel="stylesheet" href="css/style.css"/>
     <link rel="stylesheet" href="main.css"/>
     <title>Block Diagram</title>
-    <style>
-	.left ul{
-		padding: 0;
-		list-style-type: none;
-		text-align: left;
-	}
-	.left li {
-		width: auto;
-		height: 40px;
-		line-height: 40px;  
-		padding-left: 18px;
-	}
-	.left li:hover {
-		background: black; 
-	}
-
-	.left:hover {
-        width: 150px; 
-    }  
-
-    .left .item-menu {
-        height:40px;
-        overflow:hidden;
-        color:#fff;
-    }  
-
-	.left a{
-		color: white;
-	    text-decoration: none;
-	    font-weight: bold;
-    }
-    .left .item-menu i {
-        padding-left: 0px;
-    }
-	span.menu{
-		padding-left: 12px;
-    }
-
-    body {
-        margin:0;
-        height:0;
-        width:100%;
-        height:100%;
-        min-width:600px;
-    }
-    #container {
-        padding-left: 50px;   /* LC width */
-        padding-right: 200px;  /* RC width */
-        height:800px;
-    }
-    .center {
-        width:100%;
-        height:100%;
-        padding-top:5px;
-        position: relative;
-        float:left;
-        overflow:auto;
-    }
-    .left{
-        width: 50px;
-        background: #2f2f2f;
-        white-space: nowrap; 
-        transition: width 0.5s ;
-        margin-left: -100%;
-        position: relative;
-        float: left;
-        right:50px;
-        height:100%;
-    }
-    .right {
-        width:200px;
-        height:100%;
-        margin-right: -200px;
-        float: left;
-        background: #2f2f2f;
-        position: relative;
-    }
-    .footer {
-        clear: both;
-        background: #2f2f2f;
-        height:20px;
-    }
-    #svg-container{
-        width:100%;
-        height:100%;
-        padding:0 5px 5px 5px;
-    }
-    #diagram{
-        width:100%;
-        height:100%;
-        border:1px solid #595959
-    }
-    .form-group{margin-bottom:1px;}
-    label{margin-bottom:1px;}
-
-    #rightTab .nav-pills {
-        background:#5f5f5f;
-    }
-    #rightTab .nav-pills > li {
-        position:relative;
-        display:block;
-    }
-
-    #rightTab .nav-pills > li > a.active {
-        background:#2f2f2f;
-        color:#fff;
-        
-    }
-
-    #rightTab .nav-pills > li > a {
-        border-radius: 4px 4px 0 0;
-        padding:5px;
-        color:#aaa;
-    }
-
-    #rightTab .tab-content {
-        color : white;
-        height:100%;
-    }
-    </style>
   </head>
   <body>
     <div class="container" id="firstLoading">
@@ -145,7 +26,7 @@
             </div>
         </div>
     </div>
-    <div class="container-fluid" style="padding:0px !important">
+    <div class="container-fluid" id="main" style="padding:0px !important">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -209,6 +90,7 @@
                         </g>
                     </svg>
                 </div>
+                <div id="cal-group"></div>
             </div>
             <div class="left">
                 <ul id="leftMenus">
@@ -232,8 +114,8 @@
                     </a>
                     <a href="javascript:void(0)">
                         <li class="item-menu item3">
-                            <i class="far fa-window-restore"></i>
-                            <span class="menu">Block4</span>
+                            <i class="fas fa-calculator"></i>
+                            <span class="menu"> Calcaulate</span>
                         </li>
                     </a>
                     <a href="javascript:void(0)">
@@ -301,6 +183,19 @@
                                 <form>
                                     <legend class="text-light"></legend>
                                     <div class="form-group">
+                                        <label class="text-light">Formula <span class="text-danger">*</span></label>
+                                        <textarea class="form-control form-control-sm" id="prop_calFormula" readonly rows=10>
+                                        </textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="text-light">Value <span class="text-danger">*</span></label>
+                                        <input class="form-control form-control-sm" id="prop_calValue" readonly/>
+                                    </div>
+                                    
+
+
+                                    <!-- <legend class="text-light">Node</legend>
+                                    <div class="form-group">
                                         <label class="text-light">In Block <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm" id="prop_inBlockSelect">
                                             <option value="">Select</option>
@@ -328,7 +223,7 @@
                                     </div>
                                     <div class="form-group" style="margin:10px 0;">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calTypeAddBtn">Add</button>
-                                    </div>
+                                    </div> -->
                                 </form>
                             </div>
                             <div class="col-lg-12 col-md-12 mx-auto">
@@ -486,8 +381,10 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script> -->
     <script src="js/jquery-3.3.1.slim.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/d3.v5.min.js"></script>
+    <script src="js/ruleJS.all.full.js"></script>
     <script src="js/script.js"></script>
     <script src="js/block.data.js"></script>
     <script src="js/block.layout.js"></script>
