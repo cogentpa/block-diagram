@@ -28,6 +28,10 @@ var Cal = function(){
         $("#cal-group").append(calDiv);
         rules.addItem(calInput.get(0))
 
+        calDiv.bind("click", function(){
+            calClick(calNo);
+        });
+        
         calInput.bind("blur", function(){
             CalData.setAttr(calNo, "val", this.value);
             CalData.setAttr(calNo, "fm", this.getAttribute("data-formula"));

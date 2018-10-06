@@ -65,10 +65,6 @@ function drawBlock(ty){
         var calNo = CalData.getCalNo();
         CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
         var calDiv = Cal.add(calNo);
-
-        calDiv.bind("click", function(){
-            calClick(calNo);
-        });
     }
 }
 /*
