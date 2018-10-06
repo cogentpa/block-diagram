@@ -1,3 +1,6 @@
+var rules = Cal.init();
+
+
 $("#propModal").on("show.bs.modal", function (e) {
     $("#propPageNm").val(Layout.getPageInfo("name"));
     $("#bgWidth").val($("#svg-container").width());
@@ -8,6 +11,7 @@ $("#propModal").on("show.bs.modal", function (e) {
 $("#newModal_newBtn").bind("click", function(){
     Diagrams.setData({});
     Diagrams.updateNode();
+    Cal.destory();
     $("#newModal").modal('hide');
 });
 $("#propModal_applyBtn").bind("click", function(){
@@ -37,57 +41,18 @@ $("#leftMenus").find("li.item-menu").each(function(){
 
 var svg = d3.select("#diagram");
 
-var rules = new ruleJS("cal-group");
-rules.init();
-
 function calClick(id){
     var d = CalData.getCalById(id);
     CalData.setSelect(d);
     $("#prop_calFormula").val(d.fm);
     $("#prop_calValue").val(d.val);
+
+    $("#prop_calStart").get(0).checked = $("#"+id).parent().hasClass("cal_start");
+    $("#prop_calEnd").get(0).checked = $("#"+id).parent().hasClass("cal_end");
+    
+    $("#cal-group").find(".calDiv").removeClass("select");
+    $("#"+id).parent().addClass("select");
 }
-
-$("#prop_calFormula").bind("keyup", function(e){
-    /*
-    var val = this.value;
-    var selectCal = CalData.getSelect();
-    var calObj = {id:selectCal.id, val:selectCal.val,fm:val,no:selectCal.no};
-    CalData.setCalById(selectCal.id, calObj);
-    //var calGroup = d3.select("#diagram").select(".viewport").select("#cal-group");
-    $("#"+selectCal.id).find(".cal_fm").val(val);
-    var input = this;
-    if(e.keyCode == "13"){
-        var formula = val;
-        console.log(input)
-        var parsed = rules.parse(formula, input);
-        if (parsed.result !== null) {
-            $("#prop_calValue").val(parsed.result);
-            //$("#"+selectCal.id).find(".cal_text").text(parsed.result);
-        }
-
-        if (parsed.error) {
-            alert(parsed.error);
-        }
-    }
-    */
-});
-
-$("#prop_calValue").bind("keyup", function(){
-    /*
-    var val = this.value;
-    var selectCal = CalData.getSelect();
-    var calObj = {id:selectCal.id, val:val,fm:selectCal.fm,no:selectCal.no};
-    CalData.setCalById(selectCal.id, calObj);
-    //var calGroup = d3.select("#diagram").select(".viewport").select("#cal-group");
-    $("#"+selectCal.id).find(".cal_text").text(val);
-    //$("#"+selectCal.id).find(".cal_val").val(val);
-    */
-});
-
-
-
-
-
 
 function drawBlock(ty){
     if(ty == "item0"){
@@ -98,81 +63,12 @@ function drawBlock(ty){
         Diagrams.addBox({type:"mb",x:150,y:50,width:100,height:30,mb:[1,1,1]});
     }else if(ty == "item3"){
         var calNo = CalData.getCalNo();
-            var calId = "cal_"+calNo;
-            /*
-            var calGroup = d3.select("#diagram").select(".viewport").select("#cal-group");
-            var calG = calGroup.append("g").attr("class", "cal_node").attr("id",calId);
-            
-            var cnt = $("#cal-group").find(".cal_node").length;
-            
-            calG.attr("transform", 'translate('+(110*cnt)+' 50)')
-            
-            var rect = calG.append("rect")
-                .attr("width", 100)
-                .attr("height", 30)
-                .attr("x", 0)
-                .attr("y",0)
-                //.attr("y", 50)
-                .attr("fill", "transparent")
-                .attr("stroke-width", 1)
-                .attr("stroke", "#595959");
+        CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
+        var calDiv = Cal.add(calNo);
 
-            var text = calG.append("text")
-                .text("Cal Input")
-                .attr("class","cal_text")
-                .attr("x", 5)
-                .attr("y", 20);
-                
-            var fm = calG.append("input")
-                .attr("value", "")
-                .attr("class", "cal_fm")
-                .attr("data-formula","")
-                .attr("id", calNo);
-            
-            var input = calG.append("input")
-                .attr("value", "")
-                .attr("class", "cal_val")
-                .attr("id", "calVal_"+calNo);
-            
-            var noGroup = calG.append("g").attr("transform", 'translate(100 0)');
-
-            var circle = noGroup.append("circle")
-                .attr("class", "cal_no")
-                .attr("fill", "red")
-                .attr("stroke-width", 3)
-                .attr("stroke", "red")
-                .attr("r", 15)
-                .attr("cx", 0)
-                .attr("cy", 0)
-            
-            var circle_no = noGroup.append("text")
-                .text(calNo)
-                .attr("fill", "#fff")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("text-anchor", "middle")
-                .attr("alignment-baseline", "middle");
-            */
-            CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
-            
-            var calDiv = $("<div/>").attr("class","calDiv");
-            var calNoDiv = $("<div/>").attr("class","calNo").html(calNo);
-            var calInput = $("<input/>").attr("id", calNo).attr("type", "text");
-            calDiv.append(calNoDiv)
-            calDiv.append(calInput);
-            calDiv.draggable();
-            $("#cal-group").append(calDiv);
-            rules.addItem(calInput.get(0))
-            //rules.parse("=C1", calInput.get(0));
-            
-            calInput.bind("blur", function(){
-                CalData.setCalById(calNo, {id:calNo,val:this.value,fm:this.getAttribute("data-formula")});
-            });
-            calDiv.bind("click", function(){
-                var selectCal = CalData.getCalById(calNo);
-                $("#prop_calFormula").text("="+selectCal.fm);
-                $("#prop_calValue").val(selectCal.val);
-            });
+        calDiv.bind("click", function(){
+            calClick(calNo);
+        });
     }
 }
 /*
@@ -210,6 +106,7 @@ function cfn_setSelect(s,v){
 }
 
 /* Property cal */
+/*
 function setCalType(){
     var calType = CalData.getTypes();
     var selectOpt = [];
@@ -302,19 +199,10 @@ $("#prop_outBlockSelect").bind("change", function(){
         $("#prop_outValue").val($(calId).text());
     }
 });
+*/
 
 
-
-
-
-
-
-
-
-
-
-
-
+//Block Info Event
 $("#prop_blockNmInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
     selectNode.name = this.value;
@@ -342,6 +230,28 @@ $("#prop_blockYInput").bind("blur", function(){
     Diagrams.updateNode();
 });
 
+
+//Calculate Event
+$("#prop_calStart").bind("click", function(){
+    var selectCal = CalData.getSelect();
+    if(this.checked){
+        $("#"+selectCal.id).parent().addClass("cal_start");
+    }else{
+        $("#"+selectCal.id).parent().removeClass("cal_start");
+    }
+    CalData.setAttr(selectCal.id, "start", this.checked);
+    console.log(CalData.getCals())
+});
+$("#prop_calEnd").bind("click", function(){
+    var selectCal = CalData.getSelect();
+    if(this.checked){
+        $("#"+selectCal.id).parent().addClass("cal_end");
+    }else{
+        $("#"+selectCal.id).parent().removeClass("cal_end");
+    }
+    CalData.setAttr(selectCal.id, "end", this.checked);
+});
+
 function getDiagramNodeData(bid){
     var dgData = Diagrams.getData();
     var rtnObj = {};
@@ -356,59 +266,21 @@ function getDiagramNodeData(bid){
 function blockSelect(obj){
     var bid = obj.id;
     Layout.setBlock(obj);
-    //Layout.setBlockId(bid);
-    //if(Layout.getBlockNm(bid) == ""){
-        //Layout.setBlockNm(bid, bid);
-    //}
-    //var arrCal = CalData.getBlockById(bid);
-    //setCalTypeList(arrCal);
-    //getBlockProp(bid);
-
     var nodeObj = obj;
 
     $("#prop_blockIdInput").val(bid||"");
     $("#prop_blockNmInput").val(nodeObj.name||"");
 
-    
     $("#prop_blockWidthInput").val(nodeObj.width||"");
     $("#prop_blockHeightInput").val(nodeObj.height||"");
     $("#prop_blockXInput").val(nodeObj.x||"");
     $("#prop_blockYInput").val(nodeObj.y||"");
     
     console.log(Layout.getBlockInfo())
-    
-    /*
-    $.ajax({
-         url: "/blockDiagram/blockDiagram_001_mst",
-         data : {
-             diagramId : $("#diagram_id").val(),
-             GRP_CODE   : "G001",
-             CODE_FNAME : strCODE_FNAME,
-             PAGE_SIZE  : nRowCount,
-             CURR_PAGE  : nGoPage
-         },
-         dataType:"json",
-         type: "POST",
-         async:false,
-         success : function(data){
-             console.log(data);
-             if(data.KEY == "OK")
-            {
-            }
-            else
-            {
-            }
-         }
-    });
-    */
-
 }
 
-console.log(Layout.getPageInfo())
-
-setCalType();
-
 $("#firstLoading").hide();
+
 function window_resize(){
     var winHeight = window.innerHeight||document.body.clientHeight;
     if(parseInt(winHeight) < 1){
@@ -419,4 +291,31 @@ function window_resize(){
 window_resize();
 $(window).bind("resize", function(){
     window_resize();
+});
+
+function init(){
+    Diagrams.setData({});
+    Diagrams.updateNode();
+    Cal.destory();
+}
+
+init();
+
+
+//Test
+$("#prop_calRev").bind("click", function(){
+    var selectCal = CalData.getSelect();
+    var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
+    $("#"+rc.skey).val(rc.x);
+    //$("#"+rc.skey).trigger("change");
+    rules.reload();
+});
+
+$("#prop_calSave").bind("click", function(e){
+    window.cals = CalData.save();
+});
+
+$("#prop_calOpen").bind("click", function(){
+    Cal.destory();
+    Cal.open(window.cals);
 });

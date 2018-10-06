@@ -96,6 +96,26 @@ var CalData = function(){
         }
         return rtnNm;
     } 
+    function init(){
+        data.cnt = 0;
+        data.selectCal = {};
+        data.cals = {};
+    }
+    function save(){
+        var saveData = "";
+        var s = {};
+        s["cnt"] = data.cnt;
+        s["cals"] = data.cals;
+        return s;
+    }
+    function open(d){
+        init();
+        data.cals = d.cals;
+        data.cnt = d.cnt;
+    }
+    function setCnt(cnt){
+        data.cnt = cnt;
+    }
     function getCalNo(){
         var rtnNo = data.no[data.cnt];
         data.cnt++;
@@ -113,7 +133,12 @@ var CalData = function(){
     function setSelect(d){
         data.selectCal = d;
     }
-
+    function getAttr(id, attr){
+        return data.cals[id][attr]; 
+    }
+    function setAttr(id, attr, val){
+        data.cals[id][attr] = val; 
+    }
 
 
 
@@ -157,6 +182,12 @@ var CalData = function(){
             delete data.cals[bid];
         }
     }
+    api.init = init;
+    api.save = save;
+    api.open = open;
+    api.setCnt = setCnt;
+    api.getAttr = getAttr;
+    api.setAttr = setAttr;
     api.getSelect = getSelect;
     api.setSelect = setSelect;
     api.getCalNo = getCalNo;
