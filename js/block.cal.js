@@ -102,7 +102,7 @@ var Cal = function(){
         console.log("org : "+cal)
         var formattedFormula = excelFormulaUtilities.formula2JavaScript(cal);
         console.log("convert : "+formattedFormula)
-        return formattedFormula;
+        return "("+formattedFormula+")";
     }
     
     api.init = init;
