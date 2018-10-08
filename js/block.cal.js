@@ -31,10 +31,14 @@ var Cal = function(){
         calDiv.bind("click", function(){
             calClick(calNo);
         });
-        
+
         calInput.bind("blur", function(){
             CalData.setAttr(calNo, "val", this.value);
-            CalData.setAttr(calNo, "fm", this.getAttribute("data-formula"));
+            var fm = this.getAttribute("data-formula");
+            if(fm == null || fm == ""){
+                fm = this.value;
+            }
+            CalData.setAttr(calNo, "fm", fm);
         });
 
         return calDiv;
@@ -77,8 +81,11 @@ var Cal = function(){
                 endKey = key;
             }
         }
-        if(!startKey)console.log("No Start");
-        if(!endKey)endKey = calKey;
+        if(!startKey){
+            alert("No Start");
+            return;
+        }
+        if(calKey)endKey = calKey;
         for(var i in cal){
             var rfm = cal[i].rfm;
             for(var j in cal){
@@ -95,7 +102,10 @@ var Cal = function(){
         var calString = "";
         if(endKey && cal[endKey]){
             calString = cal[endKey]["rfm"];
+            console.log("calString : "+calString);
+            calString = genCalString(calString);
             rtnX = nerdamer.solveEquations(calString+"="+val,'x');
+            console.log("rtnX : "+rtnX);
             rtnX = eval(rtnX.toString());
         }
         console.log(CalData.getCals())
@@ -116,3 +126,7 @@ var Cal = function(){
     api.reverse = reverse;
     return api;
 }();
+
+
+var formattedFormula = excelFormulaUtilities.formula2JavaScript("ROUND(ROUND(x,2), 1)");
+console.log(formattedFormula)
