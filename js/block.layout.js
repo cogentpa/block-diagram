@@ -289,21 +289,50 @@ init();
 function calClick(id){
     var d = CalData.getCalById(id);
     CalData.setSelect(d);
-    $("#prop_calFormula").val(d.fm);
-    $("#prop_calValue").val($("#"+id).val());
 
     $("#prop_calStart").get(0).checked = $("#"+id).parent().hasClass("cal_start");
     $("#prop_calEnd").get(0).checked = $("#"+id).parent().hasClass("cal_end");
     
     $("#cal-group").find(".calDiv").removeClass("select");
     $("#"+id).parent().addClass("select");
+    
+    $("#prop_calFormula").val("="+d.fm);
+    $("#prop_calValue").val($("#"+id).val());
     console.log(CalData.getCals());
+
 }
 
+function setFormula(v){
+    var d = CalData.getSelect();
+    var val = $.trim(v);
+    $("#"+d.id).val(val);
+    CalData.setAttr(d.id, "fm", val.replace("=",""));
+}
+
+$("#prop_calFormula").bind("keyup", function(e){
+    if(e.keyCode == "13"){
+        setFormula(this.value);
+    }
+});
+
+$("#prop_calFormula").bind("blur", function(e){
+    setFormula(this.value);
+});
+
 //Test
-$("#prop_calRev").bind("click", function(){
+$("#prop_calCal2").bind("click", function(){
+    var selectCal = CalData.getSelect();
+    
+    $("#"+selectCal.id).val($("#prop_calValue").val());
+    $("#"+selectCal.id).attr("data-formula", $("#prop_calValue").val());
+    rules.init();
+});
+
+$("#prop_calCal").bind("click", function(){
     var selectCal = CalData.getSelect();
     Cal.refresh();
+
+    /*
     if(selectCal.end){
         var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
         console.log(rc.x)
@@ -319,6 +348,22 @@ $("#prop_calRev").bind("click", function(){
         rules.reload();
         console.log(CalData.getCals());
     }
+    */
+});
+
+$("#prop_calRev").bind("click", function(){
+    var selectCal = CalData.getSelect();
+    var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
+    console.log("reverse start")
+    console.log("val : "+$("#prop_calValue").val())
+    console.log(rc);
+    console.log("reverse end")
+    if(rc){
+        $("#"+rc.skey).val(rc.x);
+        $("#"+rc.skey).attr("data-formula", rc.x);
+        rules.init();
+    }
+
 });
 
 $("#prop_calSave").bind("click", function(e){

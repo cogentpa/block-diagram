@@ -4,7 +4,7 @@ var Cal = function(){
     function add(calNo, att){
         var calDiv = $("<div/>").attr("class","calDiv");
         var calNoDiv = $("<div/>").attr("class","calNo").html(calNo);
-        var calInput = $("<input/>").attr("class", "calInput").attr("id", calNo).attr("type", "text");
+        var calInput = $("<input/>").attr("class", "calInput").attr("id", calNo).attr("type", "text").attr("readonly", "readonly");
         if(att){
             calDiv.css("left", att.x+"px").css("top", att.y+"px");
             calInput.attr("value",att.val).attr("data-formula",att.fm);
@@ -33,6 +33,7 @@ var Cal = function(){
         });
 
         calInput.bind("keyup", function(){
+            /*
             CalData.setAttr(calNo, "val", this.value);
             var fm = this.getAttribute("data-formula");
             if(fm == null || fm == ""){
@@ -40,6 +41,7 @@ var Cal = function(){
             }
             CalData.setAttr(calNo, "fm", fm);
             //CalData.setAttr(calNo, "ofm", fm);
+            */
         });
 
         return calDiv;
@@ -71,7 +73,8 @@ var Cal = function(){
             var cal = CalData.getCalById(id);
             $(this).attr("data-formula", cal.fm);
         });
-        rules.reload();
+        rules.init();
+        //rules.reload();
     }
 
     function reverse(id, val){
@@ -113,6 +116,7 @@ var Cal = function(){
         if(endKey && cal[endKey]){
             calString = cal[endKey]["rfm"];
             calString = genCalString(calString);
+            console.log("역순 방정식 : "+calString);
             rtnX = nerdamer.solveEquations(calString+"="+val,'x');
             rtnX = eval(rtnX.toString());
         }
