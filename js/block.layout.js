@@ -41,18 +41,7 @@ $("#leftMenus").find("li.item-menu").each(function(){
 
 var svg = d3.select("#diagram");
 
-function calClick(id){
-    var d = CalData.getCalById(id);
-    CalData.setSelect(d);
-    $("#prop_calFormula").val(d.fm);
-    $("#prop_calValue").val(d.val);
 
-    $("#prop_calStart").get(0).checked = $("#"+id).parent().hasClass("cal_start");
-    $("#prop_calEnd").get(0).checked = $("#"+id).parent().hasClass("cal_end");
-    
-    $("#cal-group").find(".calDiv").removeClass("select");
-    $("#"+id).parent().addClass("select");
-}
 
 function drawBlock(ty){
     if(ty == "item0"){
@@ -297,14 +286,39 @@ function init(){
 
 init();
 
+function calClick(id){
+    var d = CalData.getCalById(id);
+    CalData.setSelect(d);
+    $("#prop_calFormula").val(d.fm);
+    $("#prop_calValue").val($("#"+id).val());
+
+    $("#prop_calStart").get(0).checked = $("#"+id).parent().hasClass("cal_start");
+    $("#prop_calEnd").get(0).checked = $("#"+id).parent().hasClass("cal_end");
+    
+    $("#cal-group").find(".calDiv").removeClass("select");
+    $("#"+id).parent().addClass("select");
+    console.log(CalData.getCals());
+}
 
 //Test
 $("#prop_calRev").bind("click", function(){
     var selectCal = CalData.getSelect();
-    var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
-    $("#"+rc.skey).val(rc.x);
-    //$("#"+rc.skey).trigger("change");
-    rules.reload();
+    Cal.refresh();
+    if(selectCal.end){
+        var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
+        console.log(rc.x)
+        if(rc){
+            $("#"+rc.skey).val(rc.x);
+            $("#"+rc.skey).attr("data-formula", rc.x);
+            rules.reload();
+        }
+    }else{
+        //CalData.setAttr(selectCal.id, "ofm", $("#"+selectCal.id).attr("data-formula"));
+        $("#"+selectCal.id).val($("#prop_calValue").val());
+        $("#"+selectCal.id).attr("data-formula", $("#prop_calValue").val());
+        rules.reload();
+        console.log(CalData.getCals());
+    }
 });
 
 $("#prop_calSave").bind("click", function(e){
@@ -315,3 +329,4 @@ $("#prop_calOpen").bind("click", function(){
     Cal.destory();
     Cal.open(window.cals);
 });
+

@@ -1247,8 +1247,7 @@
                     "IF": "",
                     "&": "+",
                     "AND": "",
-                    "OR": "",
-                    "ROUND":""
+                    "OR": ""
                 },
                 currentFunctionOnStack = functionStack[functionStack.length - 1],
                 useTemplate = false;
@@ -1309,9 +1308,6 @@
                 case "or":
                     outstr = "||";
                     break;
-                case "round":
-                    outstr = "";
-                    break;
                 default:
                     outstr = typeof directConversionMap[tokenString.toUpperCase()] === "string" ? directConversionMap[tokenString.toUpperCase()] : tokenString;
                     useTemplate = true;
@@ -1358,9 +1354,6 @@
                                 outStr = tokenString;
                             }
 
-                            break;
-                        case "round":
-                            outStr = tokenString;
                             break;
                         // By Default return an array containing all cell names in array
                         default:

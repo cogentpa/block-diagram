@@ -4,7 +4,7 @@ var Cal = function(){
     function add(calNo, att){
         var calDiv = $("<div/>").attr("class","calDiv");
         var calNoDiv = $("<div/>").attr("class","calNo").html(calNo);
-        var calInput = $("<input/>").attr("id", calNo).attr("type", "text");
+        var calInput = $("<input/>").attr("class", "calInput").attr("id", calNo).attr("type", "text");
         if(att){
             calDiv.css("left", att.x+"px").css("top", att.y+"px");
             calInput.attr("value",att.val).attr("data-formula",att.fm);
@@ -32,13 +32,14 @@ var Cal = function(){
             calClick(calNo);
         });
 
-        calInput.bind("blur", function(){
+        calInput.bind("keyup", function(){
             CalData.setAttr(calNo, "val", this.value);
             var fm = this.getAttribute("data-formula");
             if(fm == null || fm == ""){
-                fm = this.value;
+                fm  = this.value;
             }
             CalData.setAttr(calNo, "fm", fm);
+            //CalData.setAttr(calNo, "ofm", fm);
         });
 
         return calDiv;
@@ -62,6 +63,15 @@ var Cal = function(){
         var rules = new ruleJS("cal-group");
         rules.init();
         return rules;
+    }
+
+    function refresh(){
+        $("#cal-group").find(".calInput").each(function(){
+            var id = this.id;
+            var cal = CalData.getCalById(id);
+            $(this).attr("data-formula", cal.fm);
+        });
+        rules.reload();
     }
 
     function reverse(id, val){
@@ -102,20 +112,18 @@ var Cal = function(){
         var calString = "";
         if(endKey && cal[endKey]){
             calString = cal[endKey]["rfm"];
-            console.log("calString : "+calString);
             calString = genCalString(calString);
             rtnX = nerdamer.solveEquations(calString+"="+val,'x');
-            console.log("rtnX : "+rtnX);
             rtnX = eval(rtnX.toString());
         }
-        console.log(CalData.getCals())
+        //console.log(CalData.getCals())
         return {x:rtnX,skey:startKey,ekey:endKey};
     }
 
     function genCalString(cal){
-        console.log("org : "+cal)
         var formattedFormula = excelFormulaUtilities.formula2JavaScript(cal);
-        console.log("convert : "+formattedFormula)
+        formattedFormula = formattedFormula.replace(/ROUND\(|round\(/g,"").replace(/\,\d\)/g,"");
+        //console.log("convert : "+formattedFormula)
         return "("+formattedFormula+")";
     }
     
@@ -124,9 +132,6 @@ var Cal = function(){
     api.open = open;
     api.destory = destory;
     api.reverse = reverse;
+    api.refresh = refresh;
     return api;
 }();
-
-
-var formattedFormula = excelFormulaUtilities.formula2JavaScript("ROUND(ROUND(x,2), 1)");
-console.log(formattedFormula)

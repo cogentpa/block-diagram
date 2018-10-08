@@ -22828,9 +22828,7 @@ var ruleJS = (function (root) {
 
     try {
       parser.setObj(element);
-      console.log(element)
       result = parser.parse(formula);
-      console.log(result)
       var id;
 
       if (element instanceof HTMLElement) {
@@ -22838,9 +22836,7 @@ var ruleJS = (function (root) {
       } else if (element && element.id) {
         id = element.id;
       }
-      console.log(id)
       var deps = instance.matrix.getDependencies(id);
-      console.log(deps)
       if (deps.indexOf(id) !== -1) {
         result = null;
 
