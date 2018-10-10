@@ -28,8 +28,50 @@ var Diagrams = function (){
         var y = p1[1] + ua * (p2[1] - p1[1])
       
         return {x, y}
-      }
-
+    }
+      
+    function closestPoint(pathNode, point) {
+        var pathLength = pathNode.getTotalLength(),
+            precision = 8,
+            best,
+            bestLength,
+            bestDistance = Infinity;
+      
+        // linear scan for coarse approximation
+        for (var scan, scanLength = 0, scanDistance; scanLength <= pathLength; scanLength += precision) {
+          if ((scanDistance = distance2(scan = pathNode.getPointAtLength(scanLength))) < bestDistance) {
+            best = scan, bestLength = scanLength, bestDistance = scanDistance;
+          }
+        }
+      
+        // binary search for precise estimate
+        precision /= 2;
+        while (precision > 0.5) {
+          var before,
+              after,
+              beforeLength,
+              afterLength,
+              beforeDistance,
+              afterDistance;
+          if ((beforeLength = bestLength - precision) >= 0 && (beforeDistance = distance2(before = pathNode.getPointAtLength(beforeLength))) < bestDistance) {
+            best = before, bestLength = beforeLength, bestDistance = beforeDistance;
+          } else if ((afterLength = bestLength + precision) <= pathLength && (afterDistance = distance2(after = pathNode.getPointAtLength(afterLength))) < bestDistance) {
+            best = after, bestLength = afterLength, bestDistance = afterDistance;
+          } else {
+            precision /= 2;
+          }
+        }
+      
+        best = [best.x, best.y];
+        best.distance = Math.sqrt(bestDistance);
+        return best;
+      
+        function distance2(p) {
+          var dx = p.x - point[0],
+              dy = p.y - point[1];
+          return dx * dx + dy * dy;
+        }
+    }  
 
     /** diagrams start */
     var diagrams = {};
@@ -106,7 +148,11 @@ var Diagrams = function (){
         startNode : null
     };
     
-    var c10 = d3.scaleOrdinal(d3.schemeCategory10);;
+    var c10 = d3.scaleOrdinal(d3.schemeCategory10);
+    var lineGen = d3.line()
+                    .x(function(d) { return d[0]; })
+                    .y(function(d) { return d[1]; });
+
     var svg = d3.select("#diagram").select(".viewport");
     var toolbox = d3.select("#node_toolbox");
     var arrow = d3.select("#arrow");
@@ -770,7 +816,7 @@ var Diagrams = function (){
             .attr("stroke-width", "2px")
             .attr("marker-end", "url(#arrowhead)");
             ;
-        
+        /*
         lg.append("text")
             .attr("class", "out-value")
             .attr("id", function(d){
@@ -788,7 +834,7 @@ var Diagrams = function (){
             .text(function(d,i){
                 return parseInt(Math.random()*1000);
             });    
-
+        */
         lg = lg.merge(links);
 
         lg.select(".line_back").datum(function(d){
