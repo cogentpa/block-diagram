@@ -129,6 +129,7 @@ label{margin-bottom:1px;}
     width:150px;
     background:#595959;
     float:left;
+    border-radius:15px;
 }
 .calDiv input {
     border:1px dotted #595959;
@@ -138,17 +139,29 @@ label{margin-bottom:1px;}
 }
 .calDiv .calNo {
     float:left;
-    margin:0 4px;
+    margin:0 1px 0 7px;
     color:#fff;
+    font-size:14px;
+    line-height:28px;
 }
 
 #cal-group.view .calDiv {
     background:transparent;
 }
 
+#cal-group.view .calDiv:hover {
+    background:#ccc;
+}
+
+#cal-group.view .calDiv:hover input{
+    background:#fff;
+}
+
 #cal-group.view .calDiv input {
     border:0px;
+    background:transparent;
 }
+
 #cal-group.view .calDiv .calNo {
    display:none;
 }

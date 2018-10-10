@@ -23,6 +23,17 @@ $("#propModal_applyBtn").bind("click", function(){
     $("#propModal").modal('hide');
     console.log(Layout.getPageInfo());
 });
+
+$("#mode_design").bind("click", function(){
+    $("#mode_view").removeClass("active");
+    $(this).addClass("active");
+    $("#cal-group").removeClass("view");
+});
+$("#mode_view").bind("click", function(){
+    $("#mode_design").removeClass("active");
+    $(this).addClass("active");
+    $("#cal-group").addClass("view");
+});
 $("#leftMenus").find("li.item-menu").each(function(){
     $(this).bind("click", function(){
         var _item = $(this);
@@ -45,7 +56,7 @@ var svg = d3.select("#diagram");
 
 function drawBlock(ty){
     if(ty == "item0"){
-        Diagrams.addBox({type:"rect",x:50,y:50,width:200,height:50});
+        Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:30});
     }else if(ty == "item1"){
         Diagrams.addBox({type:"rect",x:200,y:50,width:100,height:100});
     }else if(ty == "item2"){
@@ -225,7 +236,7 @@ $("#prop_calStart").bind("click", function(){
         $("#"+selectCal.id).parent().removeClass("cal_start");
     }
     CalData.setAttr(selectCal.id, "start", this.checked);
-    console.log(CalData.getCals())
+    console.log(CalData.getCals());
 });
 $("#prop_calEnd").bind("click", function(){
     var selectCal = CalData.getSelect();
@@ -261,7 +272,8 @@ function blockSelect(obj){
     $("#prop_blockXInput").val(nodeObj.x||"");
     $("#prop_blockYInput").val(nodeObj.y||"");
     
-    console.log(Layout.getBlockInfo())
+    $('#rightTab_block').tab('show')
+    console.log(Layout.getBlockInfo());
 }
 
 $("#firstLoading").hide();
@@ -298,6 +310,8 @@ function calClick(id){
     
     $("#prop_calFormula").val("="+d.fm);
     $("#prop_calValue").val($("#"+id).val());
+
+    $('#rightTab_cal').tab('show')
     console.log(CalData.getCals());
 
 }
@@ -317,6 +331,12 @@ $("#prop_calFormula").bind("keyup", function(e){
 
 $("#prop_calFormula").bind("blur", function(e){
     setFormula(this.value);
+});
+
+$("#prop_calRemove").bind("click",function(){
+    var selectCal = CalData.getSelect();
+    $("#"+selectCal.id+"_div").remove();
+    CalData.delCalById(selectCal.id);
 });
 
 //Test
@@ -354,16 +374,15 @@ $("#prop_calCal").bind("click", function(){
 $("#prop_calRev").bind("click", function(){
     var selectCal = CalData.getSelect();
     var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
-    console.log("reverse start")
-    console.log("val : "+$("#prop_calValue").val())
+    console.log("reverse start");
+    console.log("val : "+$("#prop_calValue").val());
     console.log(rc);
-    console.log("reverse end")
+    console.log("reverse end");
     if(rc){
         $("#"+rc.skey).val(rc.x);
         $("#"+rc.skey).attr("data-formula", rc.x);
         rules.init();
     }
-
 });
 
 $("#prop_calSave").bind("click", function(e){

@@ -102,7 +102,9 @@ var CalData = function(){
         data.cals = {};
     }
     function save(){
-        var saveData = "";
+        for(var key in data.cals){
+            data.cals[key].val = $("#"+key).val();
+        }
         var s = {};
         s["cnt"] = data.cnt;
         s["cals"] = data.cals;
@@ -172,15 +174,8 @@ var CalData = function(){
         }
         data.cals[id].push(d);
     }
-    function delCalById(bid, cid){
-        data.cals[bid].map(function(d,i){
-            if(d.calId == cid){
-                data.cals[bid].splice(i,1);
-            }
-        });
-        if(data.cals[bid].length < 1){
-            delete data.cals[bid];
-        }
+    function delCalById(cid){
+        delete data.cals[cid];
     }
     api.init = init;
     api.save = save;

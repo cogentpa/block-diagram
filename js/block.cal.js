@@ -2,7 +2,7 @@ var Cal = function(){
     var api = {};
 
     function add(calNo, att){
-        var calDiv = $("<div/>").attr("class","calDiv");
+        var calDiv = $("<div/>").attr("class","calDiv").attr("id", calNo+"_div");
         var calNoDiv = $("<div/>").attr("class","calNo").html(calNo);
         var calInput = $("<input/>").attr("class", "calInput").attr("id", calNo).attr("type", "text").attr("readonly", "readonly");
         if(att){
@@ -12,6 +12,20 @@ var Cal = function(){
         calDiv.append(calNoDiv)
         calDiv.append(calInput);
         calDiv.draggable({
+            start: function() {
+                CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
+                CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
+            },
+            drag: function() {
+                CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
+                CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
+            },
+            stop: function() {
+                CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
+                CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
+            }
+        });
+        calInput.draggable({
             start: function() {
                 CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
                 CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
