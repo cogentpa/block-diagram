@@ -24,38 +24,13 @@ var Cal = function(){
                 CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
                 CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
             }
-        });
-        calInput.draggable({
-            start: function() {
-                CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
-                CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
-            },
-            drag: function() {
-                CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
-                CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
-            },
-            stop: function() {
-                CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
-                CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
-            }
-        });
+        }).css("position", "absolute");
+
         $("#cal-group").append(calDiv);
-        rules.addItem(calInput.get(0))
+        rules.addItem(calInput.get(0));
 
         calDiv.bind("click", function(){
             calClick(calNo);
-        });
-
-        calInput.bind("keyup", function(){
-            /*
-            CalData.setAttr(calNo, "val", this.value);
-            var fm = this.getAttribute("data-formula");
-            if(fm == null || fm == ""){
-                fm  = this.value;
-            }
-            CalData.setAttr(calNo, "fm", fm);
-            //CalData.setAttr(calNo, "ofm", fm);
-            */
         });
 
         return calDiv;
