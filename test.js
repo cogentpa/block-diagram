@@ -550,6 +550,13 @@ function Diagram(){
         return points;
     }
 
+    function makeOrthogonalPoints(p1, p2){
+
+        var points = [];
+
+        return points;
+        
+    }
 
     /** function */
     function init(trgtId){
