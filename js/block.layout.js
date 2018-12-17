@@ -33,6 +33,8 @@ $("#mode_view").bind("click", function(){
     $("#mode_design").removeClass("active");
     $(this).addClass("active");
     $("#cal-group").addClass("view");
+    $("#node_toolbox").css("visibility","hidden");
+    $(".size-point").css("visibility","hidden");
 });
 $("#leftMenus").find("li.item-menu").each(function(){
     $(this).bind("click", function(){
@@ -91,15 +93,7 @@ function dragended(d) {
 */
 
 /* Common */
-function cfn_setSelect(s,v){
-    var opt = [];
-    v.map(function(d, i){
-        opt.push("<option value='"+d.code+"'>"+d.name+"</option>");
-    });
-    $(s).html("<option value=''>Select</option>");
-    $(s).append(opt);
-    return $(s);
-}
+
 
 /* Property cal */
 /*
@@ -310,8 +304,11 @@ function calClick(id){
     
     $("#prop_calFormula").val("="+d.fm);
     $("#prop_calValue").val($("#"+id).val());
+    $("#prop_calName").val(d.nm||"");
 
-    $('#rightTab_cal').tab('show')
+    $('#rightTab_cal').tab('show');
+
+    setCalBlockSelect(d.bl);
     console.log(CalData.getCals());
 
 }
@@ -322,6 +319,49 @@ function setFormula(v){
     $("#"+d.id).val(val);
     CalData.setAttr(d.id, "fm", val.replace("=",""));
 }
+
+function setCalName(v){
+    var d = CalData.getSelect();
+    var val = $.trim(v);
+    CalData.setAttr(d.id, "nm", val);
+}
+
+function cfn_setSelect(s,v){
+    var opt = [];
+    v.map(function(d, i){
+        var selected = (d.select)?"selected":"";
+        opt.push("<option value='"+d.code+"' "+selected+">"+d.name+"</option>");
+    });
+    $(s).html("<option value=''>Select</option>");
+    $(s).append(opt);
+    return $(s);
+}
+
+function setCalBlockSelect(sId){
+    var select = [];
+    var diagramData = Diagrams.getData();
+    diagramData.nodes.map(function(d, i){
+        select.push({code:d.id,name:d.name||d.id,select:sId == d.id?true:false});
+    });
+    var blockSelect = cfn_setSelect("#prop_blockSelect", select);
+}
+
+$("#prop_blockSelect").bind("change", function(){
+    if(this.value != ""){
+        var d = CalData.getSelect();
+        CalData.setAttr(d.id, "bl", this.value);
+    }
+});
+
+$("#prop_calName").bind("keyup", function(e){
+    if(e.keyCode == "13"){
+        setCalName(this.value);
+    }
+});
+
+$("#prop_calName").bind("blur", function(e){
+    setCalName(this.value);
+});
 
 $("#prop_calFormula").bind("keyup", function(e){
     if(e.keyCode == "13"){
