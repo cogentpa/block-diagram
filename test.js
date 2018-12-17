@@ -552,7 +552,7 @@ function Diagram(){
 
 
     /** function */
-    function init(trgtId, nodeList){
+    function init(trgtId){
         var svg = d3.select(trgtId);
 
         appendDef(svg);
@@ -579,7 +579,7 @@ function Diagram(){
             console.log("svg click");
             TempG.selectAll("*").remove();
         })
-        initNodeList(nodeList);
+        initNodeList();
     }
 
     function appendDef(d3Svg){
@@ -627,11 +627,7 @@ function Diagram(){
                 .attr("stroke-width", 1);
     }
 
-    function initNodeList(nodeList){
-
-        if(nodeList){
-            NodesInit = nodeList;
-        }
+    function initNodeList(){
 
         NodeList = {};
 
@@ -790,93 +786,3 @@ function Diagram(){
 
     return diagrams;
 }
-
-var Diagrams = Diagram();
-
-var data = {
-    nodes: [{
-            id:0,
-            name: "A",
-            type:"rect",
-            x: 200,
-            y: 100,
-            width : 100,
-            height : 100,
-            isStart : true
-        }, {
-            id:1,
-            name: "B",
-            type:"rect",
-            x: 100,
-            y: 300,
-            width : 100,
-            height : 100
-        }, {
-            name: "C",
-            id:2,
-            type:"rect",
-            x: 300,
-            y: 300,
-            width : 100,
-            height : 100
-        }, {
-            name: "D",
-            id:3,
-            type:"rect",
-            x: 600,
-            y: 300,
-            width : 100,
-            height : 100,
-            isEnd : true
-        }, {
-            name: "P.O.U",
-            id:"pou1",
-            type:"pou",
-            x: 500,
-            y: 100,
-            width : 200,
-            height : 100,
-        }, {
-            name: "circle",
-            id:"circle1",
-            type:"circle",
-            x: 400,
-            y: 200,
-            width : 100,
-            height : 100,
-        }, {
-            name: "MB",
-            id:4,
-            type:"mb",
-            x: 300,
-            y: 180,
-            width : 100,
-            height : 30,
-            mb : [0,1,2,3,4]
-        },
-
-    ],
-    links: [{
-        source: 0,
-        target: 1,
-        tOffsetX: 0,
-        tOffsetY: 0,
-        waypoints: [[30,30],[30,60],[90,60]]
-    }, {
-        source: 1,
-        target: 2,
-        tOffsetX: 0,
-        tOffsetY: 0,
-        waypoints : []
-    }, {
-        source: 2,
-        target: 3,
-        tOffsetX: 0,
-        tOffsetY: 0,
-        waypoints : []
-    }, ]
-};
-
-Diagrams.init("#diagram", nodeList);
-Diagrams.setData(data);
-
