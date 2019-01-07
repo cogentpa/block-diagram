@@ -297,26 +297,28 @@ function Diagram(){
     
     var dragNewLink = function(){
         var line;
+        var sp1, sp2;
+        var sId;
         return d3.drag()
             .on("start", function(){
                 var d3this = d3.select(this);
                 var targetNode = d3.select("#" + TempG.attr("target_id"));
                 var tData = targetNode.datum();
-                
-                var points = closestPoint(targetNode.select("path").node(), [parseInt(d3this.attr("x1")-tData.x),parseInt(d3this.attr("y1"))-tData.y]);
 
-                var lx = tData.x + points[0];
-                var ly = tData.y + points[1];
+                sId = tData.id;
+                
+                var points1 = closestPoint(targetNode.select("path").node(), [parseInt(d3this.attr("x1")-tData.x),parseInt(d3this.attr("y1"))-tData.y]);
+                
+                sp1 = [((tData.x + points1[0])/10).toFixed(0)*10, ((tData.y + points1[1])/10).toFixed(0)*10];
+                sp2 = [(parseInt(d3this.attr("x2")/10).toFixed(0)*10),(parseInt(d3this.attr("y2"))/10).toFixed(0)*10];
 
                 var m = d3.mouse(this);
 
-                line = LinkG.append("line")
+                line = LinkG.append("polyline")
                 .attr("stroke", "#000000")
                     .attr("stroke-width", "2px")
-                    .attr("x1", lx)
-                    .attr("y1", ly)
-                    .attr("x2", m[0]-2)
-                    .attr("y2", m[1]-2)
+                    .attr("fill", "none")
+                    .attr("points", [sp1, sp2, m[0]-2, m[1]-2])
                     .attr("marker-end", "url(#arrowhead)");
                  
                 TempG.selectAll("*").transition().duration(200)
@@ -325,19 +327,59 @@ function Diagram(){
             })
             .on("drag", function(){
                 var m = d3.mouse(this);
+                var lPoint = m;
                 var lx = m[0];
                 var ly = m[1];
                 if(MouseOverNode.node){
                     var points = closestPoint(MouseOverNode.node, [m[0] - MouseOverNode.data.x,m[1]-MouseOverNode.data.y]);
-                    lx = MouseOverNode.data.x + points[0];
-                    ly = MouseOverNode.data.y + points[1];
+
+                    lx = (points[0]/10).toFixed(0)*10;
+                    ly = (points[1]/10).toFixed(0)*10;
+
+                    var lx2 = MouseOverNode.data.x + lx;
+                    var ly2 = MouseOverNode.data.y + ly;
+
+                    //위
+                    if(ly === 0){
+                        ly2 -= 30;
+                    //오른쪽    
+                    }else if(MouseOverNode.data.width === lx){
+                        lx2 += 30;
+                    //아래    
+                    }else if(MouseOverNode.data.height === ly){
+                        ly2 += 30
+                    //왼쪽    
+                    }else{
+                        lx2 -= 30;
+                    }
+
+
+                    lx = MouseOverNode.data.x + lx;
+                    ly = MouseOverNode.data.y + ly;
+
+                    lPoint = [lx2, ly2, lx, ly];
+                    
                 }
-                line.attr("x2", lx)
-                    .attr("y2", ly);
+                line.attr("points", [sp1, sp2, lPoint]);
                 
             })
             .on("end", function(){
-                line.remove();
+                console.log({
+                    source: sId,
+                    target: MouseOverNode.data.id,
+                    tOffsetX : sp1,//Math.round(ip.x/10)*10 - d.x,
+                    tOffsetY : sp2,//Math.round(ip.y/10)*10 - d.y,
+                    waypoints : line.attr("points").split(",")
+                })
+                data.links.push({
+                    source: sId,
+                    target: MouseOverNode.data.id,
+                    tOffsetX : sp1,//Math.round(ip.x/10)*10 - d.x,
+                    tOffsetY : sp2,//Math.round(ip.y/10)*10 - d.y,
+                    waypoints : line.attr("points").split(",")
+                });
+                updateDiagrams();
+                //line.remove();
             });
         
 /*
