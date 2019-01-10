@@ -293,23 +293,103 @@ function Diagram(){
                 updateDiagrams();
                 selectNode(targetNode, tData);
             })
-    }(); 
-    
+    }();
+
+    var dragLineCircle = function(){
+        var d3this;
+        var link;
+        var targetIndex;
+        var node;
+        var linkData;
+        var startPoint, endPoint, waypoints;
+        //var tx,ty,tx2,ty2;
+        return d3.drag()
+                .on("start", function(d){
+                    var before;
+                    var after;
+
+                    d3this = d3.select(this);
+                    var lg = d3.select(d.line);
+                    link = lg.selectAll("polyline");
+                    linkData = link.datum();
+                    var sourceNode = data.nodes.filter(function(d) {
+                        return d.id == linkData.source;
+                    })[0];
+                    var targetNode = data.nodes.filter(function(d) {
+                        return d.id == linkData.target;
+                    })[0];
+
+                    //끝
+                    if(d.isLast === 1){
+                        node = NodeG.select("#nd-"+linkData.source).select("path").node();
+                    //시작 
+                    } else if (d.isLast === 2){    
+                        node = NodeG.select("#nd-"+linkData.target).select("path").node();
+                    } else {
+                        before = linkData.waypoints.slice(0, d.index);
+                        after = linkData.waypoints.slice(d.index);
+                        targetIndex = before.length;
+                        if(d.isNew){
+                            before.push(d3.mouse(this));
+                        }
+                        linkData.waypoints = before.concat(after);
+                    }
+
+                    startPoint = [sourceNode.x+(linkData.sOffsetX || 0), sourceNode.y+(linkData.sOffsetY || 0)];
+                    endPoint = [targetNode.x+linkData.tOffsetX, targetNode.y+linkData.tOffsetY];
+                    waypoints = linkData.waypoints;
+
+                    TempG.append("polyline")
+                        .attr("class", "temp-line")
+                        .attr("points", startPoint.concat(waypoints).concat(endPoint))
+                        .attr("fill", "none")
+                        .attr("stroke", "#999")
+                        .attr("stroke-width", "2px")
+                        .attr("marker-end", "url(#arrowhead)")
+                        .attr("opacity", 0.5);
+                })
+                .on("drag", function(d){
+                    var x = (d3.event.x/10).toFixed(0)*10;
+                    var y = (d3.event.y/10).toFixed(0)*10;
+                    if(node){
+                        var points1 = closestPoint(node, [parseInt(d3this.attr("x1")-sData.x),parseInt(d3this.attr("y1"))-sData.y]);
+                        var sp1 = [((sData.x + points1[0])/10).toFixed(0)*10, ((sData.y + points1[1])/10).toFixed(0)*10];
+                        var sp2 = [(parseInt(d3this.attr("x2")/10).toFixed(0)*10),(parseInt(d3this.attr("y2"))/10).toFixed(0)*10];
+                    } else {
+                        waypoints[targetIndex] = [x,y];
+                    }
+                    d3this.attr("cx", x)
+                        .attr("cy", y);
+                    link.attr("points", function(l){
+                        return startPoint.concat(waypoints).concat(endPoint);
+                        
+                    })
+                })
+                .on("end", function(){
+                    /*
+                    if(isLast){
+                        linkData.tOffsetX = endPoint[0] - tx;
+                        linkData.tOffsetY = endPoint[1] - ty;;
+                    }
+                    */
+                    TempG.selectAll("*").remove();
+                    updateDiagrams();
+                })
+    }();
+
     var dragNewLink = function(){
         var line;
         var sp1, sp2;
-        var sId;
+        var sData;
         return d3.drag()
             .on("start", function(){
                 var d3this = d3.select(this);
-                var targetNode = d3.select("#" + TempG.attr("target_id"));
-                var tData = targetNode.datum();
+                var sourceNode = d3.select("#" + TempG.attr("target_id"));
+                sData = sourceNode.datum();
 
-                sId = tData.id;
+                var points1 = closestPoint(sourceNode.select("path").node(), [parseInt(d3this.attr("x1")-sData.x),parseInt(d3this.attr("y1"))-sData.y]);
                 
-                var points1 = closestPoint(targetNode.select("path").node(), [parseInt(d3this.attr("x1")-tData.x),parseInt(d3this.attr("y1"))-tData.y]);
-                
-                sp1 = [((tData.x + points1[0])/10).toFixed(0)*10, ((tData.y + points1[1])/10).toFixed(0)*10];
+                sp1 = [((sData.x + points1[0])/10).toFixed(0)*10, ((sData.y + points1[1])/10).toFixed(0)*10];
                 sp2 = [(parseInt(d3this.attr("x2")/10).toFixed(0)*10),(parseInt(d3this.attr("y2"))/10).toFixed(0)*10];
 
                 var m = d3.mouse(this);
@@ -328,13 +408,11 @@ function Diagram(){
             .on("drag", function(){
                 var m = d3.mouse(this);
                 var lPoint = m;
-                var lx = m[0];
-                var ly = m[1];
                 if(MouseOverNode.node){
                     var points = closestPoint(MouseOverNode.node, [m[0] - MouseOverNode.data.x,m[1]-MouseOverNode.data.y]);
 
-                    lx = (points[0]/10).toFixed(0)*10;
-                    ly = (points[1]/10).toFixed(0)*10;
+                    var lx = (points[0]/10).toFixed(0)*10;
+                    var ly = (points[1]/10).toFixed(0)*10;
 
                     var lx2 = MouseOverNode.data.x + lx;
                     var ly2 = MouseOverNode.data.y + ly;
@@ -364,22 +442,23 @@ function Diagram(){
                 
             })
             .on("end", function(){
-                console.log({
-                    source: sId,
-                    target: MouseOverNode.data.id,
-                    tOffsetX : sp1,//Math.round(ip.x/10)*10 - d.x,
-                    tOffsetY : sp2,//Math.round(ip.y/10)*10 - d.y,
-                    waypoints : line.attr("points").split(",")
-                })
-                data.links.push({
-                    source: sId,
-                    target: MouseOverNode.data.id,
-                    tOffsetX : sp1,//Math.round(ip.x/10)*10 - d.x,
-                    tOffsetY : sp2,//Math.round(ip.y/10)*10 - d.y,
-                    waypoints : line.attr("points").split(",")
-                });
-                updateDiagrams();
-                //line.remove();
+                if(MouseOverNode.node){
+                    var points = line.attr("points").split(",").map(function(v,i,a){
+                        return parseInt(v);
+                    });
+                    var waypoints = points.slice(2,points.length -2);
+                    DATA.links.push({
+                        source: sData.id,
+                        sOffsetX : sp1[0] - sData.x,
+                        sOffsetY : sp1[1] - sData.y,
+                        target: MouseOverNode.data.id,
+                        tOffsetX : points[points.length-2] - MouseOverNode.data.x,//Math.round(ip.x/10)*10 - d.x,
+                        tOffsetY : points[points.length-1] - MouseOverNode.data.y,//Math.round(ip.y/10)*10 - d.y,
+                        waypoints : waypoints
+                    });
+                    updateDiagrams();
+                }
+                line.remove();
             });
         
 /*
@@ -568,11 +647,12 @@ function Diagram(){
 
     /** lineFunction  */
     function makePoints(l){
-        var startPoint = [l.sd.x+(l.sd.width/2), l.sd.y+(l.sd.height/2)];
+        var startPoint = [l.sd.x+(l.sOffsetX || 0), l.sd.y+(l.sOffsetY || 0)];
         var endPoint = [l.td.x+l.tOffsetX, l.td.y+l.tOffsetY];
         var i,length;
         var points;
         if(l.waypoints.length > 0){
+            /*
             var tPoints = [startPoint].concat(l.waypoints).concat([endPoint]);
             l.waypoints = [];
             length = tPoints.length-1;
@@ -583,7 +663,9 @@ function Diagram(){
                 {
                     l.waypoints.push(tPoints[i]);
                 }
+                
             }
+            */
             points = [startPoint].concat(l.waypoints).concat([endPoint]);
             
         } else {
@@ -721,7 +803,72 @@ function Diagram(){
             })
             .on("mouseleave", function(){
                 d3.select(this).select(".line_back").attr("stroke", null);
-            });
+            })
+            .on("click", function(d){
+                d3.event.stopPropagation();
+                TempG.selectAll(".temp-point").remove();
+                //console.log(d);
+                var points = d3.select(this).select("polyline").attr("points").split(",");
+                var circlePoints = [];
+        
+                var i;
+                var length = points.length;
+                var point1X, point1Y, point2X, point2Y;
+                //[1,2,3,4]
+                for(i=2;i<length;i=i+2){
+                    point1X = points[i-2]*1;
+                    point1Y = points[i-1]*1;
+                    point2X = points[i]*1;
+                    point2Y = points[i+1]*1;
+                    //신규점
+                    circlePoints.push(
+                        {
+                            index:i/2-1,
+                            isNew:true,
+                            line:this,
+                            x:(point1X + point2X)/2,
+                            y:(point1Y + point2Y)/2
+                        }
+                    )
+                }
+                //기존점
+                if(length > 3){
+                    for(i=0;i<length;i=i+2){
+                        circlePoints.push(
+                            {
+                                index:i/2-1,
+                                isNew:false,
+                                isLast : ((i == length-2) || (i == 0)) ? 2 : 0,  //0: 중간, 1:마지막, 2:시작
+                                line:this,
+                                x:points[i]*1,
+                                y:points[i+1]*1,
+                            }
+                        )
+                    }
+                }
+                d.circlePoints = circlePoints;
+                TempG.selectAll(".temp-point")
+                    .data(circlePoints)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "temp-point")
+                    .attr("r", 3)
+                    .attr("cx", function(d){return d.x})
+                    .attr("cy", function(d){return d.y})
+                    .attr("fill", "#FC3")
+                    //.attr("pointer-events", "none")
+                    .attr("stroke-width", function(d,i,a){
+                        return (a.length-1 == i) ? 4 : 2;
+                    })
+                    .attr("stroke", "#FC3")
+                    .call(dragLineCircle)
+                    .style("opacity", "0")
+                    .transition().duration(100).style("opacity", "1")
+                    ;
+        
+                //circle.transition().duration(200).style("opacity", "1");
+            })
+
         
         lg.append("polyline")
             .attr("class", "line_back")
