@@ -163,7 +163,7 @@ function Diagram(){
                 this.drawPath(svgObj, data);
             }
             circle.drawPath = function(svgObj, points){
-                var path = svgObj.select("path")
+                var path = svgObj.select("path");
                 if(path.empty())path = svgObj.append("path");
 
                 path.attr("d", this.genPath(points))
@@ -280,7 +280,7 @@ function Diagram(){
                                             if(p_el.select("foreignObject").empty() === false){
                                                 p_el.select("foreignObject").remove();
                                             }
-                                        })                                     
+                                        })
                                         .on("keypress", function() {
                                             // IE fix   
                                             if (!d3.event){
@@ -317,7 +317,7 @@ function Diagram(){
             }
             mb.addIcon = function(svgObj, data, pos){
                 var iconG = svgObj.append("g").attr("class","mbIcon");
-                iconG.attr("transform", "translate("+pos.x+","+pos.y+")")
+                iconG.attr("transform", "translate("+pos.x+","+pos.y+")");
                 var plusIcon = iconG.append("text").attr("class","plus");
                 plusIcon.attr("x", 0)
                     .attr("y", 0)
@@ -410,24 +410,16 @@ function Diagram(){
                         points += "L"+p.x+","+p.y;
                     }
                 });
-                return points
+                return points;
             }
             mb.makeEditable = function(d, field)
             {
-                console.log("make_editable", arguments);
-                console.log(this)
                 this.on("mouseover", function() {
                     d3.select(this).style("fill", "red");
                   }).on("mouseout", function() {
                     d3.select(this).style("fill", null);
                   }).on("click", function(d) {
                     var p = this.parentNode;
-                    console.log(this, arguments);
-            
-                    // inject a HTML form to edit the content here...
-            
-                    // bug in the getBBox logic here, but don't know what I've done wrong here;
-                    // anyhow, the coordinates are completely off & wrong. :-((
                     var xy = this.getBBox();
                     var p_xy = p.getBBox();
             
@@ -456,7 +448,6 @@ function Diagram(){
                                     .attr("style", "width: 294px;")
                                     // make the form go away when you jump out (form looses focus) or hit ENTER:
                                     .on("blur", function() {
-                                        console.log("blur", this, arguments);
             
                                         var txt = inp.node().value;
             
@@ -506,7 +497,6 @@ function Diagram(){
         var stX, stY;
         return d3.drag()
                   .on("start",function(d, i){
-                      console.log("node drag start");
                       tmpClear();
                       targetNode = d3.select(this);
                       stX = d.x;
@@ -522,7 +512,6 @@ function Diagram(){
                       tempNode.attr("transform", "translate("+(d.x-stX)+","+(d.y-stY)+")");
                   })
                   .on("end",function(d, i){
-                      console.log("node drag end");
                       tempNode.remove();
                       updateDiagrams();
                       selectNode(targetNode, d);
@@ -607,6 +596,7 @@ function Diagram(){
                 updateDiagrams();
                 selectNode(targetNode, tData);
             })
+            ;
     }();
 
     var dragLineCircle = function(){
@@ -648,7 +638,7 @@ function Diagram(){
                     tmpWaypoints = startPoint.concat(linkData.waypoints).concat(endPoint);
                     if(d.isNew){
                         tmpWaypoints.splice( d.index, 0, d3.mouse(this)[0]);
-                        tmpWaypoints.splice( d.index+1, 0, d3.mouse(this)[1])
+                        tmpWaypoints.splice( d.index+1, 0, d3.mouse(this)[1]);
                     }
                     //waypoints = linkData.waypoints;
                     TempG.append("polyline")
@@ -668,7 +658,7 @@ function Diagram(){
                         x = ((nx + points1[0])/10).toFixed(0)*10;
                         y = ((ny + points1[1])/10).toFixed(0)*10;
                     }
-                    tmpWaypoints[d.index] = x
+                    tmpWaypoints[d.index] = x;
                     tmpWaypoints[d.index+1] = y;
                     d3this.attr("cx", x)
                         .attr("cy", y);
@@ -684,6 +674,7 @@ function Diagram(){
                     tmpClear();
                     updateDiagrams();
                 })
+                ;
     }();
 
     var dragNewLink = function(){
@@ -712,7 +703,8 @@ function Diagram(){
                  
                 TempG.selectAll("*").transition().duration(200)
                 .attr("opacity", 0)
-                .remove();
+                .remove()
+                ;
             })
             .on("drag", function(){
                 var lPoint = [d3.event.x, d3.event.y];
@@ -733,7 +725,7 @@ function Diagram(){
                         lx2 += 30;
                     //아래    
                     }else if(MouseOverNode.data.height === ly){
-                        ly2 += 30
+                        ly2 += 30;
                     //왼쪽    
                     }else{
                         lx2 -= 30;
@@ -760,9 +752,10 @@ function Diagram(){
                         sOffsetX : sp1[0] - sData.x,
                         sOffsetY : sp1[1] - sData.y,
                         target: MouseOverNode.data.id,
-                        tOffsetX : points[points.length-2] - MouseOverNode.data.x,//Math.round(ip.x/10)*10 - d.x,
-                        tOffsetY : points[points.length-1] - MouseOverNode.data.y,//Math.round(ip.y/10)*10 - d.y,
-                        waypoints : waypoints
+                        tOffsetX : points[points.length-2] - MouseOverNode.data.x,
+                        tOffsetY : points[points.length-1] - MouseOverNode.data.y,
+                        waypoints : waypoints,
+                        id : new Date().getTime()
                     });
                     updateDiagrams();
                 }
@@ -807,7 +800,7 @@ function Diagram(){
     
 
     function selectNode(targetNode, d){
-        var tPoints = []
+        var tPoints = [];
         tPoints.push([d.width/2, 0]);
         tPoints.push([d.width, d.height/2]);
         tPoints.push([d.width/2, d.height]);
@@ -1007,7 +1000,7 @@ function Diagram(){
             .attr("y", 0)
             .attr("width", "100%")
             .attr("height", "100%")
-
+            ;
         LinkG = viewportG.append("g").attr("id", "link-group");
         NodeG = viewportG.append("g").attr("id", "node-group");
         TempG = viewportG.append("g").attr("id", "temp-group");
@@ -1018,9 +1011,8 @@ function Diagram(){
         DATA = {nodes:[], links:[]};
 
         svg.on("click", function(){
-            console.log("svg click");
             tmpClear();
-        })
+        });
         initNodeList();
     }
 
@@ -1088,6 +1080,7 @@ function Diagram(){
     }
 
     function updateDiagrams(){
+        tmpClear();
         drawLine();
         drawNode();
     }
@@ -1101,10 +1094,10 @@ function Diagram(){
             .append("g")
             .datum(function(d,i){
                 var sourceNode = DATA.nodes.filter(function(n, i) {
-                    return n.id == d.source
+                    return n.id == d.source;
                 })[0];
                 var targetNode = DATA.nodes.filter(function(n, i) {
-                    return n.id == d.target
+                    return n.id == d.target;
                 })[0];
                 d.sd = sourceNode;
                 d.td = targetNode;
@@ -1142,7 +1135,7 @@ function Diagram(){
                             x:(point1X + point2X)/2,
                             y:(point1Y + point2Y)/2
                         }
-                    )
+                    );
                 }
                 //기존점
                 if(length > 3){
@@ -1156,7 +1149,7 @@ function Diagram(){
                                 x:points[i]*1,
                                 y:points[i+1]*1,
                             }
-                        )
+                        );
                     }
                 }
                 d.circlePoints = circlePoints;
@@ -1166,8 +1159,8 @@ function Diagram(){
                     .append("circle")
                     .attr("class", "temp-point")
                     .attr("r", 3)
-                    .attr("cx", function(d){return d.x})
-                    .attr("cy", function(d){return d.y})
+                    .attr("cx", function(d){return d.x;})
+                    .attr("cy", function(d){return d.y;})
                     .attr("fill", "#FC3")
                     //.attr("pointer-events", "none")
                     .attr("stroke-width", function(d,i,a){
@@ -1178,15 +1171,31 @@ function Diagram(){
                     .style("opacity", "0")
                     .transition().duration(100).style("opacity", "1")
                     ;
-        
+                TempG.append("image")
+                    .attr("x", parseInt(points[0]) + 5)
+                    .attr("y", parseInt(points[1]) - 5)
+                    .attr('width', 16)
+                    .attr('height', 16)
+                    .attr("xlink:href", "./icon/trash-alt-solid.svg")
+                    .style("cursor", "pointer")
+                    .on("click", function(){
+                        var links = DATA.links.filter(function(e,i,a){
+                            return e.id !== d.id;
+                        });
+                        DATA.links = links;
+                        updateDiagrams();
+
+                    })
+                    ;
                 //circle.transition().duration(200).style("opacity", "1");
-            })
+            });
 
         
         lg.append("polyline")
             .attr("class", "line_back")
             .attr("fill", "none")
-            .attr("stroke-width", "6px");
+            .attr("stroke-width", "6px")
+            ;
 
         lg.append("polyline")
             //.attr("class", "link")
@@ -1195,9 +1204,8 @@ function Diagram(){
             //.on("mousemove", lineMousepoint)
             //.on("mouseover", lineMouseover)
             .attr("fill", "none")
-            .attr("stroke", "#000000")
             .attr("stroke-width", "2px")
-            .attr("marker-end", "url(#arrowhead)");
+            .attr("marker-end", "url(#arrowhead)")
             ;
 
         lg = lg.merge(links);
@@ -1209,6 +1217,9 @@ function Diagram(){
 
         lg.select(".line").datum(function(d){
             return d;
+        })
+        .attr("stroke", function(d){
+            return d.color || "#000000";
         })
         .attr("points", makePoints);
     }
