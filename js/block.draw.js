@@ -610,6 +610,7 @@ function Diagram(){
         //var tx,ty,tx2,ty2;
         return d3.drag()
                 .on("start", function(d){
+                    node = null;
                     d3this = d3.select(this);
                     var lg = d3.select(d.line);
                     link = lg.selectAll("polyline");
