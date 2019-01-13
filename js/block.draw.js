@@ -75,12 +75,12 @@ function Diagram(){
     Node.prototype = {
         genPath : d3.line().x(function(d) { return d.x; })
                             .y(function(d) { return d.y; })
-      , drawPath : function(svgObj, points){
+      , drawPath : function(svgObj, points, data){
                     var path = svgObj.select("path")
                     if(path.empty())path =  svgObj.append("path");
 
                     path.attr("d", this.genPath(points))
-                        .attr("stroke", "black")
+                        .attr("stroke", data.color || "black")
                         .attr("stroke-width", 2)
                         .attr("fill", "#fff");
                }                               
@@ -102,7 +102,7 @@ function Diagram(){
                 }
                 points.push({x:0, y:0});
 
-                this.drawPath(svgObj, points);
+                this.drawPath(svgObj, points, data);
             }
             rect.getPathData = function(data){
                 var points = [];
@@ -143,7 +143,7 @@ function Diagram(){
                 points.push({x:0, y:h});
                 points.push({x:0, y:rHeight});
 
-                this.drawPath(svgObj, points);
+                this.drawPath(svgObj, points, data);
             }
             return pou;
         },
@@ -156,7 +156,7 @@ function Diagram(){
                         .attr("cy", data.height/2)
                         .attr("rx",data.width/2)
                         .attr("ry",data.height/2)
-                        .attr("stroke", "black")
+                        .attr("stroke", data.color || "black")
                         .attr("stroke-width", 2)
                         .attr("fill", "#fff");
 
@@ -1187,6 +1187,7 @@ function Diagram(){
 
                     })
                     ;
+                if(UserFn)UserFn(d);                     
                 //circle.transition().duration(200).style("opacity", "1");
             });
 
