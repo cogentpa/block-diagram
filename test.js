@@ -507,7 +507,7 @@ function Diagram(){
         return d3.drag()
                   .on("start",function(d, i){
                       console.log("node drag start");
-                      TempG.selectAll("*").remove();
+                      tmpClear();
                       targetNode = d3.select(this);
                       stX = d.x;
                       stY = d.y;
@@ -603,7 +603,7 @@ function Diagram(){
 
             })
             .on("end", function(){
-                TempG.selectAll("*").remove();
+                tmpClear();
                 updateDiagrams();
                 selectNode(targetNode, tData);
             })
@@ -681,7 +681,7 @@ function Diagram(){
                     linkData.tOffsetX = tmpWaypoints[tmpWaypoints.length-2]-targetNode.x;
                     linkData.tOffsetY = tmpWaypoints[tmpWaypoints.length-1]-targetNode.y;
 
-                    TempG.selectAll("*").remove();
+                    tmpClear();
                     updateDiagrams();
                 })
     }();
@@ -962,8 +962,9 @@ function Diagram(){
         var i,length;
         var points;
         if(l.waypoints.length > 0){
-            /*
             var tPoints = [startPoint].concat(l.waypoints).concat([endPoint]);
+            console.log(tPoints);
+            /*
             l.waypoints = [];
             length = tPoints.length-1;
             for(i=1;i<length;i++){
@@ -1020,7 +1021,7 @@ function Diagram(){
 
         svg.on("click", function(){
             console.log("svg click");
-            TempG.selectAll("*").remove();
+            tmpClear();
         })
         initNodeList();
     }
@@ -1078,7 +1079,10 @@ function Diagram(){
             NodeList[name] = NodesInit[name]();
         }
     }
-
+    function tmpClear(){
+        TempG.selectAll("*").remove();
+        if(UserFn)UserFn();
+    }
     function clearAll(){
         DATA.links = [];
         DATA.nodes = [];
@@ -1118,7 +1122,7 @@ function Diagram(){
             })
             .on("click", function(d){
                 d3.event.stopPropagation();
-                TempG.selectAll("*").remove();
+                tmpClear();
                 var points = d3.select(this).select("polyline").attr("points").split(",");
                 var circlePoints = [];
         
