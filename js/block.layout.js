@@ -10,7 +10,7 @@ $("#propModal").on("show.bs.modal", function (e) {
 });
 $("#newModal_newBtn").bind("click", function(){
     Diagrams.setData({});
-    Diagrams.updateNode();
+    //Diagrams.updateNode();
     Cal.destory();
     $("#newModal").modal('hide');
 });
@@ -53,8 +53,6 @@ $("#leftMenus").find("li.item-menu").each(function(){
 });
 
 var svg = d3.select("#diagram");
-
-
 
 function drawBlock(ty){
     if(ty == "item0"){
@@ -253,7 +251,8 @@ function getDiagramNodeData(bid){
     return rtnObj;
 }
 
-function blockSelect(obj){
+function nodeSelect(obj){
+    if(obj == null)return;
     var bid = obj.id;
     Layout.setBlock(obj);
     var nodeObj = obj;
@@ -265,8 +264,8 @@ function blockSelect(obj){
     $("#prop_blockHeightInput").val(nodeObj.height||"");
     $("#prop_blockXInput").val(nodeObj.x||"");
     $("#prop_blockYInput").val(nodeObj.y||"");
-    
-    $('#rightTab_block').tab('show')
+    $('#rightTab_block').tab('show');
+
     console.log(Layout.getBlockInfo());
 }
 
@@ -285,8 +284,6 @@ $(window).bind("resize", function(){
 });
 
 function init(){
-    Diagrams.setData({});
-    Diagrams.updateNode();
     Cal.destory();
 }
 
