@@ -962,25 +962,23 @@ function Diagram(){
         var i,length;
         var points;
         if(l.waypoints.length > 0){
-            var tPoints = [startPoint].concat(l.waypoints).concat([endPoint]);
-            console.log(tPoints);
-            /*
+            var tPoints = startPoint.concat(l.waypoints).concat(endPoint);
             l.waypoints = [];
             length = tPoints.length-1;
-            for(i=1;i<length;i++){
+            for(i=2;i<length-2;i += 2){
                 //같은 선이면 포인트 삭제
-                if(!(tPoints[i-1][0] === tPoints[i][0] && tPoints[i-1][0] === tPoints[i+1][0])
-                    && !(tPoints[i-1][1] === tPoints[i][1] && tPoints[i-1][1] === tPoints[i+1][1]))
+                if(!(tPoints[i] === tPoints[i-2] && tPoints[i-2] === tPoints[i+2])
+                    && !(tPoints[i+1] === tPoints[i-1] && tPoints[i-1] === tPoints[i+3]))
                 {
                     l.waypoints.push(tPoints[i]);
+                    l.waypoints.push(tPoints[i+1]);
                 }
                 
             }
-            */
-            points = [startPoint].concat(l.waypoints).concat([endPoint]);
+            points = startPoint.concat(l.waypoints).concat(endPoint);
             
         } else {
-            points = [startPoint,endPoint];
+            points = startPoint.concat(endPoint);
         }
         return points;
     }
@@ -1277,13 +1275,13 @@ function Diagram(){
 
     function getData(mode){
         if("save" === mode){
-            data.links.forEach(function(v){
+            DATA.links.forEach(function(v){
                 delete v.circlePoints;
                 delete v.sd;
                 delete v.td;
             });
         }
-        return data;
+        return DATA;
     }
 
     function addBox(node){
