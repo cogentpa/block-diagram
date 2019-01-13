@@ -217,6 +217,13 @@ $("#prop_blockYInput").bind("blur", function(){
     selectNode.y = parseInt(this.value);
     Diagrams.updateNode();
 });
+$("#prop_blockRemove").bind("click", function(){
+    var selectNode = Layout.getBlock();
+    var selectId = selectNode.id;
+    if(selectId){
+        Layout.removeNode(selectId);
+    }
+});
 
 
 //Calculate Event
@@ -251,8 +258,20 @@ function getDiagramNodeData(bid){
     return rtnObj;
 }
 
+function initNodeProp(){
+    $("#prop_blockIdInput").val("");
+    $("#prop_blockNmInput").val("");
+    $("#prop_blockWidthInput").val("");
+    $("#prop_blockHeightInput").val("");
+    $("#prop_blockXInput").val("");
+    $("#prop_blockYInput").val("");
+}
+
 function nodeSelect(obj){
-    if(obj == null)return;
+    if(obj == null){
+        initNodeProp();
+        return;
+    }
     var bid = obj.id;
     Layout.setBlock(obj);
     var nodeObj = obj;

@@ -63,6 +63,26 @@ var Layout = function (){
     function getId(t){
         return t+"_"+parseInt(Math.random()*1000);
     }
+    function removeNode(id){
+        var diagramData = Diagrams.getData();
+
+        diagramData.links.map(function(d, i){
+            if(d.target === id){
+                diagramData.links.splice(i, 1);
+            }
+        });
+        diagramData.links.map(function(d, i){
+            if(d.source === id){
+                diagramData.links.splice(i, 1);
+            }
+        });
+        diagramData.nodes.map(function(d, i){
+            if(d.id === id){
+                diagramData.nodes.splice(i, 1);
+            }
+        });
+        Diagrams.updateNode();
+    }
     api.setPageInfo = setPageInfo;
     api.getPageInfo = getPageInfo;
     api.setBlockNm = setBlockNm;
@@ -73,6 +93,7 @@ var Layout = function (){
     api.setBlock = setBlock;
     api.getBlock = getBlock;
     api.getId = getId;
+    api.removeNode = removeNode;
     return api;
 }();
 
