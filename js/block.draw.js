@@ -83,7 +83,20 @@ function Diagram(){
                         .attr("stroke", data.color || "black")
                         .attr("stroke-width", 2)
                         .attr("fill", "#fff");
-               }                               
+               }
+       , drawText : function(svgObj, data){
+                    var text = svgObj.select("text");
+                    if(text.empty())text =  svgObj.append("text");
+                    text.attr("x", data.width/2)
+                        .attr("y", data.height/2)
+                        .attr("text-anchor", "middle")
+                        .attr("dominant-baseline", "middle")
+                        .text(data.name)
+                        .attr("stroke", "black")
+                        .attr("stroke-width", 1)
+                        ;
+
+       }                                        
     }
     NodesInit = {
         rect : function(){
@@ -103,6 +116,7 @@ function Diagram(){
                 points.push({x:0, y:0});
 
                 this.drawPath(svgObj, points, data);
+                this.drawText(svgObj, data);
             }
             rect.getPathData = function(data){
                 var points = [];
@@ -144,6 +158,7 @@ function Diagram(){
                 points.push({x:0, y:rHeight});
 
                 this.drawPath(svgObj, points, data);
+                this.drawText(svgObj, data);
             }
             return pou;
         },
@@ -161,6 +176,7 @@ function Diagram(){
                         .attr("fill", "#fff");
 
                 this.drawPath(svgObj, data);
+                this.drawText(svgObj, data);
             }
             circle.drawPath = function(svgObj, points){
                 var path = svgObj.select("path");
@@ -1268,7 +1284,7 @@ function Diagram(){
         */    
         
         ng.each(function(d){
-            var _thisG = d3.select(this)//.selectAll("path").data([d]).enter(); 
+            var _thisG = d3.select(this);//.selectAll("path").data([d]).enter(); 
             NodeList[d.type].draw(_thisG, d);
         });
     }
