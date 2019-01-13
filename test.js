@@ -91,8 +91,14 @@ function Diagram(){
                 var points = [];
                 points.push({x:0, y:0});
                 points.push({x:data.width, y:0});
+                if(data.isStart){
+                    points.push({x:data.width + data.width/5, y:data.height/2});
+                }
                 points.push({x:data.width, y:data.height});
                 points.push({x:0, y:data.height});
+                if(data.isEnd){
+                    points.push({x:0 - data.width/5, y:data.height/2});
+                }
                 points.push({x:0, y:0});
 
                 this.drawPath(svgObj, points);
@@ -101,8 +107,14 @@ function Diagram(){
                 var points = [];
                 points.push({x:0, y:0});
                 points.push({x:data.width, y:0});
+                if(data.isStart){
+                    points.push({x:data.width + data.width/5, y:data.height/2});
+                }
                 points.push({x:data.width, y:data.height});
                 points.push({x:0, y:data.height});
+                if(data.isEnd){
+                    points.push({x:0 - data.width/5, y:data.height/2});
+                }
                 points.push({x:0, y:0});
                 return this.genPath(points);
             }
@@ -181,7 +193,308 @@ function Diagram(){
         },
         mb : function(){
             var mb = new Node();
-            mb.draw = function(svgObj, data){}
+            mb.draw = function(svgObj, data){
+                svgObj.selectAll("g.mbItem").remove();
+                svgObj.selectAll("g.mbIcon").remove();
+                this.addItem(svgObj, data);
+                this.drawPath(svgObj, data);
+            }
+            mb.addItem = function(svgObj, data){
+                var item = svgObj.append("g").attr("class","mbItem");
+                var itemWidth = data["item"]["width"];
+                var itemHeight = data["item"]["height"];
+                if(data["mb"]){
+                    var maxX = data["mb"].length;
+
+                    data["mb"].map(function(a,i){
+                        var x = i*itemWidth;
+                        a.map(function(b,j){
+                            var y = j*itemHeight;
+                            //var itemG = item.append("g");
+                            //itemG.attr("transform", "translate("+x+","+y+")")
+                            
+                            var rect = item.append("rect");
+                            
+                            rect.attr("x", x)
+                                .attr("y", y)
+                                .attr("width", itemWidth)
+                                .attr("height", itemHeight)
+                                .attr("stroke", "black")
+                                .attr("stroke-width", 2)
+                                .attr("fill", "#fff");
+                            
+                            var classNm = "mb_"+i+"-"+j;
+                            var text = item.append("text").attr("class", classNm);
+                            text.attr("x", x+(itemWidth/2))
+                                .attr("y", y+(itemHeight/2))
+                                .attr("text-anchor", "middle")
+                                .attr("dominant-baseline", "middle")
+                                .text(b["text"])
+                                .attr("stroke", "black")
+                                .attr("stroke-width", 1)
+                                .on("mouseover", function() {
+                                    d3.select(this).attr("stroke", "red");
+                                })
+                                .on("mouseout", function() {
+                                    d3.select(this).attr("stroke", "black");
+                                })
+                                .on("mousedown", function(d) {
+                                    var p = this.parentNode.parentNode.parentNode.parentNode;
+                                    var xy = this.getBBox();
+                                    var p_xy = p.getBBox();
+                                    var el = d3.select(this);
+                                    var p_el = d3.select(p);
+                                    var frm = p_el.append("foreignObject");
+                                    var _this = this;
+                                    var classNm = d3.select(_this).attr("class")||"";
+                                    var mbPos = classNm.replace("mb_","").split("-");
+                                    var mbPosX = mbPos[0]||0;
+                                    var mbPosY = mbPos[1]||0;
+                                    
+                                    var inp = frm
+                                        .attr("x", x+d.x)
+                                        .attr("y", y+d.y+6)
+                                        .attr("width", 100)
+                                        .attr("height", 25)
+                                        .append("xhtml:form")
+                                        .append("input")
+                                        .attr("xmlns","http://www.w3.org/1999/xhtml")
+                                        .attr("value", function() {
+                                            this.focus();
+                                            var val = d3.select(_this).text();
+                                            return val;
+                                        })
+                                        .attr("style", "width: 94px;")   
+                                        .on("click", function(){
+                                            this.select();
+                                        })                
+                                        .on("blur", function() {
+                                            var txt = inp.node().value;
+                                            if(d.mb){
+                                                if(d.mb[mbPosX][mbPosY]){
+                                                    d.mb[mbPosX][mbPosY]["text"] = txt;
+                                                }
+                                            }
+                                            el.text(function(d) { return txt; });
+                                            if(p_el.select("foreignObject").empty() === false){
+                                                p_el.select("foreignObject").remove();
+                                            }
+                                        })                                     
+                                        .on("keypress", function() {
+                                            // IE fix   
+                                            if (!d3.event){
+                                                d3.event = window.event;
+                                            }
+                                            var e = d3.event;
+                                            if (e.keyCode == 13){
+                                                if (typeof(e.cancelBubble) !== 'undefined'){ // IE
+                                                    e.cancelBubble = true;
+                                                }
+                                                if (e.stopPropagation){
+                                                    e.stopPropagation();
+                                                }
+                                                e.preventDefault();
+                                                e.target.blur();
+                                            }
+                                        });
+                                    var e = d3.event;
+                                    if (e.stopPropagation){
+                                        e.stopPropagation();
+                                    }
+                                    e.preventDefault();
+                                });
+                            if(y == 0){
+                                mb.addIcon(svgObj,data,{type:"down",x:x+itemWidth/2-8,y:-5,index:i});
+                            }
+                        });
+                        if(i == maxX-1){
+                            mb.addIcon(svgObj,data,{type:"right",x:x+itemWidth+5,y:20});
+                        }
+                    });
+                }
+                return item;
+            }
+            mb.addIcon = function(svgObj, data, pos){
+                var iconG = svgObj.append("g").attr("class","mbIcon");
+                iconG.attr("transform", "translate("+pos.x+","+pos.y+")")
+                var plusIcon = iconG.append("text").attr("class","plus");
+                plusIcon.attr("x", 0)
+                    .attr("y", 0)
+                    .text("+")
+                    .attr("stroke", "blue")
+                    .attr("stroke-width", 1)
+                    .style("cursor", "pointer")
+                    .on("mousedown", function(){
+                        if(pos.type == "right"){
+                            data["mb"].push([{text:"new"}]);
+                            mb.draw(svgObj, data);
+                        }else if(pos.type == "down"){
+                            data["mb"][pos.index].push({text:"new"});
+                            mb.draw(svgObj, data);
+                        }
+                    });
+                var minusIcon = iconG.append("text").attr("class","minus");
+                minusIcon.attr("x", 15)
+                    .attr("y", 0)
+                    .text("-")
+                    .attr("stroke", "red")
+                    .attr("stroke-width", 1)
+                    .style("cursor", "pointer")
+                    .on("mousedown", function(){
+                        if(pos.type == "right"){
+                            var len = data["mb"].length;
+                            if(len < 2){
+                                return;
+                            }
+                            data["mb"].splice(len-1, 1);
+                            mb.draw(svgObj, data);
+                        }else if(pos.type == "down"){
+                            var len = data["mb"][pos.index].length;
+                            if(len < 2){
+                                return;
+                            }
+                            data["mb"][pos.index].splice(len-1, 1);
+                            mb.draw(svgObj, data);
+                        }
+                    });
+            }
+            mb.drawPath = function(svgObj, data){
+                var path = svgObj.select("path")
+                if(path.empty())path = svgObj.append("path");
+
+                path.attr("d", this.genPath(data))
+                    .attr("fill", "none");
+                    //.attr("stroke", "red");
+            }
+            mb.genPath = function(data){
+                var itemWidth = data["item"]["width"];
+                var itemHeight = data["item"]["height"];
+                var items = data["mb"];
+                var maxHeight = 0;
+                items.map(function(o,i){
+                    if(maxHeight < o.length){
+                        maxHeight = o.length;
+                    }
+                });
+                var totalWidth = itemWidth*items.length;
+                var totalHeight = itemHeight*maxHeight;
+                data.width = totalWidth;
+                data.height = totalHeight;
+                var pathData = [];
+                pathData.push({x:0, y:0});
+                pathData.push({x:totalWidth, y:0});
+                pathData.push({x:totalWidth, y:items[items.length-1].length*itemHeight});
+
+                for(var i=items.length-1;i>0;i--){
+                    var xy = {};
+                    xy.x = i*itemWidth;
+                    xy.y = items[i].length*itemHeight;
+                    pathData.push(xy);
+                    xy = {};
+                    xy.x = i*itemWidth;
+                    xy.y = items[i-1].length*itemHeight;
+                    pathData.push(xy);
+                }
+                pathData.push({x:0, y:items[0].length*itemHeight});
+                pathData.push({x:0, y:0});
+                var points = mb.lineFunc(pathData);
+                return points;
+            }
+            mb.lineFunc = function(d){
+                var points = "";
+                d.map(function(p,i){
+                    if(i == 0){
+                        points += "M"+p.x+","+p.y;
+                    }else{
+                        points += "L"+p.x+","+p.y;
+                    }
+                });
+                return points
+            }
+            mb.makeEditable = function(d, field)
+            {
+                console.log("make_editable", arguments);
+                console.log(this)
+                this.on("mouseover", function() {
+                    d3.select(this).style("fill", "red");
+                  }).on("mouseout", function() {
+                    d3.select(this).style("fill", null);
+                  }).on("click", function(d) {
+                    var p = this.parentNode;
+                    console.log(this, arguments);
+            
+                    // inject a HTML form to edit the content here...
+            
+                    // bug in the getBBox logic here, but don't know what I've done wrong here;
+                    // anyhow, the coordinates are completely off & wrong. :-((
+                    var xy = this.getBBox();
+                    var p_xy = p.getBBox();
+            
+                    xy.x -= p_xy.x;
+                    xy.y -= p_xy.y;
+            
+                    var el = d3.select(this);
+                    var p_el = d3.select(p);
+            
+                    var frm = p_el.append("foreignObject");
+            
+                    var inp = frm
+                        .attr("x", xy.x)
+                        .attr("y", xy.y)
+                        .attr("width", 300)
+                        .attr("height", 25)
+                        .append("xhtml:form")
+                                .append("input")
+                                    .attr("value", function() {
+                                        // nasty spot to place this call, but here we are sure that the <input> tag is available
+                                        // and is handily pointed at by 'this':
+                                        this.focus();
+            
+                                        return d[field];
+                                    })
+                                    .attr("style", "width: 294px;")
+                                    // make the form go away when you jump out (form looses focus) or hit ENTER:
+                                    .on("blur", function() {
+                                        console.log("blur", this, arguments);
+            
+                                        var txt = inp.node().value;
+            
+                                        d[field] = txt;
+                                        el
+                                            .text(function(d) { return d[field]; });
+            
+                                        // Note to self: frm.remove() will remove the entire <g> group! Remember the D3 selection logic!
+                                        p_el.select("foreignObject").remove();
+                                    })
+                                    .on("keypress", function() {
+                                        console.log("keypress", this, arguments);
+            
+                                        // IE fix
+                                        if (!d3.event)
+                                            d3.event = window.event;
+            
+                                        var e = d3.event;
+                                        if (e.keyCode == 13)
+                                        {
+                                            if (typeof(e.cancelBubble) !== 'undefined') // IE
+                                              e.cancelBubble = true;
+                                            if (e.stopPropagation)
+                                              e.stopPropagation();
+                                            e.preventDefault();
+            
+                                            var txt = inp.node().value;
+            
+                                            d[field] = txt;
+                                            el
+                                                .text(function(d) { return d[field]; });
+            
+                                            // odd. Should work in Safari, but the debugger crashes on this instead.
+                                            // Anyway, it SHOULD be here and it doesn't hurt otherwise.
+                                            p_el.select("foreignObject").remove();
+                                        }
+                                    });
+                  });
+            }
             return mb;
         }
     }
@@ -298,50 +611,48 @@ function Diagram(){
     var dragLineCircle = function(){
         var d3this;
         var link;
-        var targetIndex;
         var node;
+        var nx,ny;
         var linkData;
-        var startPoint, endPoint, waypoints;
+        var startPoint, endPoint, tmpWaypoints;
+        var sourceNode, targetNode;
         //var tx,ty,tx2,ty2;
         return d3.drag()
                 .on("start", function(d){
-                    var before;
-                    var after;
-
                     d3this = d3.select(this);
                     var lg = d3.select(d.line);
                     link = lg.selectAll("polyline");
                     linkData = link.datum();
-                    var sourceNode = data.nodes.filter(function(d) {
+                    sourceNode = data.nodes.filter(function(d) {
                         return d.id == linkData.source;
                     })[0];
-                    var targetNode = data.nodes.filter(function(d) {
+                    targetNode = data.nodes.filter(function(d) {
                         return d.id == linkData.target;
                     })[0];
 
                     //끝
                     if(d.isLast === 1){
                         node = NodeG.select("#nd-"+linkData.source).select("path").node();
+                        nx = targetNode.x;
+                        ny = targetNode.y;
                     //시작 
-                    } else if (d.isLast === 2){    
+                    } else if (d.isLast === 2){
                         node = NodeG.select("#nd-"+linkData.target).select("path").node();
-                    } else {
-                        before = linkData.waypoints.slice(0, d.index);
-                        after = linkData.waypoints.slice(d.index);
-                        targetIndex = before.length;
-                        if(d.isNew){
-                            before.push(d3.mouse(this));
-                        }
-                        linkData.waypoints = before.concat(after);
+                        nx = sourceNode.x;
+                        ny = sourceNode.y;
                     }
 
                     startPoint = [sourceNode.x+(linkData.sOffsetX || 0), sourceNode.y+(linkData.sOffsetY || 0)];
                     endPoint = [targetNode.x+linkData.tOffsetX, targetNode.y+linkData.tOffsetY];
-                    waypoints = linkData.waypoints;
-
+                    tmpWaypoints = startPoint.concat(linkData.waypoints).concat(endPoint);
+                    if(d.isNew){
+                        tmpWaypoints.splice( d.index, 0, d3.mouse(this)[0]);
+                        tmpWaypoints.splice( d.index+1, 0, d3.mouse(this)[1])
+                    }
+                    //waypoints = linkData.waypoints;
                     TempG.append("polyline")
                         .attr("class", "temp-line")
-                        .attr("points", startPoint.concat(waypoints).concat(endPoint))
+                        .attr("points", tmpWaypoints)
                         .attr("fill", "none")
                         .attr("stroke", "#999")
                         .attr("stroke-width", "2px")
@@ -352,26 +663,23 @@ function Diagram(){
                     var x = (d3.event.x/10).toFixed(0)*10;
                     var y = (d3.event.y/10).toFixed(0)*10;
                     if(node){
-                        var points1 = closestPoint(node, [parseInt(d3this.attr("x1")-sData.x),parseInt(d3this.attr("y1"))-sData.y]);
-                        var sp1 = [((sData.x + points1[0])/10).toFixed(0)*10, ((sData.y + points1[1])/10).toFixed(0)*10];
-                        var sp2 = [(parseInt(d3this.attr("x2")/10).toFixed(0)*10),(parseInt(d3this.attr("y2"))/10).toFixed(0)*10];
-                    } else {
-                        waypoints[targetIndex] = [x,y];
+                        var points1 = closestPoint(node, [x-nx,y-ny]);
+                        x = ((nx + points1[0])/10).toFixed(0)*10;
+                        y = ((ny + points1[1])/10).toFixed(0)*10;
                     }
+                    tmpWaypoints[d.index] = x
+                    tmpWaypoints[d.index+1] = y;
                     d3this.attr("cx", x)
                         .attr("cy", y);
-                    link.attr("points", function(l){
-                        return startPoint.concat(waypoints).concat(endPoint);
-                        
-                    })
+                    link.attr("points", tmpWaypoints);
                 })
                 .on("end", function(){
-                    /*
-                    if(isLast){
-                        linkData.tOffsetX = endPoint[0] - tx;
-                        linkData.tOffsetY = endPoint[1] - ty;;
-                    }
-                    */
+                    linkData.waypoints = tmpWaypoints.slice(2, tmpWaypoints.length-2);
+                    linkData.sOffsetX = tmpWaypoints[0]-sourceNode.x;
+                    linkData.sOffsetY = tmpWaypoints[1]-sourceNode.y;
+                    linkData.tOffsetX = tmpWaypoints[tmpWaypoints.length-2]-targetNode.x;
+                    linkData.tOffsetY = tmpWaypoints[tmpWaypoints.length-1]-targetNode.y;
+
                     TempG.selectAll("*").remove();
                     updateDiagrams();
                 })
@@ -823,7 +1131,7 @@ function Diagram(){
                     //신규점
                     circlePoints.push(
                         {
-                            index:i/2-1,
+                            index:i,
                             isNew:true,
                             line:this,
                             x:(point1X + point2X)/2,
@@ -836,9 +1144,9 @@ function Diagram(){
                     for(i=0;i<length;i=i+2){
                         circlePoints.push(
                             {
-                                index:i/2-1,
+                                index:i,
                                 isNew:false,
-                                isLast : ((i == length-2) || (i == 0)) ? 2 : 0,  //0: 중간, 1:마지막, 2:시작
+                                isLast : (i == length-2) ? 1 : (i == 0) ? 2 : 0,  //0: 중간, 1:마지막, 2:시작
                                 line:this,
                                 x:points[i]*1,
                                 y:points[i+1]*1,
@@ -945,9 +1253,6 @@ function Diagram(){
             var _thisG = d3.select(this)//.selectAll("path").data([d]).enter(); 
             NodeList[d.type].draw(_thisG, d);
         });
-        
-
-
     }
 
     function setData(d){
