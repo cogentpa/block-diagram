@@ -40,182 +40,62 @@ $("#leftMenus").find("li.item-menu").each(function(){
     $(this).bind("click", function(){
         var _item = $(this);
         if(_item.hasClass("item0")){
-            drawBlock("item0");
+            Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:40});
         }else if(_item.hasClass("item1")){
-            drawBlock("item1");
+            Diagrams.addBox({type:"circle",x:50,y:50,width:100,height:100});
         }else if(_item.hasClass("item2")){
-            drawBlock("item2");
+            Diagrams.addBox({type:"mb",x:150,y:50,width:100,height:30,mb:[]});
         }else if(_item.hasClass("item3")){
-            drawBlock("item3");
-            console.log(CalData.getCals());
+            Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:40,isStart:true});
+        }else if(_item.hasClass("item4")){
+            Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:40, isEnd:true});
+        }else if(_item.hasClass("item5")){
+            Diagrams.addBox({type:"pou",x:50,y:50,width:120,height:100});
+        }else if(_item.hasClass("item6")){
+            var calNo = CalData.getCalNo();
+            CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
+            var calDiv = Cal.add(calNo);
         }
     });
 });
 
 var svg = d3.select("#diagram");
-
-function drawBlock(ty){
-    if(ty == "item0"){
-        Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:30});
-    }else if(ty == "item1"){
-        Diagrams.addBox({type:"circle",x:50,y:50,width:100,height:100});
-    }else if(ty == "item2"){
-        Diagrams.addBox({type:"mb",x:150,y:50,width:100,height:30,mb:[]});
-    }else if(ty == "item3"){
-        var calNo = CalData.getCalNo();
-        CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
-        var calDiv = Cal.add(calNo);
-    }
-}
-/*
-var drag = d3.drag()
-    .on("start", dragstarted)
-    .on("drag", dragged)
-    .on("end", dragended);
-
-function dragstarted(d) {
-    d3.select(this).raise().classed("active", true);
-}
-
-function dragged(d) {
-    if(d.t == "circle"){
-        d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-    }else{
-        d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
-    }
-}
-
-function dragended(d) {
-    d3.select(this).classed("active", false);
-}
-*/
-
-/* Common */
-
-
-/* Property cal */
-/*
-function setCalType(){
-    var calType = CalData.getTypes();
-    var selectOpt = [];
-    for(var key in calType){
-        selectOpt.push({code:key,name:calType[key]["nm"]});
-    }
-    var select = cfn_setSelect("#prop_calTypeSelect", selectOpt);
-}
-
-function getBlockProp(bid){
-    var blInfo = Layout.getBlockInfo();
-    var inBlocks = blInfo.inBlocks;
-    var outBlocks = blInfo.outBlocks;
-    var inSelect = [];
-    var outSelect = [];
-    inBlocks.map(function(d,i){
-        inSelect.push({code:d,name:Layout.getBlockNm(d)||d});
-    });
-    outBlocks.map(function(d,i){
-        outSelect.push({code:d,name:Layout.getBlockNm(d)||d});
-    });
-    var inSelect = cfn_setSelect("#prop_inBlockSelect", inSelect);
-    var outSelect = cfn_setSelect("#prop_outBlockSelect", outSelect);
-}
-
-function rmCalType(el){
-    $(el).parents("a").remove();
-    CalData.delCalById($(el).parents("a").attr("bl"),$(el).parents("a").attr("cal"));
-    console.log(CalData.getCals());
-}
-
-function makeCalTypeItem(obj){
-    console.log(Layout.getBlockNm(obj.inBl))
-    var itemHtml = '<a href="javascript:void(0)" class="list-group-item list-group-item-action flex-column align-items-start" cal="'+obj.calId+'" bl="'+obj.bl+'">'
-                 + '<div class="d-flex w-100 justify-content-between">'
-                 + '<h5 class="mb-1">'+CalData.getName(obj.calTy)+'</h5>'
-                 + '<small><i class="far fa-trash-alt remove" onclick="rmCalType(this)"></i></small>'
-                 + '</div>'
-                 + '<p class="mb-1">In : '+Layout.getBlockNm(obj.inBl)+' ('+obj.in+')</p>'
-                 + '<p class="mb-1">Out : '+Layout.getBlockNm(obj.outBl)+' ('+obj.out+')</p>'
-                 //+ '<small>In : '+obj.in+', Out : </small>'
-                 + '</a>'
-    return itemHtml;
-}
-
-function setCalTypeList(cals){
-    var itemHtmls = [];
-    cals.map(function(d,i){
-        itemHtmls.push(makeCalTypeItem(d));
-    });
-    $("#prop_calTypeList").html("");
-    $("#prop_calTypeList").append(itemHtmls);
-}
-
-function addCalTypeItem(bid){
-    var calTypeId = $("#prop_calTypeSelect").val();
-    var inBlockId = $("#prop_inBlockSelect").val();
-    var outBlockId = $("#prop_outBlockSelect").val();
-
-    var itemObj = {
-            calId:Layout.getId("cal"),
-            calInId:Layout.getId("cal_in"),
-            calOutId:Layout.getId("cal_out"),
-            inBl:inBlockId,
-            bl:bid,
-            outBl:outBlockId,
-            calTy:calTypeId,
-            in:200,
-            out:180
-    }
-    $("#prop_calTypeList").append(makeCalTypeItem(itemObj));  
-    CalData.addBlockById(bid, itemObj);
-    console.log(CalData.getCals());    
-}
-
-$("#prop_calTypeAddBtn").bind("click", function(){
-    addCalTypeItem(Layout.getBlockId());                 
-});
-$("#prop_inBlockSelect").bind("change", function(){
-    var selectId = Layout.getBlockId();
-    if(this.value != ""){
-        var calId = "#txt-in-"+this.value+"-"+selectId;
-        $("#prop_inValue").val($(calId).text());
-    }
-});
-$("#prop_outBlockSelect").bind("change", function(){
-    var selectId = Layout.getBlockId();
-    if(this.value != ""){
-        var calId = "#txt-out-"+selectId+"-"+this.value;
-        $("#prop_outValue").val($(calId).text());
-    }
-});
-*/
-
-
 //Block Info Event
 $("#prop_blockNmInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    selectNode.name = this.value;
-    Diagrams.updateNode();
+    if(selectNode.type){
+        selectNode.name = this.value;
+        Diagrams.updateNode();
+    }
 });
 $("#prop_blockWidthInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    selectNode.width = parseInt(this.value);
-    Diagrams.updateNode();
+    if(selectNode.type){
+        selectNode.width = parseInt(this.value);
+        Diagrams.updateNode();
+    }
 
 });
 $("#prop_blockHeightInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    selectNode.height = parseInt(this.value);
-    Diagrams.updateNode();
+    if(selectNode.type){
+        selectNode.height = parseInt(this.value);
+        Diagrams.updateNode();
+    }
 });
 $("#prop_blockXInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    selectNode.x = parseInt(this.value);
-    Diagrams.updateNode();
+    if(selectNode.type){
+        selectNode.x = parseInt(this.value);
+        Diagrams.updateNode();
+    }
 });
 $("#prop_blockYInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    selectNode.y = parseInt(this.value);
-    Diagrams.updateNode();
+    if(selectNode.type){
+        selectNode.y = parseInt(this.value);
+        Diagrams.updateNode();
+    }
 });
 $("#prop_blockRemove").bind("click", function(){
     var selectNode = Layout.getBlock();
@@ -272,17 +152,22 @@ function nodeSelect(obj){
         initNodeProp();
         return;
     }
+
     var bid = obj.id;
     Layout.setBlock(obj);
     var nodeObj = obj;
-
+    var objType = "node";
+    if(!nodeObj.type){
+        objType = "line";
+    }
     $("#prop_blockIdInput").val(bid||"");
-    $("#prop_blockNmInput").val(nodeObj.name||"");
-
-    $("#prop_blockWidthInput").val(nodeObj.width||"");
-    $("#prop_blockHeightInput").val(nodeObj.height||"");
-    $("#prop_blockXInput").val(nodeObj.x||"");
-    $("#prop_blockYInput").val(nodeObj.y||"");
+    if(objType == "node"){
+        $("#prop_blockNmInput").val(nodeObj.name||"");
+        $("#prop_blockWidthInput").val(nodeObj.width||"");
+        $("#prop_blockHeightInput").val(nodeObj.height||"");
+        $("#prop_blockXInput").val(nodeObj.x||"");
+        $("#prop_blockYInput").val(nodeObj.y||"");
+    }
     $("#prop_blockColor").spectrum("set", nodeObj.color||"#000000");
     $('#rightTab_block').tab('show');
 }
