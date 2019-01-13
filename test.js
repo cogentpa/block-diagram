@@ -624,10 +624,10 @@ function Diagram(){
                     var lg = d3.select(d.line);
                     link = lg.selectAll("polyline");
                     linkData = link.datum();
-                    sourceNode = data.nodes.filter(function(d) {
+                    sourceNode = DATA.nodes.filter(function(d) {
                         return d.id == linkData.source;
                     })[0];
-                    targetNode = data.nodes.filter(function(d) {
+                    targetNode = DATA.nodes.filter(function(d) {
                         return d.id == linkData.target;
                     })[0];
 
@@ -1098,10 +1098,10 @@ function Diagram(){
         var lg = links.enter()
             .append("g")
             .datum(function(d,i){
-                var sourceNode = data.nodes.filter(function(n, i) {
+                var sourceNode = DATA.nodes.filter(function(n, i) {
                     return n.id == d.source
                 })[0];
-                var targetNode = data.nodes.filter(function(n, i) {
+                var targetNode = DATA.nodes.filter(function(n, i) {
                     return n.id == d.target
                 })[0];
                 d.sd = sourceNode;
