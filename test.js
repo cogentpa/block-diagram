@@ -706,7 +706,7 @@ function Diagram(){
                 .attr("stroke", "#000000")
                     .attr("stroke-width", "2px")
                     .attr("fill", "none")
-                    .attr("points", [sp1, sp2, m[0]-2, m[1]-2])
+                    .attr("points", [sp1, sp2, d3.event.x-2, d3.event.y-2])
                     .attr("marker-end", "url(#arrowhead)");
                  
                 TempG.selectAll("*").transition().duration(200)
@@ -714,10 +714,9 @@ function Diagram(){
                 .remove();
             })
             .on("drag", function(){
-                var m = d3.mouse(this);
-                var lPoint = m;
+                var lPoint = [d3.event.x, d3.event.y];
                 if(MouseOverNode.node){
-                    var points = closestPoint(MouseOverNode.node, [m[0] - MouseOverNode.data.x,m[1]-MouseOverNode.data.y]);
+                    var points = closestPoint(MouseOverNode.node, [d3.event.x - MouseOverNode.data.x,d3.event.y-MouseOverNode.data.y]);
 
                     var lx = (points[0]/10).toFixed(0)*10;
                     var ly = (points[1]/10).toFixed(0)*10;
