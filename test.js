@@ -632,12 +632,12 @@ function Diagram(){
 
                     //끝
                     if(d.isLast === 1){
-                        node = NodeG.select("#nd-"+linkData.source).select("path").node();
+                        node = NodeG.select("#nd-"+linkData.target).select("path").node();
                         nx = targetNode.x;
                         ny = targetNode.y;
                     //시작 
                     } else if (d.isLast === 2){
-                        node = NodeG.select("#nd-"+linkData.target).select("path").node();
+                        node = NodeG.select("#nd-"+linkData.source).select("path").node();
                         nx = sourceNode.x;
                         ny = sourceNode.y;
                     }
@@ -1114,8 +1114,7 @@ function Diagram(){
             })
             .on("click", function(d){
                 d3.event.stopPropagation();
-                TempG.selectAll(".temp-point").remove();
-                //console.log(d);
+                TempG.selectAll("*").remove();
                 var points = d3.select(this).select("polyline").attr("points").split(",");
                 var circlePoints = [];
         
@@ -1279,11 +1278,30 @@ function Diagram(){
         return data;
     }
 
+    function addBox(node){
+        if(!node) node = {};
+        if(!node.width)node.width = 100;
+        if(!node.height)node.height = 100;
+        if(!node.type)node.type = "rect";
+        if(!node.x)node.x = 10;
+        if(!node.y)node.y = 10;
+        node.id = new Date().getTime();
+        
+        if(node.type == "mb"){
+            node.mb = [1];
+        }
+        
+        DATA.nodes.push(node);
+        updateDiagrams();
+    }
+
     //set return obj;
     var diagrams = {};
     diagrams.init = init;
     diagrams.setData = setData;
     diagrams.getData = getData;
+    diagrams.addBox = addBox;
+    diagrams.updateNode = updateDiagrams;
 
     return diagrams;
 }
