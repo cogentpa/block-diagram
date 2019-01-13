@@ -63,6 +63,7 @@ function Diagram(){
     var DATA;
     var NodeList;
     var NodesInit;
+    var UserFn;
 
     var MouseOverNode = { node : null
                         , data : null 
@@ -950,6 +951,8 @@ function Diagram(){
         //.on("mouseover", lineMouseover)
         ; 
 
+        if(UserFn)UserFn(d); 
+
     }
 
     /** lineFunction  */
@@ -990,7 +993,7 @@ function Diagram(){
     }
 
     /** function */
-    function init(trgtId){
+    function init(trgtId, fn){
         var svg = d3.select(trgtId);
 
         appendDef(svg);
@@ -1009,6 +1012,8 @@ function Diagram(){
         LinkG = viewportG.append("g").attr("id", "link-group");
         NodeG = viewportG.append("g").attr("id", "node-group");
         TempG = viewportG.append("g").attr("id", "temp-group");
+
+        UserFn = fn;
 
         D3SVG = svg;
         DATA = {nodes:[], links:[]};
