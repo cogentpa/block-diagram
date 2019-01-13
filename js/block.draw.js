@@ -103,17 +103,28 @@ function Diagram(){
             var rect = new Node();
             rect.draw = function(svgObj, data){
                 var points = [];
-                points.push({x:0, y:0});
-                points.push({x:data.width, y:0});
+                
                 if(data.isStart){
-                    points.push({x:data.width + data.width/5, y:data.height/2});
+                    points.push({x:0, y:0});
+                    points.push({x:data.width-data.width/5, y:0});
+                    points.push({x:data.width, y:data.height/2});
+                    points.push({x:data.width-data.width/5, y:data.height});
+                    points.push({x:0, y:data.height});
+                    points.push({x:0, y:0});
+                }else if(data.isEnd){
+                    points.push({x:0+data.width/5, y:0});
+                    points.push({x:data.width, y:0});
+                    points.push({x:data.width, y:data.height});
+                    points.push({x:0+data.width/5, y:data.height});
+                    points.push({x:0, y:data.height/2});
+                    points.push({x:0+data.width/5, y:0});
+                }else {
+                    points.push({x:0, y:0});
+                    points.push({x:data.width, y:0});
+                    points.push({x:data.width, y:data.height});
+                    points.push({x:0, y:data.height});
+                    points.push({x:0, y:0});
                 }
-                points.push({x:data.width, y:data.height});
-                points.push({x:0, y:data.height});
-                if(data.isEnd){
-                    points.push({x:0 - data.width/5, y:data.height/2});
-                }
-                points.push({x:0, y:0});
 
                 this.drawPath(svgObj, points, data);
                 this.drawText(svgObj, data);
