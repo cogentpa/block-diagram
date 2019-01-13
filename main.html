@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/all.min.css"/>
     <link rel="stylesheet" href="css/loading.css"/>
     <link rel="stylesheet" href="css/style.css"/>
+    <link rel="stylesheet" href="css/spectrum.css"/>
     <link rel="stylesheet" href="main.css"/>
     <title>Block Diagram</title>
   </head>
@@ -69,31 +70,25 @@
                     <a href="javascript:void(0)">
                         <li class="item-menu item0">
                             <i class="fas fa-vector-square"></i>
-                            <span class="menu">Block1</span>
+                            <span class="menu">Box</span>
                         </li>
                     </a> 
                     <a href="javascript:void(0)">
                         <li class="item-menu item1">
                             <i class="far fa-circle"></i> 
-                            <span class="menu">Block2</span>
+                            <span class="menu">Circle</span>
                         </li>
                     </a>
                     <a href="javascript:void(0)">
                         <li class="item-menu item2">
                             <i class="far fa-window-restore"></i>
-                            <span class="menu">Block3</span>
+                            <span class="menu">Multi Box</span>
                         </li>
                     </a>
                     <a href="javascript:void(0)">
                         <li class="item-menu item3">
                             <i class="fas fa-calculator"></i>
                             <span class="menu"> Calcaulate</span>
-                        </li>
-                    </a>
-                    <a href="javascript:void(0)">
-                        <li class="item-menu item4">
-                            <i class="far fa-window-restore"></i>
-                            <span class="menu">Block5</span>
                         </li>
                     </a>
                 </ul>
@@ -147,6 +142,10 @@
                                                    </div>
                                                </div>
                                            </div>
+                                           <div class="form-group" style="margin:10px 0;">
+                                            <label class="text-light">Color<span class="text-danger"></span></label>
+                                            <input class="form-control form-control-sm" id="prop_blockColor" placeholder="#000000"/>
+                                        </div>
                                            <div class="form-group" style="margin:10px 0;">
                                                 <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_blockRemove">Remove</button>
                                             </div>
@@ -407,6 +406,7 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/d3.v5.min.js"></script>
     <script src="js/ruleJS.all.full.js"></script>
+    <script src="js/spectrum.js"></script>
     <script src="js/block.draw.js"></script>
     <script src="js/block.cal.js"></script>
     <script src="js/block.data.js"></script>

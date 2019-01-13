@@ -81,6 +81,12 @@ var Layout = function (){
                 diagramData.nodes.splice(i, 1);
             }
         });
+        diagramData.links.map(function(d, i){
+            if(d.id === id){
+                diagramData.links.splice(i, 1);
+            }
+        });
+        console.log(diagramData)
         Diagrams.updateNode();
     }
     api.setPageInfo = setPageInfo;
