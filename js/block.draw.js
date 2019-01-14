@@ -65,9 +65,7 @@ function Diagram(){
     var NodesInit;
     var UserFn;
 
-    var MouseOverNode = { node : null
-                        , data : null 
-                        };
+    var MouseOverNode = { node : null, data : null};
 
     /** node */
     function Node(){}
@@ -75,18 +73,15 @@ function Diagram(){
     Node.prototype = {
         genPath : d3.line().x(function(d) { return d.x; })
                             .y(function(d) { return d.y; })
-      , drawPath : function(svgObj, points, data){
-                    var path = svgObj.select("path")
-                    if(path.empty())path =  svgObj.append("path");
-
+      , drawPath : function(svgObj, points, data){                
+                    var path = svgObj.append("path");
                     path.attr("d", this.genPath(points))
                         .attr("stroke", data.color || "black")
                         .attr("stroke-width", 2)
                         .attr("fill", "#fff");
                }
        , drawText : function(svgObj, data){
-                    var text = svgObj.select("text");
-                    if(text.empty())text =  svgObj.append("text");
+                    var text = svgObj.append("text");
                     text.attr("x", data.width/2)
                         .attr("y", data.height/2)
                         .attr("text-anchor", "middle")
@@ -190,8 +185,7 @@ function Diagram(){
                 this.drawText(svgObj, data);
             }
             circle.drawPath = function(svgObj, points){
-                var path = svgObj.select("path");
-                if(path.empty())path = svgObj.append("path");
+                var path = svgObj.append("path");
 
                 path.attr("d", this.genPath(points))
                     .attr("fill", "none");
@@ -387,8 +381,7 @@ function Diagram(){
                     });
             }
             mb.drawPath = function(svgObj, data){
-                var path = svgObj.select("path")
-                if(path.empty())path = svgObj.append("path");
+                var path = svgObj.append("path");
 
                 path.attr("d", this.genPath(data))
                     .attr("fill", "none");
@@ -1296,6 +1289,7 @@ function Diagram(){
         
         ng.each(function(d){
             var _thisG = d3.select(this);//.selectAll("path").data([d]).enter(); 
+            _thisG.selectAll("*").remove();
             NodeList[d.type].draw(_thisG, d);
         });
     }
