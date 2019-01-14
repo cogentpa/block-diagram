@@ -28,13 +28,13 @@ $("#mode_design").bind("click", function(){
     $("#mode_view").removeClass("active");
     $(this).addClass("active");
     $("#cal-group").removeClass("view");
+    $("#svg-container").removeClass("view");
 });
 $("#mode_view").bind("click", function(){
     $("#mode_design").removeClass("active");
     $(this).addClass("active");
     $("#cal-group").addClass("view");
-    $("#node_toolbox").css("visibility","hidden");
-    $(".size-point").css("visibility","hidden");
+    $("#svg-container").addClass("view");
 });
 $("#leftMenus").find("li.item-menu").each(function(){
     $(this).bind("click", function(){

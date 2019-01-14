@@ -144,7 +144,25 @@ label{margin-bottom:1px;}
     font-size:14px;
     line-height:28px;
 }
+.calDiv.cal_start{
+    background: #7977f7;
+}
 
+.calDiv.cal_end{
+    background: #fa9090;
+}
+
+.calDiv.cal_start input {
+    border:1px dotted #7977f7;
+}
+
+.calDiv.cal_end input {
+    border:1px dotted #fa9090;
+}
+
+.calDiv.select {
+    background:#000000;
+}
 #cal-group.view .calDiv {
     background:transparent;
 }
@@ -165,23 +183,15 @@ label{margin-bottom:1px;}
 #cal-group.view .calDiv .calNo {
    display:none;
 }
-
-.calDiv.cal_start{
-    background: #7977f7;
+#svg-container.view .plus{
+    display:none;
 }
-
-.calDiv.cal_end{
-    background: #fa9090;
+#svg-container.view .minus{
+    display:none;
 }
-
-.calDiv.cal_start input {
-    border:1px dotted #7977f7;
+#svg-container.view .addline-arrow {
+    display:none;
 }
-
-.calDiv.cal_end input {
-    border:1px dotted #fa9090;
-}
-
-.calDiv.select {
-    background:#000000;
+#svg-container.view .size-point {
+    display:none;
 }
