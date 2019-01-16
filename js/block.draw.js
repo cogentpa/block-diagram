@@ -130,7 +130,8 @@ function Diagram(){
 
                 this.drawPath(svgObj, points, data);
                 this.drawText(svgObj, data);
-            }
+            };
+
             rect.getPathData = function(data){
                 var points = [];
                 points.push({x:0, y:0});
@@ -145,7 +146,8 @@ function Diagram(){
                 }
                 points.push({x:0, y:0});
                 return this.genPath(points);
-            }
+            };
+            
             return rect;
         },
         pou : function(){
@@ -172,7 +174,8 @@ function Diagram(){
 
                 this.drawPath(svgObj, points, data);
                 this.drawText(svgObj, data);
-            }
+            };
+
             return pou;
         },
         circle : function(){
@@ -189,14 +192,16 @@ function Diagram(){
 
                 this.drawPath(svgObj, data);
                 this.drawText(svgObj, data);
-            }
+            };
+
             circle.drawPath = function(svgObj, points){
                 var path = svgObj.append("path");
 
                 path.attr("d", this.genPath(points))
                     .attr("fill", "none");
                 //this.__proto__.drawPath(svgObj, points);
-            }
+            };
+
              //TO-DO 타원으로 points 생성해야함    
             circle.genPath = function(points){
                 var cx = points.width/2;
@@ -218,7 +223,8 @@ function Diagram(){
                     d += " L "+x + " " + y;
                 }
                 return d;
-            }
+            };
+            
             return circle;
         },
         mb : function(){
@@ -387,14 +393,16 @@ function Diagram(){
                             mb.draw(svgObj, data);
                         }
                     });
-            }
+            };
+
             mb.drawPath = function(svgObj, data){
                 var path = svgObj.append("path");
 
                 path.attr("d", this.genPath(data))
                     .attr("fill", "none");
                     //.attr("stroke", "red");
-            }
+            };
+
             mb.genPath = function(data){
                 var itemWidth = data["item"]["width"];
                 var itemHeight = data["item"]["height"];
@@ -428,7 +436,8 @@ function Diagram(){
                 pathData.push({x:0, y:0});
                 var points = mb.lineFunc(pathData);
                 return points;
-            }
+            };
+
             mb.lineFunc = function(d){
                 var points = "";
                 d.map(function(p,i){
@@ -439,7 +448,8 @@ function Diagram(){
                     }
                 });
                 return points;
-            }
+            };
+
             mb.makeEditable = function(d, field)
             {
                 this.on("mouseover", function() {
@@ -514,7 +524,8 @@ function Diagram(){
                                         }
                                     });
                   });
-            }
+            };
+            
             return mb;
         }
     };
@@ -862,10 +873,9 @@ function Diagram(){
             .append("circle")
             .attr("class", "size-point")
             .attr("r", 3)
-            .attr("cx", function(data){return data[0]+d.x})
-            .attr("cy", function(data){return data[1]+d.y})
+            .attr("cx", function(data){return data[0]+d.x;})
+            .attr("cy", function(data){return data[1]+d.y;})
             .attr("fill", "#FE7F2D")
-            //.attr("pointer-events", "none")
             .attr("stroke-width", "2")
             .attr("stroke", "#FE7F2D")
             .style("opacity", "0")
@@ -983,11 +993,11 @@ function Diagram(){
             .attr("stroke-width", "10px")
             .style("cursor", "pointer")
             .style("opacity", "0")
-            .call(dragNewLink);
-        //.classed("flowline", true)
-        //.on("mousemove", lineMousepoint)
-        //.on("mouseover", lineMouseover)
-        ; 
+            .call(dragNewLink)
+        /*.classed("flowline", true)
+        .on("mousemove", lineMousepoint)
+        .on("mouseover", lineMouseover)*/
+            ;
 
         if(UserFn)UserFn(d); 
 
@@ -1005,8 +1015,8 @@ function Diagram(){
             length = tPoints.length-1;
             for(i=2;i<length-2;i += 2){
                 //같은 선이면 포인트 삭제
-                if(!(tPoints[i] === tPoints[i-2] && tPoints[i-2] === tPoints[i+2])
-                    && !(tPoints[i+1] === tPoints[i-1] && tPoints[i-1] === tPoints[i+3]))
+                if(!(tPoints[i] === tPoints[i-2] && tPoints[i-2] === tPoints[i+2]) &&
+                   !(tPoints[i+1] === tPoints[i-1] && tPoints[i-1] === tPoints[i+3]))
                 {
                     l.waypoints.push(tPoints[i]);
                     l.waypoints.push(tPoints[i+1]);
