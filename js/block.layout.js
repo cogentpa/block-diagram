@@ -61,40 +61,47 @@ $("#leftMenus").find("li.item-menu").each(function(){
 
 var svg = d3.select("#diagram");
 //Block Info Event
-$("#prop_blockNmInput").bind("blur", function(){
-    var selectNode = Layout.getBlock();
-    if(selectNode.type){
-        selectNode.name = this.value;
-        Diagrams.updateNode();
-    }
+$("#prop_blockNmInput").bind("blur", function(e){
+    //if(e.keyCode == "13"){
+        var selectNode = Layout.getBlock();
+        if(selectNode.type && selectNode.id){
+            selectNode.name = this.value;
+            Diagrams.updateNode();
+            Diagrams.selectNode(selectNode.id);
+        }
+   // }   
 });
 $("#prop_blockWidthInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    if(selectNode.type){
+    if(selectNode.type && selectNode.id){
         selectNode.width = parseInt(this.value);
         Diagrams.updateNode();
+        Diagrams.selectNode(selectNode.id);
     }
 
 });
 $("#prop_blockHeightInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    if(selectNode.type){
+    if(selectNode.type && selectNode.id){
         selectNode.height = parseInt(this.value);
         Diagrams.updateNode();
+        Diagrams.selectNode(selectNode.id);
     }
 });
 $("#prop_blockXInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    if(selectNode.type){
+    if(selectNode.type && selectNode.id){
         selectNode.x = parseInt(this.value);
         Diagrams.updateNode();
+        Diagrams.selectNode(selectNode.id);
     }
 });
 $("#prop_blockYInput").bind("blur", function(){
     var selectNode = Layout.getBlock();
-    if(selectNode.type){
+    if(selectNode.type && selectNode.id){
         selectNode.y = parseInt(this.value);
         Diagrams.updateNode();
+        Diagrams.selectNode(selectNode.id);
     }
 });
 $("#prop_blockRemove").bind("click", function(){
@@ -104,21 +111,29 @@ $("#prop_blockRemove").bind("click", function(){
         Layout.removeNode(selectId);
     }
 });
-
+$("#prop_blockStroke").bind("change", function(){
+    var selectNode = Layout.getBlock();
+    if(selectNode.id){
+        selectNode.stroke = this.value;
+        Diagrams.updateNode();
+        Diagrams.selectNode(selectNode.id);
+    }
+});
 
 //Calculate Event
 $("#prop_calStart").bind("click", function(){
     var selectCal = CalData.getSelect();
+    if(!selectCal.id)return;
     if(this.checked){
         $("#"+selectCal.id).parent().addClass("cal_start");
     }else{
         $("#"+selectCal.id).parent().removeClass("cal_start");
     }
     CalData.setAttr(selectCal.id, "start", this.checked);
-    console.log(CalData.getCals());
 });
 $("#prop_calEnd").bind("click", function(){
     var selectCal = CalData.getSelect();
+    if(!selectCal.id)return;
     if(this.checked){
         $("#"+selectCal.id).parent().addClass("cal_end");
     }else{
@@ -145,6 +160,7 @@ function initNodeProp(){
     $("#prop_blockHeightInput").val("");
     $("#prop_blockXInput").val("");
     $("#prop_blockYInput").val("");
+    Layout.setBlock({});
 }
 
 function nodeSelect(obj){
