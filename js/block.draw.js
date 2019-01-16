@@ -22,7 +22,9 @@ function Diagram(){
         // linear scan for coarse approximation
         for (var scan, scanLength = 0, scanDistance; scanLength <= pathLength; scanLength += precision) {
           if ((scanDistance = distance2(scan = pathNode.getPointAtLength(scanLength))) < bestDistance) {
-            best = scan, bestLength = scanLength, bestDistance = scanDistance;
+            best = scan;
+            bestLength = scanLength;
+            bestDistance = scanDistance;
           }
         }
       
@@ -36,9 +38,13 @@ function Diagram(){
               beforeDistance,
               afterDistance;
           if ((beforeLength = bestLength - precision) >= 0 && (beforeDistance = distance2(before = pathNode.getPointAtLength(beforeLength))) < bestDistance) {
-            best = before, bestLength = beforeLength, bestDistance = beforeDistance;
+            best = before;
+            bestLength = beforeLength;
+            bestDistance = beforeDistance;
           } else if ((afterLength = bestLength + precision) <= pathLength && (afterDistance = distance2(after = pathNode.getPointAtLength(afterLength))) < bestDistance) {
-            best = after, bestLength = afterLength, bestDistance = afterDistance;
+            best = after;
+            bestLength = afterLength;
+            bestDistance = afterDistance;
           } else {
             precision /= 2;
           }
@@ -72,15 +78,15 @@ function Diagram(){
 
     Node.prototype = {
         genPath : d3.line().x(function(d) { return d.x; })
-                            .y(function(d) { return d.y; })
-      , drawPath : function(svgObj, points, data){                
+                            .y(function(d) { return d.y; }),
+        drawPath : function(svgObj, points, data){                
                     var path = svgObj.append("path");
                     path.attr("d", this.genPath(points))
                         .attr("stroke", data.color || "black")
                         .attr("stroke-width", 2)
                         .attr("fill", "#fff");
-               }
-       , drawText : function(svgObj, data){
+               },
+        drawText : function(svgObj, data){
                     var text = svgObj.append("text");
                     text.attr("x", data.width/2)
                         .attr("y", data.height/2)
@@ -92,7 +98,8 @@ function Diagram(){
                         ;
 
        }                                        
-    }
+    };
+
     NodesInit = {
         rect : function(){
             var rect = new Node();
@@ -510,7 +517,7 @@ function Diagram(){
             }
             return mb;
         }
-    }
+    };
 
     var dragNode = function(){
         var tempNode;
@@ -1357,6 +1364,12 @@ function Diagram(){
         updateDiagrams();
     }
 
+    function selectNodeById(id){
+        var node = NodeG.select("#nd-"+id);
+        var data = node.datum();
+        selectNode(node, data);
+    }
+
     //set return obj;
     var diagrams = {};
     diagrams.init = init;
@@ -1364,6 +1377,7 @@ function Diagram(){
     diagrams.getData = getData;
     diagrams.addBox = addBox;
     diagrams.updateNode = updateDiagrams;
+    diagrams.selectNode = selectNodeById;
 
     return diagrams;
 }
