@@ -125,50 +125,59 @@
 
                     <div class="tab-content clearfix">
                         <div class="tab-pane active" id="right-tab0">
-                                <div class="col-lg-12 col-md-12 mx-auto" id="prop_blockInfo">
-                                        <form>
-                                           <legend class="text-light"></legend>
-                                           <div class="form-group">
-                                               <label class="text-light">Id <span class="text-danger">*</span></label>
-                                               <input class="form-control form-control-sm" id="prop_blockIdInput" readonly/>
-                                           </div>
-                                           <div class="form-group">
-                                               <label class="text-light">Name <span class="text-danger">*</span></label>
-                                               <input class="form-control form-control-sm" id="prop_blockNmInput"/>
-                                           </div>
-                                           <div class="form-group">
-                                               <label class="text-light">Size <span class="text-danger">*</span></label>
-                                               <div class="form-row">
-                                                   <div class="col">
-                                                       <input class="form-control form-control-sm" id="prop_blockWidthInput" placeholder="Width"/> 
-                                                   </div>
-                                                   <span class="text-light">x</span>
-                                                   <div class="col">
-                                                       <input class="form-control form-control-sm" id="prop_blockHeightInput" placeholder="Height"/>
-                                                   </div>
-                                               </div>
-                                           </div>
-                                           <div class="form-group">
-                                               <label class="text-light">Position<span class="text-danger">*</span></label>
-                                               <div class="form-row">
-                                                   <div class="col">
-                                                       <input class="form-control form-control-sm" id="prop_blockXInput" placeholder="X"/> 
-                                                   </div>
-                                                   <span class="text-light">,</span>
-                                                   <div class="col">
-                                                       <input class="form-control form-control-sm" id="prop_blockYInput" placeholder="Y"/>
-                                                   </div>
-                                               </div>
-                                           </div>
-                                           <div class="form-group" style="margin:10px 0;">
-                                            <label class="text-light">Color<span class="text-danger"></span></label>
-                                            <input class="form-control form-control-sm" id="prop_blockColor" placeholder="#000000"/>
-                                        </div>
-                                           <div class="form-group" style="margin:10px 0;">
-                                                <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_blockRemove">Remove</button>
+                            <div class="col-lg-12 col-md-12 mx-auto" id="prop_blockInfo">
+                                <form>
+                                    <legend class="text-light"></legend>
+                                    <div class="form-group">
+                                        <label class="text-light">Id <span class="text-danger">*</span></label>
+                                        <input class="form-control form-control-sm" id="prop_blockIdInput" readonly/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="text-light">Name <span class="text-danger">*</span></label>
+                                        <input class="form-control form-control-sm" id="prop_blockNmInput"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="text-light">Size <span class="text-danger">*</span></label>
+                                        <div class="form-row">
+                                            <div class="col">
+                                                <input class="form-control form-control-sm" id="prop_blockWidthInput" placeholder="Width"/> 
                                             </div>
-                                        </form>
-                                   </div>
+                                            <span class="text-light">x</span>
+                                            <div class="col">
+                                                <input class="form-control form-control-sm" id="prop_blockHeightInput" placeholder="Height"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="text-light">Position<span class="text-danger">*</span></label>
+                                        <div class="form-row">
+                                            <div class="col">
+                                                <input class="form-control form-control-sm" id="prop_blockXInput" placeholder="X"/> 
+                                            </div>
+                                            <span class="text-light">,</span>
+                                            <div class="col">
+                                                <input class="form-control form-control-sm" id="prop_blockYInput" placeholder="Y"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin:10px 0;">
+                                        <label class="text-light">Color<span class="text-danger"></span></label>
+                                        <input class="form-control form-control-sm" id="prop_blockColor" placeholder="#000000"/>
+                                    </div>
+                                    <div class="form-group" style="margin:10px 0;">
+                                        <label class="text-light">Stroke Style</label>
+                                        <select class="form-control form-control-sm" id="prop_blockStroke">
+                                            <option value="">Default</option>
+                                            <option value="dash1">Dash Style 1</option>
+                                            <option value="dash2">Dash Style 2</option>
+                                            <option value="dash3">Dash Style 3</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin:10px 0;">
+                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_blockRemove">Remove</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                         <div class="tab-pane" id="right-tab1">
                             <div class="col-lg-12 col-md-12 mx-auto" id="prop_calTypeAdd">
@@ -216,56 +225,24 @@
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calCal2">Calculate 2</button>
                                     </div> 
                                     <div class="form-group" style="margin:10px 0;">
-                                            <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calRemove">Remove</button>
-                                        </div> 
+                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calRemove">Remove</button>
+                                    </div> 
                                     <div class="form-group" style="margin:10px 0;">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calSave">Save</button>
                                     </div> 
                                     <div class="form-group" style="margin:10px 0;">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calOpen">Open</button>
                                     </div> 
-                                    
-
-
-                                    <!-- <legend class="text-light">Node</legend>
-                                    <div class="form-group">
-                                        <label class="text-light">In Block <span class="text-danger">*</span></label>
-                                        <select class="form-control form-control-sm" id="prop_inBlockSelect">
-                                            <option value="">Select</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Out Block <span class="text-danger">*</span></label>
-                                        <select class="form-control form-control-sm" id="prop_outBlockSelect">
-                                            <option value="">Select</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">In Value <span class="text-danger">*</span></label>
-                                        <input class="form-control form-control-sm" id="prop_inValue" placeholder="0" readonly/>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Out Value <span class="text-danger">*</span></label>
-                                        <input class="form-control form-control-sm" id="prop_outValue" placeholder="0" readonly/>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Calcaulation <span class="text-danger">*</span></label>
-                                        <select class="form-control form-control-sm" id="prop_calTypeSelect">
-                                            <option value="">Select</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group" style="margin:10px 0;">
-                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calTypeAddBtn">Add</button>
-                                    </div> -->
                                 </form>
                             </div>
-                            <div class="col-lg-12 col-md-12 mx-auto">
+                            <!-- <div class="col-lg-12 col-md-12 mx-auto">
                                 <div class="list-group" id="prop_calTypeList" style="height:250px;width:100%;overflow:auto"></div>
-                            </div>
+                            </div> -->
                         </div>
                     </div>   
                 </div>           
             </div> 
+            </div>
             <!-- Content here -->
             <div class="footer"></div>
         </div>
