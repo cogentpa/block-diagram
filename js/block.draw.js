@@ -3,7 +3,7 @@
  * 시작 점에서 해당 방향으로 10px 지점에 첫번째 점 생성
  * 대상 노드의 해당 방향으로 10px 지점에 마지막 점 생성
  * 두 방향이 좌<->우, 위<->아래 일경우 중간 지점 3개 생성, 그외 2개 생성
- * 생성 제외 지역이 없으면 중간, 아니면
+ * 생성 제외 지역이 없으면 중간, 아니면....
  */
 
 
@@ -171,8 +171,7 @@ function Diagram(){
         circle : function(){
             var circle = new Node();
             circle.draw = function(svgObj, data){
-                var ellipse = svgObj.select("ellipse");
-                if(ellipse.empty())ellipse =  svgObj.append("ellipse");
+                var ellipse = svgObj.append("ellipse");
                 ellipse.attr("cx", data.width/2)
                         .attr("cy", data.height/2)
                         .attr("rx",data.width/2)
@@ -195,17 +194,19 @@ function Diagram(){
             circle.genPath = function(points){
                 var cx = points.width/2;
                 var cy = points.height/2;
-                //var xr = (points.width/2)/90;
-                //var yr = (points.height/2)/90;
 
-                var radius = points.width/2;
+                var x_radius = points.width/2;
+                var y_radius = points.height/2;
 
-                var d = " M "+ (cx + radius) + " " + cy;
+                var x,y;
+
+                var d = " M "+ (cx + x_radius) + " " + cy;
                 var angle=1;
+
                 while(angle <= 360){
                     var radians= angle * (Math.PI / 180);  // convert degree to radians
-                    var x = cx + Math.cos(radians) * radius;  
-                    var y = cy + Math.sin(radians) * radius;
+                    x = cx + Math.cos(radians) * x_radius;  
+                    y = cy + Math.sin(radians) * y_radius;
                     angle++;
                     d += " L "+x + " " + y;
                 }
@@ -608,6 +609,7 @@ function Diagram(){
 
                 }
                 tempNode.attr("transform", "translate(" + tData.x + "," + tData.y + ")");
+                tempNode.selectAll("*").remove();
                 NodeList[tData.type].draw(tempNode, tData);
 
             })
@@ -726,6 +728,21 @@ function Diagram(){
                 .attr("opacity", 0)
                 .remove()
                 ;
+
+                NodeG.selectAll(".node")
+                        .append("rect")
+                        .attr("class", "temp-box")
+                        .attr("opacity", 0)
+                        .attr("x", -20)
+                        .attr("y", -20)
+                        .attr("width", function(d){
+                            return d.width+40;
+                        })
+                        .attr("height", function(d){
+                            return d.height+40;
+                        })
+                        ;
+
             })
             .on("drag", function(){
                 var lPoint = [d3.event.x, d3.event.y];
