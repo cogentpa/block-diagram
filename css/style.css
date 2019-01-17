@@ -77,7 +77,7 @@ body {
 .footer {
     clear: both;
     background: #2f2f2f;
-    height:20px;
+    height:30px;
 }
 #svg-container{
     width:100%;
@@ -195,3 +195,11 @@ label{margin-bottom:1px;}
 #svg-container.view .size-point {
     display:none;
 }
+#custom-handle {
+    width: 3em;
+    height: 1.6em;
+    top: 50%;
+    margin-top: -.8em;
+    text-align: center;
+    line-height: 1.6em;
+  }
