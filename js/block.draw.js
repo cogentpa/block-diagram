@@ -73,6 +73,12 @@ function Diagram(){
 
     var MouseOverNode = { node : null, data : null};
 
+    var StokeStyle = {
+        "dash1" : "5,5",
+        "dash2" : "10,5",
+        "dash3" : "15, 10, 5, 10",
+    };
+
     /** node */
     function Node(){}
 
@@ -83,8 +89,14 @@ function Diagram(){
                     var path = svgObj.append("path");
                     path.attr("d", this.genPath(points))
                         .attr("stroke", data.color || "black")
-                        .attr("stroke-width", 2)
+                        .attr("stroke-width", data.strokeWidth||2)
                         .attr("fill", "#fff");
+                    if(data.stroke){
+                        path.attr("stroke-dasharray", StokeStyle[data.stroke]);
+                        
+                    }
+
+
                },
         drawText : function(svgObj, data){
                     var text = svgObj.append("text");
@@ -181,25 +193,9 @@ function Diagram(){
         circle : function(){
             var circle = new Node();
             circle.draw = function(svgObj, data){
-                var ellipse = svgObj.append("ellipse");
-                ellipse.attr("cx", data.width/2)
-                        .attr("cy", data.height/2)
-                        .attr("rx",data.width/2)
-                        .attr("ry",data.height/2)
-                        .attr("stroke", data.color || "black")
-                        .attr("stroke-width", 2)
-                        .attr("fill", "#fff");
 
-                this.drawPath(svgObj, data);
+                this.drawPath(svgObj, data, data);
                 this.drawText(svgObj, data);
-            };
-
-            circle.drawPath = function(svgObj, points){
-                var path = svgObj.append("path");
-
-                path.attr("d", this.genPath(points))
-                    .attr("fill", "none");
-                //this.__proto__.drawPath(svgObj, points);
             };
 
              //TO-DO 타원으로 points 생성해야함    
@@ -525,7 +521,7 @@ function Diagram(){
                                     });
                   });
             };
-            
+
             return mb;
         }
     };
@@ -1003,6 +999,86 @@ function Diagram(){
 
     }
 
+    function selectLine(d){
+        d3.event.stopPropagation();
+        tmpClear();
+        var points = LinkG.select("#ln-"+d.id).attr("points").split(",");
+        var circlePoints = [];
+
+        var i;
+        var length = points.length;
+        var point1X, point1Y, point2X, point2Y;
+        //[1,2,3,4]
+        for(i=2;i<length;i=i+2){
+            point1X = points[i-2]*1;
+            point1Y = points[i-1]*1;
+            point2X = points[i]*1;
+            point2Y = points[i+1]*1;
+            //신규점
+            circlePoints.push(
+                {
+                    index:i,
+                    isNew:true,
+                    line:this,
+                    x:(point1X + point2X)/2,
+                    y:(point1Y + point2Y)/2
+                }
+            );
+        }
+        //기존점
+        if(length > 3){
+            for(i=0;i<length;i=i+2){
+                circlePoints.push(
+                    {
+                        index:i,
+                        isNew:false,
+                        isLast : (i == length-2) ? 1 : (i == 0) ? 2 : 0,  //0: 중간, 1:마지막, 2:시작
+                        line:this,
+                        x:points[i]*1,
+                        y:points[i+1]*1,
+                    }
+                );
+            }
+        }
+        d.circlePoints = circlePoints;
+        TempG.selectAll(".temp-point")
+            .data(circlePoints)
+            .enter()
+            .append("circle")
+            .attr("class", "temp-point")
+            .attr("r", 3)
+            .attr("cx", function(d){return d.x;})
+            .attr("cy", function(d){return d.y;})
+            .attr("fill", "#FC3")
+            //.attr("pointer-events", "none")
+            .attr("stroke-width", function(d,i,a){
+                return (a.length-1 == i) ? 4 : 2;
+            })
+            .attr("stroke", "#FC3")
+            .call(dragLineCircle)
+            .style("opacity", "0")
+            .transition().duration(100).style("opacity", "1")
+            ;
+        TempG.append("image")
+            .attr("x", parseInt(points[0]) + 5)
+            .attr("y", parseInt(points[1]) - 5)
+            .attr('width', 16)
+            .attr('height', 16)
+            .attr("xlink:href", "./icon/trash-alt-solid.svg")
+            .style("cursor", "pointer")
+            .on("click", function(){
+                var links = DATA.links.filter(function(e,i,a){
+                    return e.id !== d.id;
+                });
+                DATA.links = links;
+                updateDiagrams();
+
+            })
+            ;
+        if(UserFn)UserFn(d);                
+        //circle.transition().duration(200).style("opacity", "1");
+    }
+
     /** lineFunction  */
     function makePoints(l){
         var startPoint = [l.sd.x+(l.sOffsetX || 0), l.sd.y+(l.sOffsetY || 0)];
@@ -1159,98 +1235,22 @@ function Diagram(){
                 return d;
             })
             .attr("class", "link")
-            //.on("click", lineClick)
             .on("mouseenter", function(){
-                d3.select(this).select(".line_back").attr("stroke", "#ccc");
+                d3.select(this).select(".line_back").attr("opacity", 0.8);
             })
             .on("mouseleave", function(){
-                d3.select(this).select(".line_back").attr("stroke", null);
+                d3.select(this).select(".line_back").attr("opacity", 0);
             })
-            .on("click", function(d){
-                d3.event.stopPropagation();
-                tmpClear();
-                var points = d3.select(this).select("polyline").attr("points").split(",");
-                var circlePoints = [];
-        
-                var i;
-                var length = points.length;
-                var point1X, point1Y, point2X, point2Y;
-                //[1,2,3,4]
-                for(i=2;i<length;i=i+2){
-                    point1X = points[i-2]*1;
-                    point1Y = points[i-1]*1;
-                    point2X = points[i]*1;
-                    point2Y = points[i+1]*1;
-                    //신규점
-                    circlePoints.push(
-                        {
-                            index:i,
-                            isNew:true,
-                            line:this,
-                            x:(point1X + point2X)/2,
-                            y:(point1Y + point2Y)/2
-                        }
-                    );
-                }
-                //기존점
-                if(length > 3){
-                    for(i=0;i<length;i=i+2){
-                        circlePoints.push(
-                            {
-                                index:i,
-                                isNew:false,
-                                isLast : (i == length-2) ? 1 : (i == 0) ? 2 : 0,  //0: 중간, 1:마지막, 2:시작
-                                line:this,
-                                x:points[i]*1,
-                                y:points[i+1]*1,
-                            }
-                        );
-                    }
-                }
-                d.circlePoints = circlePoints;
-                TempG.selectAll(".temp-point")
-                    .data(circlePoints)
-                    .enter()
-                    .append("circle")
-                    .attr("class", "temp-point")
-                    .attr("r", 3)
-                    .attr("cx", function(d){return d.x;})
-                    .attr("cy", function(d){return d.y;})
-                    .attr("fill", "#FC3")
-                    //.attr("pointer-events", "none")
-                    .attr("stroke-width", function(d,i,a){
-                        return (a.length-1 == i) ? 4 : 2;
-                    })
-                    .attr("stroke", "#FC3")
-                    .call(dragLineCircle)
-                    .style("opacity", "0")
-                    .transition().duration(100).style("opacity", "1")
-                    ;
-                TempG.append("image")
-                    .attr("x", parseInt(points[0]) + 5)
-                    .attr("y", parseInt(points[1]) - 5)
-                    .attr('width', 16)
-                    .attr('height', 16)
-                    .attr("xlink:href", "./icon/trash-alt-solid.svg")
-                    .style("cursor", "pointer")
-                    .on("click", function(){
-                        var links = DATA.links.filter(function(e,i,a){
-                            return e.id !== d.id;
-                        });
-                        DATA.links = links;
-                        updateDiagrams();
-
-                    })
-                    ;
-                if(UserFn)UserFn(d);                     
-                //circle.transition().duration(200).style("opacity", "1");
-            });
-
+            .on("click", selectLine);
         
         lg.append("polyline")
             .attr("class", "line_back")
             .attr("fill", "none")
-            .attr("stroke-width", "6px")
+            .attr("stroke", "#ccc")
+            .attr("opacity", 0)
+            .attr("stroke-width", function(d){
+                return (d.strokeWidth) ? d.strokeWidth+2 : 6;
+            })
             ;
 
         lg.append("polyline")
@@ -1260,7 +1260,6 @@ function Diagram(){
             //.on("mousemove", lineMousepoint)
             //.on("mouseover", lineMouseover)
             .attr("fill", "none")
-            .attr("stroke-width", "2px")
             .attr("marker-end", "url(#arrowhead)")
             ;
 
@@ -1274,8 +1273,17 @@ function Diagram(){
         lg.select(".line").datum(function(d){
             return d;
         })
+        .attr("id", function(d){
+            return "ln-"+d.id;
+        })
         .attr("stroke", function(d){
             return d.color || "#000000";
+        })
+        .attr("stroke-width", function(d){
+            return d.strokeWidth ||2;
+        })
+        .attr("stroke-dasharray", function(d){
+            return (d.stroke) ? StokeStyle[d.stroke] : 0;
         })
         .attr("points", makePoints);
     }
@@ -1374,10 +1382,14 @@ function Diagram(){
         updateDiagrams();
     }
 
-    function selectNodeById(id){
-        var node = NodeG.select("#nd-"+id);
-        var data = node.datum();
-        selectNode(node, data);
+    function selectItem(data){
+        if(!data)return;
+        if(data.source){
+            selectLine(data);
+        }else{
+            var node = NodeG.select("#nd-"+data.id);
+            selectNode(node, data);
+        }
     }
 
     //set return obj;
@@ -1387,7 +1399,7 @@ function Diagram(){
     diagrams.getData = getData;
     diagrams.addBox = addBox;
     diagrams.updateNode = updateDiagrams;
-    diagrams.selectNode = selectNodeById;
+    diagrams.selectItem = selectItem;
 
     return diagrams;
 }
