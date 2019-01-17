@@ -999,8 +999,8 @@ function Diagram(){
 
     }
 
-    function selectLine(d){
-        d3.event.stopPropagation();
+    function selectLine(d, e){
+        if(e === 0)d3.event.stopPropagation();
         tmpClear();
         var points = LinkG.select("#ln-"+d.id).attr("points").split(",");
         var circlePoints = [];
