@@ -118,6 +118,14 @@ $("#prop_blockStroke").bind("change", function(){
         Diagrams.selectNode(selectNode.id);
     }
 });
+$("#prop_blockStrokeWidth").bind("change", function(){
+    var selectNode = Layout.getBlock();
+    if(selectNode.id){
+        selectNode.strokeWidth = this.value;
+        Diagrams.updateNode();
+        Diagrams.selectNode(selectNode.id);
+    }
+});
 
 //Calculate Event
 $("#prop_calStart").bind("click", function(){
@@ -159,6 +167,10 @@ function initNodeProp(){
     $("#prop_blockHeightInput").val("");
     $("#prop_blockXInput").val("");
     $("#prop_blockYInput").val("");
+
+    $("#prop_blockColor").spectrum("set", "#000000");
+    $("#prop_blockStroke").val("");
+    $("#prop_blockStrokeWidth").val("2");
     Layout.setBlock({});
 }
 
@@ -184,6 +196,8 @@ function nodeSelect(obj){
         $("#prop_blockXInput").val(nodeObj.x||"");
         $("#prop_blockYInput").val(nodeObj.y||"");
     }
+    $("#prop_blockStroke").val(nodeObj.stroke);
+    $("#prop_blockStrokeWidth").val(nodeObj.strokeWidth||"2");
     $("#prop_blockColor").spectrum("set", nodeObj.color||"#000000");
     $('#rightTab_block').tab('show');
 }
@@ -210,15 +224,19 @@ function calClick(id){
 
 function setFormula(v){
     var d = CalData.getSelect();
-    var val = $.trim(v);
-    $("#"+d.id).val(val);
-    CalData.setAttr(d.id, "fm", val.replace("=",""));
+    if(d.id){
+        var val = $.trim(v);
+        $("#"+d.id).val(val);
+        CalData.setAttr(d.id, "fm", val.replace("=",""));
+    }
 }
 
 function setCalName(v){
     var d = CalData.getSelect();
-    var val = $.trim(v);
-    CalData.setAttr(d.id, "nm", val);
+    if(d.id){
+        var val = $.trim(v);
+        CalData.setAttr(d.id, "nm", val);
+    }
 }
 
 function cfn_setSelect(s,v){
