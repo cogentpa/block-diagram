@@ -121,7 +121,7 @@ $("#prop_blockStroke").bind("change", function(){
 $("#prop_blockStrokeWidth").bind("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.id){
-        selectNode.strokeWidth = this.value;
+        selectNode.strokeWidth = parseInt(this.value);
         Diagrams.updateNode();
         Diagrams.selectNode(selectNode.id);
     }
@@ -170,7 +170,7 @@ function initNodeProp(){
 
     $("#prop_blockColor").spectrum("set", "#000000");
     $("#prop_blockStroke").val("");
-    $("#prop_blockStrokeWidth").val("2");
+    $("#prop_blockStrokeWidth").val(2);
     Layout.setBlock({});
 }
 
@@ -197,7 +197,7 @@ function nodeSelect(obj){
         $("#prop_blockYInput").val(nodeObj.y||"");
     }
     $("#prop_blockStroke").val(nodeObj.stroke);
-    $("#prop_blockStrokeWidth").val(nodeObj.strokeWidth||"2");
+    $("#prop_blockStrokeWidth").val(nodeObj.strokeWidth||2);
     $("#prop_blockColor").spectrum("set", nodeObj.color||"#000000");
     $('#rightTab_block').tab('show');
 }
