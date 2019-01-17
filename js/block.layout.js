@@ -66,7 +66,7 @@ $("#prop_blockNmInput").bind("blur", function(e){
         if(selectNode.type && selectNode.id){
             selectNode.name = this.value;
             Diagrams.updateNode();
-            Diagrams.selectNode(selectNode.id);
+            Diagrams.selectItem(selectNode);
         }
    // }   
 });
@@ -75,7 +75,7 @@ $("#prop_blockWidthInput").bind("blur", function(){
     if(selectNode.type && selectNode.id){
         selectNode.width = parseInt(this.value);
         Diagrams.updateNode();
-        Diagrams.selectNode(selectNode.id);
+        Diagrams.selectItem(selectNode);
     }
 
 });
@@ -84,7 +84,7 @@ $("#prop_blockHeightInput").bind("blur", function(){
     if(selectNode.type && selectNode.id){
         selectNode.height = parseInt(this.value);
         Diagrams.updateNode();
-        Diagrams.selectNode(selectNode.id);
+        Diagrams.selectItem(selectNode);
     }
 });
 $("#prop_blockXInput").bind("blur", function(){
@@ -92,7 +92,7 @@ $("#prop_blockXInput").bind("blur", function(){
     if(selectNode.type && selectNode.id){
         selectNode.x = parseInt(this.value);
         Diagrams.updateNode();
-        Diagrams.selectNode(selectNode.id);
+        Diagrams.selectItem(selectNode);
     }
 });
 $("#prop_blockYInput").bind("blur", function(){
@@ -100,7 +100,7 @@ $("#prop_blockYInput").bind("blur", function(){
     if(selectNode.type && selectNode.id){
         selectNode.y = parseInt(this.value);
         Diagrams.updateNode();
-        Diagrams.selectNode(selectNode.id);
+        Diagrams.selectItem(selectNode);
     }
 });
 $("#prop_blockRemove").bind("click", function(){
@@ -115,7 +115,7 @@ $("#prop_blockStroke").bind("change", function(){
     if(selectNode.id){
         selectNode.stroke = this.value;
         Diagrams.updateNode();
-        Diagrams.selectNode(selectNode.id);
+        Diagrams.selectItem(selectNode);
     }
 });
 $("#prop_blockStrokeWidth").bind("change", function(){
@@ -123,7 +123,7 @@ $("#prop_blockStrokeWidth").bind("change", function(){
     if(selectNode.id){
         selectNode.strokeWidth = parseInt(this.value);
         Diagrams.updateNode();
-        Diagrams.selectNode(selectNode.id);
+        Diagrams.selectItem(selectNode);
     }
 });
 
