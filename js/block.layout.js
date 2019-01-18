@@ -404,7 +404,7 @@ function layout_init(){
     });
     window.onload = function() {
         var svgActive = false, svgHovered = false;
-        window.panZoom = svgPanZoom('#diagram', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false});
+        window.panZoom = svgPanZoom('#diagram', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false, dblClickZoomEnabled:false, center:true});
     };
 }
 
