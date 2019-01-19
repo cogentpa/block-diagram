@@ -547,6 +547,7 @@ function Diagram(){
                       tempNode.attr("transform", "translate("+(d.x-stX)+","+(d.y-stY)+")");
                   })
                   .on("end",function(d, i){
+
                       tempNode.remove();
                       updateDiagrams();
                       selectNode(targetNode, d);
@@ -628,6 +629,7 @@ function Diagram(){
 
             })
             .on("end", function(){
+                d3.event.stopPropagation();
                 tmpClear();
                 updateDiagrams();
                 selectNode(targetNode, tData);
@@ -994,13 +996,12 @@ function Diagram(){
         .on("mousemove", lineMousepoint)
         .on("mouseover", lineMouseover)*/
             ;
-
         if(UserFn)UserFn(d); 
 
     }
 
-    function selectLine(d, e){
-        if(e === 0)d3.event.stopPropagation();
+    function selectLine(d){
+        if(arguments.length > 1)d3.event.stopPropagation();
         tmpClear();
         var points = LinkG.select("#ln-"+d.id).attr("points").split(",");
         var circlePoints = [];
@@ -1074,7 +1075,7 @@ function Diagram(){
                 updateDiagrams();
 
             })
-            ;
+            ;  
         if(UserFn)UserFn(d);                
         //circle.transition().duration(200).style("opacity", "1");
     }
