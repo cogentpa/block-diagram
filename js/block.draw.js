@@ -629,7 +629,7 @@ function Diagram(){
 
             })
             .on("end", function(){
-                d3.event.stopPropagation();
+                //d3.event.stopPropagation();
                 tmpClear();
                 updateDiagrams();
                 selectNode(targetNode, tData);
