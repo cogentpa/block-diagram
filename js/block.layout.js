@@ -60,7 +60,7 @@ $("#leftMenus").find("li.item-menu").each(function(){
 
 var svg = d3.select("#diagram");
 //Block Info Event
-$("#prop_blockNmInput").bind("blur", function(e){
+$("#prop_blockNmInput").bind("change", function(e){
     //if(e.keyCode == "13"){
         var selectNode = Layout.getBlock();
         if(selectNode.type && selectNode.id){
@@ -70,7 +70,7 @@ $("#prop_blockNmInput").bind("blur", function(e){
         }
    // }   
 });
-$("#prop_blockWidthInput").bind("blur", function(){
+$("#prop_blockWidthInput").bind("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.width = parseInt(this.value);
@@ -79,7 +79,7 @@ $("#prop_blockWidthInput").bind("blur", function(){
     }
 
 });
-$("#prop_blockHeightInput").bind("blur", function(){
+$("#prop_blockHeightInput").bind("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.height = parseInt(this.value);
@@ -87,7 +87,7 @@ $("#prop_blockHeightInput").bind("blur", function(){
         Diagrams.selectItem(selectNode);
     }
 });
-$("#prop_blockXInput").bind("blur", function(){
+$("#prop_blockXInput").bind("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.x = parseInt(this.value);
@@ -95,7 +95,7 @@ $("#prop_blockXInput").bind("blur", function(){
         Diagrams.selectItem(selectNode);
     }
 });
-$("#prop_blockYInput").bind("blur", function(){
+$("#prop_blockYInput").bind("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.y = parseInt(this.value);
@@ -265,24 +265,25 @@ $("#prop_blockSelect").bind("change", function(){
         CalData.setAttr(d.id, "bl", this.value);
     }
 });
-
+/*
 $("#prop_calName").bind("keyup", function(e){
     if(e.keyCode == "13"){
         setCalName(this.value);
     }
 });
-
-$("#prop_calName").bind("blur", function(e){
+*/
+$("#prop_calName").bind("change", function(e){
     setCalName(this.value);
 });
-
+/*
 $("#prop_calFormula").bind("keyup", function(e){
     if(e.keyCode == "13"){
         setFormula(this.value);
     }
 });
+*/
 
-$("#prop_calFormula").bind("blur", function(e){
+$("#prop_calFormula").bind("change", function(e){
     setFormula(this.value);
 });
 
@@ -387,6 +388,7 @@ function layout_init(){
             Diagrams.updateNode();
         }
     });
+    /*
     $("#slider").slider({
         min : 0,
         max : 20,
@@ -404,8 +406,9 @@ function layout_init(){
     });
     window.onload = function() {
         var svgActive = false, svgHovered = false;
-        window.panZoom = svgPanZoom('#diagram', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false, dblClickZoomEnabled:false, center:true});
+        window.panZoom = svgPanZoom('#svg-container', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false, dblClickZoomEnabled:false, center:true});
     };
+    */
 }
 
 layout_init();
