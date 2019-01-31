@@ -7,9 +7,9 @@ $("#propModal").on("show.bs.modal", function (e) {
     Layout.setPageInfo("width",$("#svg-container").width());
     Layout.setPageInfo("height", $("#svg-container").height());
 });
+
 $("#newModal_newBtn").bind("click", function(){
     Diagrams.setData({});
-    //Diagrams.updateNode();
     Cal.destory();
     $("#newModal").modal('hide');
 });
@@ -20,7 +20,6 @@ $("#propModal_applyBtn").bind("click", function(){
     Layout.setPageInfo("height", $("#bgHeight").val());
     Layout.setPageInfo("name",  $("#propPageNm").val());
     $("#propModal").modal('hide');
-    console.log(Layout.getPageInfo());
 });
 
 $("#mode_design").bind("click", function(){
@@ -35,6 +34,7 @@ $("#mode_view").bind("click", function(){
     $("#cal-group").addClass("view");
     $("#svg-container").addClass("view");
 });
+
 $("#leftMenus").find("li.item-menu").each(function(){
     $(this).bind("click", function(){
         var _item = $(this);
@@ -59,16 +59,13 @@ $("#leftMenus").find("li.item-menu").each(function(){
 });
 
 var svg = d3.select("#diagram");
-//Block Info Event
 $("#prop_blockNmInput").bind("change", function(e){
-    //if(e.keyCode == "13"){
         var selectNode = Layout.getBlock();
         if(selectNode.type && selectNode.id){
             selectNode.name = this.value;
             Diagrams.updateNode();
             Diagrams.selectItem(selectNode);
         }
-   // }   
 });
 $("#prop_blockWidthInput").bind("change", function(){
     var selectNode = Layout.getBlock();
@@ -127,7 +124,7 @@ $("#prop_blockStrokeWidth").bind("change", function(){
     }
 });
 
-//Calculate Event
+
 $("#prop_calStart").bind("click", function(){
     var selectCal = CalData.getSelect();
     if(!selectCal.id)return;
@@ -175,7 +172,6 @@ function initNodeProp(){
 }
 
 function nodeSelect(obj){
-    console.log(obj);
     if(obj == null){
         initNodeProp();
         return;
@@ -214,12 +210,8 @@ function calClick(id){
     $("#prop_calFormula").val("="+d.fm);
     $("#prop_calValue").val($("#"+id).val());
     $("#prop_calName").val(d.nm||"");
-
     $('#rightTab_cal').tab('show');
-
     setCalBlockSelect(d.bl);
-    console.log(CalData.getCals());
-
 }
 
 function setFormula(v){
@@ -265,23 +257,10 @@ $("#prop_blockSelect").bind("change", function(){
         CalData.setAttr(d.id, "bl", this.value);
     }
 });
-/*
-$("#prop_calName").bind("keyup", function(e){
-    if(e.keyCode == "13"){
-        setCalName(this.value);
-    }
-});
-*/
+
 $("#prop_calName").bind("change", function(e){
     setCalName(this.value);
 });
-/*
-$("#prop_calFormula").bind("keyup", function(e){
-    if(e.keyCode == "13"){
-        setFormula(this.value);
-    }
-});
-*/
 
 $("#prop_calFormula").bind("change", function(e){
     setFormula(this.value);
@@ -293,7 +272,6 @@ $("#prop_calRemove").bind("click",function(){
     CalData.delCalById(selectCal.id);
 });
 
-//Test
 $("#prop_calCal2").bind("click", function(){
     var selectCal = CalData.getSelect();
     
@@ -305,24 +283,6 @@ $("#prop_calCal2").bind("click", function(){
 $("#prop_calCal").bind("click", function(){
     var selectCal = CalData.getSelect();
     Cal.refresh();
-
-    /*
-    if(selectCal.end){
-        var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
-        console.log(rc.x)
-        if(rc){
-            $("#"+rc.skey).val(rc.x);
-            $("#"+rc.skey).attr("data-formula", rc.x);
-            rules.reload();
-        }
-    }else{
-        //CalData.setAttr(selectCal.id, "ofm", $("#"+selectCal.id).attr("data-formula"));
-        $("#"+selectCal.id).val($("#prop_calValue").val());
-        $("#"+selectCal.id).attr("data-formula", $("#prop_calValue").val());
-        rules.reload();
-        console.log(CalData.getCals());
-    }
-    */
 });
 
 $("#prop_calRev").bind("click", function(){
@@ -356,7 +316,6 @@ function window_resize(){
         winHeight = document.body.clientHeight;
     }
     $("#container").height(winHeight-86);
-    //$("#svg-container").height(winHeight-86);
     $("#svg-container").width(2000);
     $("#svg-container").height(2000);
 }
@@ -388,27 +347,6 @@ function layout_init(){
             Diagrams.updateNode();
         }
     });
-    /*
-    $("#slider").slider({
-        min : 0,
-        max : 20,
-        value : 10,
-        slide: function(event, ui) {
-            var panZoomTiger = svgPanZoom('#diagram');
-            var zoom = ui.value/10;
-            panZoomTiger.zoom(zoom);
-        }
-    });
-    $("#zoomReset").bind("click", function(){
-        var panZoomTiger = svgPanZoom('#diagram');
-        $("#slider").slider( "value", 10);
-        panZoomTiger.zoom(1);
-    });
-    window.onload = function() {
-        var svgActive = false, svgHovered = false;
-        window.panZoom = svgPanZoom('#svg-container', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false, dblClickZoomEnabled:false, center:true});
-    };
-    */
 }
 
 layout_init();

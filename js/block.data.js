@@ -14,7 +14,7 @@ var Layout = function (){
             outBlocks:[],
             names:{}
         }
-    }
+    };
     function setPageInfo(ty, val){
         info.page[ty] = val;
     }
@@ -86,7 +86,6 @@ var Layout = function (){
                 diagramData.links.splice(i, 1);
             }
         });
-        console.log(diagramData)
         Diagrams.updateNode();
     }
     api.setPageInfo = setPageInfo;
@@ -111,7 +110,7 @@ var CalData = function(){
         selectCal : {},
         types : {cal0:{nm:"DI Tank"},cal1:{nm:"UV-ox-2"},cal3:{nm:"UDI Tank"}},
         cals : {}
-    }
+    };
     function makeCalName(){
         var cell = String.fromCharCode(65);
         var rtnNm = [];
@@ -169,12 +168,7 @@ var CalData = function(){
         data.cals[id][attr] = val; 
     }
 
-
-
-
-
     function getName(id){
-        console.log(id)
         if(data.types[id]){
             return data.types[id].nm;
         }

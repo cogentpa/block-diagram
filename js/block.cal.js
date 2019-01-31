@@ -9,7 +9,7 @@ var Cal = function(){
             calDiv.css("left", att.x+"px").css("top", att.y+"px");
             calInput.attr("value",att.val).attr("data-formula",att.fm);
         }
-        calDiv.append(calNoDiv)
+        calDiv.append(calNoDiv);
         calDiv.append(calInput);
         calDiv.draggable({
             start: function() {
@@ -63,7 +63,6 @@ var Cal = function(){
             $(this).attr("data-formula", cal.fm);
         });
         rules.init();
-        //rules.reload();
     }
 
     function reverse(id, val){
@@ -105,18 +104,15 @@ var Cal = function(){
         if(endKey && cal[endKey]){
             calString = cal[endKey]["rfm"];
             calString = genCalString(calString);
-            console.log("역순 방정식 : "+calString);
             rtnX = nerdamer.solveEquations(calString+"="+val,'x');
             rtnX = eval(rtnX.toString());
         }
-        //console.log(CalData.getCals())
         return {x:rtnX,skey:startKey,ekey:endKey};
     }
 
     function genCalString(cal){
         var formattedFormula = excelFormulaUtilities.formula2JavaScript(cal);
         formattedFormula = formattedFormula.replace(/ROUND\(|round\(/g,"").replace(/\,\d\)/g,"");
-        //console.log("convert : "+formattedFormula)
         return "("+formattedFormula+")";
     }
     
