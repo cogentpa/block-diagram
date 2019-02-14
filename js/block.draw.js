@@ -1,14 +1,3 @@
-/**
- * 선 연결 알고리즘
- * 시작 점에서 해당 방향으로 10px 지점에 첫번째 점 생성
- * 대상 노드의 해당 방향으로 10px 지점에 마지막 점 생성
- * 두 방향이 좌<->우, 위<->아래 일경우 중간 지점 3개 생성, 그외 2개 생성
- * 생성 제외 지역이 없으면 중간, 아니면....
- */
-
-
-
-//test.js
 function Diagram(){
     "use strict";
     /** Util Fnc */
@@ -1342,10 +1331,21 @@ function Diagram(){
         DATA.nodes = d.nodes || [];
         DATA.links = d.links || [];
 
-        //데이터 정제(tOffset 필수값.)
+        //데이터 정제
         DATA.links.forEach(function(v){
             if(!v.tOffsetX) v.tOffsetX = 0;
             if(!v.tOffsetY) v.tOffsetY = 0;
+            if(!v.sOffsetX) v.sOffsetX = 0;
+            if(!v.sOffsetY) v.sOffsetY = 0;
+
+            var sourceNode = DATA.nodes.filter(function(n, i) {
+                return n.id == v.sd.id;
+            })[0];
+            var targetNode = DATA.nodes.filter(function(n, i) {
+                return n.id == v.td.id;
+            })[0];
+            v.sd = sourceNode;
+            v.td = targetNode;
         });
         updateDiagrams();
     }
@@ -1354,8 +1354,8 @@ function Diagram(){
         if("save" === mode){
             DATA.links.forEach(function(v){
                 delete v.circlePoints;
-                delete v.sd;
-                delete v.td;
+                //delete v.sd;
+                //delete v.td;
             });
         }
         return DATA;
