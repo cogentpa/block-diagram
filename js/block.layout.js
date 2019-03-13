@@ -51,6 +51,8 @@ $("#leftMenus").find("li.item-menu").each(function(){
         }else if(_item.hasClass("item5")){
             Diagrams.addBox({type:"pou",x:50,y:50,width:120,height:100});
         }else if(_item.hasClass("item6")){
+            Diagrams.addBox({type:"tb",x:50,y:50,width:120,height:40});
+        }else if(_item.hasClass("itemC")){
             var calNo = CalData.getCalNo();
             CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
             var calDiv = Cal.add(calNo);
@@ -246,7 +248,7 @@ function setCalBlockSelect(sId){
     var select = [];
     var diagramData = Diagrams.getData();
     diagramData.nodes.map(function(d, i){
-        select.push({code:d.id,name:d.name||d.id,select:sId == d.id?true:false});
+        select.push({code:d.id,name:(d.name)?d.name+":"+d.id:d.id,select:sId == d.id?true:false});
     });
     var blockSelect = cfn_setSelect("#prop_blockSelect", select);
 }
@@ -315,7 +317,7 @@ function window_resize(){
     if(parseInt(winHeight) < 1){
         winHeight = document.body.clientHeight;
     }
-    $("#container").height(winHeight-86);
+    $("#container").height(winHeight-87);
     $("#svg-container").width(2000);
     $("#svg-container").height(2000);
 }
@@ -343,10 +345,14 @@ function layout_init(){
     $("#prop_blockColor").bind("change", function(){
         var selectNode = Layout.getBlock();
         if(selectNode){
-            selectNode.color = this.value;
+            selectNode.color = $(this).spectrum("get").toHexString();
             Diagrams.updateNode();
         }
     });
+
+    var Scrollbar = window.Scrollbar;
+    //Scrollbar.init(document.querySelector('#container .right'), {});
+    //Scrollbar.init(document.querySelector('#container .center'), {damping:0.5, alwaysShowTracks:true});
 }
 
 layout_init();

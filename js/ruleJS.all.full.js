@@ -20355,6 +20355,25 @@ jStat.extend(jStat.fn, {
       return 1 - Formula.NORMSDIST((Formula.AVERAGE(range) - x) / (sd / Math.sqrt(n)), Formula.TRUE);
     };
 
+    Formula.VLOOKUP = function (needle, table, index, rangeLookup) {
+      if (!needle || !table || !index) {
+        return '#N/A';
+      }
+      table = Formula.FLATTEN(table);
+    
+      rangeLookup = rangeLookup || false;
+      for (var i = 0; i < table.length; i++) {
+        var row = table[i];
+        if ((!rangeLookup && row[0] === needle) ||
+          ((row[0] === needle) ||
+            (rangeLookup && typeof row[0] === "string" && row[0].toLowerCase().indexOf(needle.toLowerCase()) !== -1))) {
+          return (index < (row.length + 1) ? row[index - 1] : '#REF!');
+        }
+      }
+    
+      return '#N/A';
+    };   
+
 
     // Text functions
 

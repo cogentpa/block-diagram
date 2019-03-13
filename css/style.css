@@ -195,6 +195,17 @@ label{margin-bottom:1px;}
 #svg-container.view .size-point {
     display:none;
 }
+
+#svg-container .textPath {
+    stroke:#CCC;
+    fill:#FFF;
+}
+
+#svg-container.view .textPath {
+    stroke:none;
+    fill:none;
+}
+
 #custom-handle {
     width: 3em;
     height: 1.6em;

@@ -84,8 +84,6 @@ function Diagram(){
                         path.attr("stroke-dasharray", StokeStyle[data.stroke]);
                         
                     }
-
-
                },
         drawText : function(svgObj, data){
                     var text = svgObj.append("text");
@@ -98,7 +96,7 @@ function Diagram(){
                         .attr("stroke-width", 1)
                         ;
 
-       }                                        
+       }
     };
 
     NodesInit = {
@@ -106,6 +104,7 @@ function Diagram(){
             var rect = new Node();
             rect.draw = function(svgObj, data){
                 var points = [];
+                var mdData;
                 
                 if(data.isStart){
                     points.push({x:0, y:0});
@@ -114,6 +113,8 @@ function Diagram(){
                     points.push({x:data.width-data.width/5, y:data.height});
                     points.push({x:0, y:data.height});
                     points.push({x:0, y:0});
+                    
+                    mdData = {name : data.name, width : data.width*0.9, height: data.height};
                 }else if(data.isEnd){
                     points.push({x:0+data.width/5, y:0});
                     points.push({x:data.width, y:0});
@@ -121,6 +122,8 @@ function Diagram(){
                     points.push({x:0+data.width/5, y:data.height});
                     points.push({x:0, y:data.height/2});
                     points.push({x:0+data.width/5, y:0});
+                    
+                    mdData = {name : data.name, width : data.width*1.1, height: data.height};
                 }else {
                     points.push({x:0, y:0});
                     points.push({x:data.width, y:0});
@@ -130,7 +133,8 @@ function Diagram(){
                 }
 
                 this.drawPath(svgObj, points, data);
-                this.drawText(svgObj, data);
+                this.drawText(svgObj, mdData || data);
+                
             };
 
             rect.getPathData = function(data){
@@ -259,7 +263,7 @@ function Diagram(){
                                 .on("mouseout", function() {
                                     d3.select(this).attr("stroke", "black");
                                 })
-                                .on("mousedown", function(d) {
+                                .on("click", function(d) {
                                     var p = this.parentNode.parentNode.parentNode.parentNode;
                                     var xy = this.getBBox();
                                     var p_xy = p.getBBox();
@@ -512,35 +516,155 @@ function Diagram(){
             };
 
             return mb;
-        }
+        },
+        tb : function(){
+            var tb = new Node();
+            tb.draw = function(svgObj, data){
+                var points = [];
+                    points.push({x:0, y:0});
+                    points.push({x:data.width, y:0});
+                    points.push({x:data.width, y:data.height});
+                    points.push({x:0, y:data.height});
+                    points.push({x:0, y:0});
+
+                this.drawPath(svgObj, points, data);
+                this.drawText(svgObj, data);
+                
+            };
+
+            tb.getPathData = function(data){
+                var points = [];
+                points.push({x:0, y:0});
+                points.push({x:data.width, y:0});
+                points.push({x:data.width, y:data.height});
+                points.push({x:0, y:data.height});
+                points.push({x:0, y:0});
+                return this.genPath(points);
+            };
+            tb.drawPath = function(svgObj, points, data){                
+                var path = svgObj.append("path");
+                path.attr("d", this.genPath(points))
+                    .attr("class", "textPath")
+                    .attr("stroke-width", data.strokeWidth||2)
+           }
+            tb.drawText = function(svgObj, data){
+                var text = svgObj.append("text");
+                text.attr("x", data.width/2)
+                    .attr("y", data.height/2)
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "middle")
+                    .text(data.name || "text")
+                    .attr("stroke", data.color || "black")
+                    .attr("stroke-width", 1)
+                    .on("mouseover", function() {
+                        d3.select(this).attr("stroke", "red");
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this).attr("stroke", "black");
+                    })
+                    .on("click", function(d) {
+                        var p = this.parentNode.parentNode.parentNode;
+                        var el = d3.select(this);
+                        var p_el = d3.select(p);
+                        var frm = p_el.append("foreignObject");
+                        var _this = this;
+                        
+                        var inp = frm
+                            .attr("x", d.x)
+                            .attr("y", d.y+3)
+                            .attr("width", d.width-6)
+                            .attr("height", d.height)
+                            .append("xhtml:form")
+                            .append("input")
+                            .attr("xmlns","http://www.w3.org/1999/xhtml")
+                            .attr("value", function() {
+                                this.focus();
+                                var val = d3.select(_this).text();
+                                return val;
+                            })
+                            .attr("style", "display:inline-block;width:"+(d.width-6)+"px;height:"+(d.height-4)+"px;")
+                            .on("click", function(){
+                                this.select();
+                            })
+                            .on("blur", function() {
+                                var txt = inp.node().value;
+                                d.name = txt;
+                                el.text(function(d) { return txt; });
+                                if(p_el.select("foreignObject").empty() === false){
+                                    p_el.select("foreignObject").remove();
+                                }
+                            })
+                            .on("keypress", function() {
+                                // IE fix   
+                                if (!d3.event){
+                                    d3.event = window.event;
+                                }
+                                var e = d3.event;
+                                if (e.keyCode == 13){
+                                    if (typeof(e.cancelBubble) !== 'undefined'){ // IE
+                                        e.cancelBubble = true;
+                                    }
+                                    if (e.stopPropagation){
+                                        e.stopPropagation();
+                                    }
+                                    e.preventDefault();
+                                    e.target.blur();
+                                }
+                            });
+                        var e = d3.event;
+                        if (e.stopPropagation){
+                            e.stopPropagation();
+                        }
+                        e.preventDefault();
+                    });
+
+
+            }
+            
+            return tb;
+        },
     };
 
     var dragNode = function(){
         var tempNode;
         var targetNode;
         var stX, stY;
+        var dragFlag;
         return d3.drag()
+                  .clickDistance(0)
                   .on("start",function(d, i){
                       tmpClear();
+                      dragFlag = false;
                       targetNode = d3.select(this);
                       stX = d.x;
                       stY = d.y;
-                      tempNode = NodeG.append("use")
-                                        .attr("xlink:href", "#" + targetNode.attr("id"))
-                                        .attr("transform", "translate(0,0)")
-                                        .attr("opacity", 0.5);
                   })
                   .on("drag",function(d, i){
+                      if(!dragFlag){
+                        dragFlag = true;
+                        tempNode = NodeG.append("use")
+                            .attr("xlink:href", "#" + targetNode.attr("id"))
+                            .attr("transform", "translate(0,0)")
+                            .attr("opacity", 0.5);
+                      }
                       d.x = (d3.event.x/10).toFixed(0)*10;
                       d.y = (d3.event.y/10).toFixed(0)*10;
                       tempNode.attr("transform", "translate("+(d.x-stX)+","+(d.y-stY)+")");
                   })
                   .on("end",function(d, i){
-
-                      tempNode.remove();
-                      updateDiagrams();
-                      selectNode(targetNode, d);
-                  });   
+                      if(dragFlag){
+                        tempNode.remove();
+                        updateDiagrams();
+                      }
+                      
+                      //이유를 모르겠음... 여기서 하면 지우고 다시 그려야만 선택됨...
+                      /*
+                      var _thisG = d3.select(this);
+                          _thisG.selectAll("path").remove();
+                          NodeList[d.type].draw(_thisG, d);
+                      */
+                      selectNode(d3.select(this), d);
+                  });
              }(); 
              
     var dragSizeCircle = function(){
@@ -848,15 +972,21 @@ function Diagram(){
         tPoints.push([d.width, d.height/2]);
         tPoints.push([d.width/2, d.height]);
         tPoints.push([0, d.height/2]);
-        
         var pathNode = targetNode.select("path").node();
         var points = tPoints.map(function(v,i){
             return closestPoint(pathNode, v);
         });
-
         TempG.attr("target_id", targetNode.attr("id"));
 
-        TempG.selectAll(".size-point").data(points).enter()
+        TempG.selectAll("circle").append("circle")
+            .attr("r", 3)
+            .attr("cx", 100)
+            .attr("cy", 100)
+            .attr("fill", "#FE7F2D")
+            .attr("stroke-width", "2")
+            .attr("stroke", "#FE7F2D");
+
+        TempG.selectAll("circle.size-point").data(points).enter()
             .append("circle")
             .attr("class", "size-point")
             .attr("r", 3)
@@ -889,8 +1019,8 @@ function Diagram(){
             .call(dragSizeCircle)
             .transition().duration(200).style("opacity", "1")
             ;
-        
-        TempG.selectAll(".addline-arrow").data(points).enter()
+
+        TempG.selectAll("line.addline-arrow").data(points).enter()
             .append("line")
             .attr("class", "addline-arrow")
             .attr("x1", function(data,i){
@@ -936,7 +1066,7 @@ function Diagram(){
             .style("opacity", "0")
             .transition().duration(200).style("opacity", "0.2");
         
-        TempG.selectAll(".addline-pointer").data(points).enter()
+        TempG.selectAll("line.addline-pointer").data(points).enter()
             .append("line")
             .attr("class", "addline-arrow")
             .attr("x1", function(data,i){
@@ -1054,7 +1184,7 @@ function Diagram(){
             .attr("y", parseInt(points[1]) - 5)
             .attr('width', 16)
             .attr('height', 16)
-            .attr("xlink:href", "./icon/trash-alt-solid.svg")
+            .attr("xlink:href", "/resources/hts/css/icon/trash-alt-solid.svg")
             .style("cursor", "pointer")
             .on("click", function(){
                 var links = DATA.links.filter(function(e,i,a){
@@ -1134,7 +1264,9 @@ function Diagram(){
         svg.on("click", function(){
             tmpClear();
         });
+
         initNodeList();
+        attachKeyEvent(svg);
     }
 
     function appendDef(d3Svg){
@@ -1182,6 +1314,29 @@ function Diagram(){
                 .attr("stroke-width", 1);
     }
 
+    function makeArrowhead(d3Svg, color){
+        var defs = d3Svg.select("defs");
+        
+        if(defs.select("#arrowhead-"+color).empty()){
+            defs.append("marker")
+                .attr("id", "arrowhead-"+color)
+                .attr("refX", 5)
+                .attr("refY", 3)
+                .attr("markerWidth", 15)
+                .attr("markerHeight", 15)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M 0 0 6 3 0 6 1.5 3")
+                .style("fill", "#"+color);
+        }
+    }
+
+    function attachKeyEvent(d3Svg){
+        d3Svg.on("keypress", function() {                                                                                                                                  
+            console.log("keypress" + d3.event.keyCode);
+          })
+    }
+
     function initNodeList(){
 
         NodeList = {};
@@ -1192,6 +1347,7 @@ function Diagram(){
     }
     function tmpClear(){
         TempG.selectAll("*").remove();
+
         if(UserFn)UserFn();
     }
     function clearAll(){
@@ -1250,7 +1406,6 @@ function Diagram(){
             //.on("mousemove", lineMousepoint)
             //.on("mouseover", lineMouseover)
             .attr("fill", "none")
-            .attr("marker-end", "url(#arrowhead)")
             ;
 
         lg = lg.merge(links);
@@ -1275,7 +1430,16 @@ function Diagram(){
         .attr("stroke-dasharray", function(d){
             return (d.stroke) ? StokeStyle[d.stroke] : 0;
         })
-        .attr("points", makePoints);
+        .attr("points", makePoints)
+        .attr("marker-end", function(d){
+            if(d.color){
+                var color = d.color.replace("#", "");
+                makeArrowhead(D3SVG, color);
+                return "url(#arrowhead-"+color+")";
+            }else{
+                return "url(#arrowhead)";
+            }
+        });
     }
     function drawNode(){
         var nodes = NodeG.selectAll(".node").data(DATA.nodes);
@@ -1288,7 +1452,10 @@ function Diagram(){
             .attr("id", function(d){
                 return "nd-" + d.id;
             })
-            //.on("click", function(d){console.log("click node")})
+            /*.on("click", function(d){
+                console.log("click node");
+                selectNode(d3.select(this), d);
+            })*/
             .call(dragNode)
             .on("mouseenter", function(){
                 MouseOverNode.node = d3.select(this).select("path").node();
@@ -1368,7 +1535,16 @@ function Diagram(){
         if(!node.type)node.type = "rect";
         if(!node.x)node.x = 10;
         if(!node.y)node.y = 10;
-        node.id = new Date().getTime();
+        
+        var maxNum = 0;
+        DATA.nodes.forEach(function(n){
+            if(node.type === n.type){
+                var num = (n.id+"").split("-")[1] || 0;
+                maxNum = maxNum > num ? maxNum : num;
+            }
+        });
+
+        node.id = node.type + "-" + (parseInt(maxNum)+1);
         
         if(node.type == "mb"){
             node.mb = [[{text:"New"}]];
