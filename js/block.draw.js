@@ -663,6 +663,7 @@ function Diagram(){
                           _thisG.selectAll("path").remove();
                           NodeList[d.type].draw(_thisG, d);
                       */
+
                       selectNode(d3.select(this), d);
                   });
              }(); 
@@ -1265,8 +1266,11 @@ function Diagram(){
             tmpClear();
         });
 
+        svg.on("keypress", function(){
+            console.log("keypress" + d3.event.keyCode);
+        });
+
         initNodeList();
-        attachKeyEvent(svg);
     }
 
     function appendDef(d3Svg){
@@ -1329,12 +1333,6 @@ function Diagram(){
                 .attr("d", "M 0 0 6 3 0 6 1.5 3")
                 .style("fill", "#"+color);
         }
-    }
-
-    function attachKeyEvent(d3Svg){
-        d3Svg.on("keypress", function() {                                                                                                                                  
-            console.log("keypress" + d3.event.keyCode);
-          })
     }
 
     function initNodeList(){
@@ -1452,10 +1450,9 @@ function Diagram(){
             .attr("id", function(d){
                 return "nd-" + d.id;
             })
-            /*.on("click", function(d){
-                console.log("click node");
-                selectNode(d3.select(this), d);
-            })*/
+            .on("click", function(d){
+                d3.event.stopPropagation();
+            })
             .call(dragNode)
             .on("mouseenter", function(){
                 MouseOverNode.node = d3.select(this).select("path").node();

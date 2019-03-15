@@ -351,8 +351,8 @@ function layout_init(){
     });
 
     var Scrollbar = window.Scrollbar;
-    //Scrollbar.init(document.querySelector('#container .right'), {});
-    //Scrollbar.init(document.querySelector('#container .center'), {damping:0.5, alwaysShowTracks:true});
+    Scrollbar.init(document.querySelector('#container .right'), {});
+    Scrollbar.init(document.querySelector('#container .center'), {damping:0.5, alwaysShowTracks:true});
 }
 
 layout_init();
