@@ -1529,7 +1529,7 @@ function Diagram(){
         DATA.nodes.forEach(function(n){
             if(node.type === n.type){
                 var num = (n.id+"").split("-")[1] || 0;
-                maxNum = maxNum > num ? maxNum : num;
+                maxNum = maxNum > parseInt(num) ? maxNum : parseInt(num);
             }
         });
 
