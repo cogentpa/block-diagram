@@ -198,7 +198,8 @@ label{margin-bottom:1px;}
 
 #svg-container .textPath {
     stroke:#CCC;
-    fill:#FFF;
+    fill:#fff;
+    fill-opacity: 0.1;
 }
 
 #svg-container.view .textPath {

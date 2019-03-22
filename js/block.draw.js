@@ -656,15 +656,7 @@ function Diagram(){
                         tempNode.remove();
                         updateDiagrams();
                       }
-                      
-                      //이유를 모르겠음... 여기서 하면 지우고 다시 그려야만 선택됨...
-                      /*
-                      var _thisG = d3.select(this);
-                          _thisG.selectAll("path").remove();
-                          NodeList[d.type].draw(_thisG, d);
-                      */
-
-                      selectNode(d3.select(this), d);
+                      selectNode(targetNode, d);
                   });
              }(); 
              

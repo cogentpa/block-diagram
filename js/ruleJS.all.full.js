@@ -20372,7 +20372,25 @@ jStat.extend(jStat.fn, {
       }
     
       return '#N/A';
-    };   
+    };
+    Formula.MINIF = function (range, testRange, testValue) {
+      range = Formula.FLATTEN(range);
+      testRange = Formula.FLATTEN(testRange); 
+
+      var rn = range.length;
+      var tn = testRange.length;
+
+      if(rn !== tn) return '#REF!';
+    
+      var min = (n > 0) ? range[0] : 0;
+
+      for (var i = 0; i < n; i++) {
+        if(testRange[i] > testValue){
+          min = (range[i] < min && (range[i] !== true) && (range[i] !== false)) ? range[i] : min;
+        }
+      }
+      return min;
+    };
 
 
     // Text functions
@@ -21726,6 +21744,8 @@ var ruleJS = (function (root) {
      */
     this.data = [];
 
+    this.eventIds = [];
+
     /**
      * form elements, which can be parsed
      * @type {string[]}
@@ -22057,6 +22077,13 @@ var ruleJS = (function (root) {
      */
     var registerElementEvents = function (element) {
       var id = element.getAttribute('id');
+
+      //이벤트 중복 제거
+      var exist = instance.matrix.eventIds.filter(function(e){
+    	  return e === id;
+      })[0];
+      if(exist) return;
+      instance.matrix.eventIds.push(id);
 
       // on db click show formula
       element.addEventListener('dblclick', function () {
@@ -22520,16 +22547,17 @@ var ruleJS = (function (root) {
       'CEILING', 'CEILINGMATH', 'CEILINGPRECISE', 'CHAR', 'CHISQDIST', 'CHISQINV', 'CODE', 'COMBIN', 'COMBINA', 'COMPLEX', 'CONCATENATE', 'CONFIDENCENORM', 'CONFIDENCET', 'CONVERT', 'CORREL', 'COS', 'COSH', 'COT', 'COTH', 'COUNT', 'COUNTA', 'COUNTBLANK', 'COUNTIF', 'COUNTIFS', 'COUNTIN', 'COUNTUNIQUE', 'COVARIANCEP', 'COVARIANCES', 'CSC', 'CSCH', 'CUMIPMT', 'CUMPRINC',
       'DATE', 'DATEVALUE', 'DAY', 'DAYS', 'DAYS360', 'DB', 'DDB', 'DEC2BIN', 'DEC2HEX', 'DEC2OCT', 'DECIMAL', 'DEGREES', 'DELTA', 'DEVSQ', 'DOLLAR', 'DOLLARDE', 'DOLLARFR',
       'E', 'EDATE', 'EFFECT', 'EOMONTH', 'ERF', 'ERFC', 'EVEN', 'EXACT', 'EXPONDIST',
-      'FALSE', 'FDIST', 'FINV', 'FISHER', 'FISHERINV',
+      'FALSE', 'FDIST', 'FINV', 'FISHER', 'FISHERINV', 'FORECAST',
       'IF', 'INT', 'ISEVEN', 'ISODD',
       'LN', 'LOG', 'LOG10',
-      'MAX', 'MAXA', 'MEDIAN', 'MIN', 'MINA', 'MOD',
+      'MAX', 'MAXA', 'MEDIAN', 'MIN', 'MINA', 'MOD', 'MINIF',
       'NOT',
       'ODD', 'OR',
       'PI', 'POWER',
       'ROUND', 'ROUNDDOWN', 'ROUNDUP',
       'SIN', 'SINH', 'SPLIT', 'SQRT', 'SQRTPI', 'SUM', 'SUMIF', 'SUMIFS', 'SUMPRODUCT', 'SUMSQ', 'SUMX2MY2', 'SUMX2PY2', 'SUMXMY2',
       'TAN', 'TANH', 'TRUE', 'TRUNC',
+      'VLOOKUP',
       'XOR'
     ],
 
