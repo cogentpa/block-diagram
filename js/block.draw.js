@@ -59,6 +59,9 @@ function Diagram(){
     var NodeList;
     var NodesInit;
     var UserFn;
+    var scrollTimer;
+
+    var clipboard;
 
     var MouseOverNode = { node : null, data : null};
 
@@ -79,11 +82,12 @@ function Diagram(){
                     path.attr("d", this.genPath(points))
                         .attr("stroke", data.color || "black")
                         .attr("stroke-width", data.strokeWidth||2)
-                        .attr("fill", "#fff");
+                        .attr("fill", data.fill || "#fff");
                     if(data.stroke){
                         path.attr("stroke-dasharray", StokeStyle[data.stroke]);
                         
                     }
+                    data.nConn = (data.fill) === "none" ? true : false;//연결 끄기;
                },
         drawText : function(svgObj, data){
                     var text = svgObj.append("text");
@@ -92,8 +96,7 @@ function Diagram(){
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "middle")
                         .text(data.name)
-                        .attr("stroke", "black")
-                        .attr("stroke-width", 1)
+                        .attr("fill", "black")
                         ;
 
        }
@@ -131,7 +134,6 @@ function Diagram(){
                     points.push({x:0, y:data.height});
                     points.push({x:0, y:0});
                 }
-
                 this.drawPath(svgObj, points, data);
                 this.drawText(svgObj, mdData || data);
                 
@@ -221,6 +223,10 @@ function Diagram(){
             mb.draw = function(svgObj, data){
                 svgObj.selectAll("g.mbItem").remove();
                 svgObj.selectAll("g.mbIcon").remove();
+
+                data.item.width = data.width/data.mb.length;
+                data.item.height = data.height/Math.max.apply(Math, data.mb.map(function(o) { return o.length; }));
+                
                 this.addItem(svgObj, data);
                 this.drawPath(svgObj, data);
             }
@@ -255,13 +261,12 @@ function Diagram(){
                                 .attr("text-anchor", "middle")
                                 .attr("dominant-baseline", "middle")
                                 .text(b["text"])
-                                .attr("stroke", "black")
-                                .attr("stroke-width", 1)
+                                .attr("fill", "black")
                                 .on("mouseover", function() {
-                                    d3.select(this).attr("stroke", "red");
+                                    d3.select(this).attr("fill", "red");
                                 })
                                 .on("mouseout", function() {
-                                    d3.select(this).attr("stroke", "black");
+                                    d3.select(this).attr("fill", "black");
                                 })
                                 .on("click", function(d) {
                                     var p = this.parentNode.parentNode.parentNode.parentNode;
@@ -352,10 +357,12 @@ function Diagram(){
                     .on("mousedown", function(){
                         if(pos.type == "right"){
                             data["mb"].push([{text:"new"}]);
-                            mb.draw(svgObj, data);
+                            updateDiagrams();
+                            /*data.width += data.item.width;
+                            mb.draw(svgObj, data);*/
                         }else if(pos.type == "down"){
                             data["mb"][pos.index].push({text:"new"});
-                            mb.draw(svgObj, data);
+                            updateDiagrams();
                         }
                     });
                 var minusIcon = iconG.append("text").attr("class","minus");
@@ -372,14 +379,14 @@ function Diagram(){
                                 return;
                             }
                             data["mb"].splice(len-1, 1);
-                            mb.draw(svgObj, data);
+                            updateDiagrams();
                         }else if(pos.type == "down"){
                             var len = data["mb"][pos.index].length;
                             if(len < 2){
                                 return;
                             }
                             data["mb"][pos.index].splice(len-1, 1);
-                            mb.draw(svgObj, data);
+                            updateDiagrams();
                         }
                     });
             };
@@ -554,13 +561,13 @@ function Diagram(){
                     .attr("text-anchor", "middle")
                     .attr("dominant-baseline", "middle")
                     .text(data.name || "text")
-                    .attr("stroke", data.color || "black")
-                    .attr("stroke-width", 1)
+                    .attr("fill", data.color || "black")
+                    .style("font-size", data.height-(data.height/5))
                     .on("mouseover", function() {
-                        d3.select(this).attr("stroke", "red");
+                        d3.select(this).attr("fill", "red");
                     })
                     .on("mouseout", function() {
-                        d3.select(this).attr("stroke", "black");
+                        d3.select(this).attr("fill", data.color || "black")
                     })
                     .on("click", function(d) {
                         var p = this.parentNode.parentNode.parentNode;
@@ -622,6 +629,56 @@ function Diagram(){
             }
             
             return tb;
+        },
+        scope : function(){
+            var scope = new Node();
+            scope.draw = function(svgObj, data){
+
+                data.nConn = true; //연결 끄기;
+
+                var points = [];
+                var points2 = [];
+                points.push({x:data.width/2, y:data.height/3});
+                points.push({x:0, y:0});
+                points.push({x:data.width/2, y:0});
+                points.push({x:data.width/2-1, y:data.height});
+                
+                points2.push({x:data.width/2, y:data.height/3});
+                points2.push({x:data.width, y:0});
+                points2.push({x:data.width/2, y:0});
+                points2.push({x:data.width/2, y:data.height});
+
+                this.drawPath(svgObj, points, points2, data);
+            };
+
+            scope.drawPath = function(svgObj, points, points2, data){                
+                //size 조절용 path
+                var sp = [];
+                sp.push({x:0, y:0});
+                sp.push({x:data.width, y:0});
+                sp.push({x:data.width, y:data.height});
+                sp.push({x:0, y:data.height});
+                sp.push({x:0, y:0});
+
+                svgObj.append("path")
+                    .attr("d", this.genPath(sp))
+                    .attr("fill", "none");
+
+                //본 모양 Path
+                var path = svgObj.append("path");
+                var path2 = svgObj.append("path");
+
+                path.attr("d", this.genPath(points))
+                    .attr("stroke", data.color || "black")
+                    .attr("stroke-width", data.strokeWidth ||2)
+                    .attr("fill", data.fill || "#000");
+                path2.attr("d", this.genPath(points2))
+                    .attr("stroke", data.color || "black")
+                    .attr("stroke-width", data.strokeWidth||2)
+                    .attr("fill", data.fill || "#fff");
+           };
+
+            return scope;
         },
     };
 
@@ -815,7 +872,7 @@ function Diagram(){
                     linkData.sOffsetY = tmpWaypoints[1]-sourceNode.y;
                     linkData.tOffsetX = tmpWaypoints[tmpWaypoints.length-2]-targetNode.x;
                     linkData.tOffsetY = tmpWaypoints[tmpWaypoints.length-1]-targetNode.y;
-
+                    
                     tmpClear();
                     updateDiagrams();
                 })
@@ -824,10 +881,19 @@ function Diagram(){
 
     var dragNewLink = function(){
         var line;
+        var tmpBox;
         var sp1, sp2;
         var sData;
+        var scrollEl;
+        var conH;
+        var conW;
         return d3.drag()
             .on("start", function(){
+
+                scrollEl = document.querySelector("#container>.center");
+                conH = scrollEl.clientHeight;
+                conW = scrollEl.clientWidth;
+                
                 var d3this = d3.select(this);
                 var sourceNode = d3.select("#" + TempG.attr("target_id"));
                 sData = sourceNode.datum();
@@ -851,23 +917,47 @@ function Diagram(){
                 .remove()
                 ;
 
-                NodeG.selectAll(".node")
+                tmpBox = NodeG.selectAll(".node")
                         .append("rect")
                         .attr("class", "temp-box")
                         .attr("opacity", 0)
                         .attr("x", -20)
                         .attr("y", -20)
                         .attr("width", function(d){
-                            return d.width+40;
+                            return d.nConn ? 0 : d.width+40;
                         })
                         .attr("height", function(d){
-                            return d.height+40;
+                            return d.nConn ? 0 : d.height+40;
                         })
                         ;
 
             })
             .on("drag", function(){
+                clearInterval(scrollTimer);
+                var mx = d3.event.x-scrollEl.scrollLeft;
+                var my = d3.event.y-scrollEl.scrollTop;
+                var sx = 0;
+                var sy = 0;
+
+                if(mx < 21){
+                    sx = -3 + (mx/10);
+                }else if(mx > conW-20){
+                    sx = 3 - (conW-mx)/10;
+                }
+                if(my < 21){
+                    sy = -3 + my/10;
+                }else if(my > conH-20){
+                    sy = 3 - (conH-my)/10;
+                }
+
+                if(sx !== 0 || sy !== 0){
+                    scrollTimer = setInterval(function(){
+                        scrollEl.scroll(scrollEl.scrollLeft+sx, scrollEl.scrollTop+sy)
+                    },30)
+                }
+
                 var lPoint = [d3.event.x, d3.event.y];
+
                 if(MouseOverNode.node){
                     var points = closestPoint(MouseOverNode.node, [d3.event.x - MouseOverNode.data.x,d3.event.y-MouseOverNode.data.y]);
 
@@ -902,6 +992,7 @@ function Diagram(){
                 
             })
             .on("end", function(){
+                clearInterval(scrollTimer);
                 if(MouseOverNode.node){
                     var points = line.attr("points").split(",").map(function(v,i,a){
                         return parseInt(v);
@@ -919,6 +1010,7 @@ function Diagram(){
                     });
                     updateDiagrams();
                 }
+                tmpBox.remove();
                 line.remove();
             });
         
@@ -965,6 +1057,7 @@ function Diagram(){
         tPoints.push([d.width, d.height/2]);
         tPoints.push([d.width/2, d.height]);
         tPoints.push([0, d.height/2]);
+        
         var pathNode = targetNode.select("path").node();
         var points = tPoints.map(function(v,i){
             return closestPoint(pathNode, v);
@@ -1012,102 +1105,103 @@ function Diagram(){
             .call(dragSizeCircle)
             .transition().duration(200).style("opacity", "1")
             ;
-
-        TempG.selectAll("line.addline-arrow").data(points).enter()
-            .append("line")
-            .attr("class", "addline-arrow")
-            .attr("x1", function(data,i){
-                var x1 = data[0]+d.x;
-                if(i === 1){
-                    x1 += 5;
-                } else if( i === 3){
-                    x1 -= 5;
-                } 
-                return x1;
-            })
-            .attr("y1", function(data,i){
-                var y1 = data[1]+d.y;
-                if(i === 0){
-                    y1 -= 5;
-                } else if( i === 2){
-                    y1 += 5;
-                } 
-                return y1;
-            })
-            .attr("x2", function(data,i){
-                var x2 = data[0]+d.x;
-                if(i === 1){
-                    x2 += 35;
-                } else if( i === 3){
-                    x2 -= 35;
-                } 
-                return x2;
-            })
-            .attr("y2", function(data,i){
-                var y2 = data[1]+d.y;
-                if(i === 0){
-                    y2 -= 35;
-                } else if( i === 2){
-                    y2 += 35;
-                } 
-                return y2;
-            })
-            .attr("fill", "none")
-            .attr("stroke", "#000000")
-            .attr("stroke-width", "2px")
-            .attr("marker-end", "url(#arrowhead)")
-            .style("opacity", "0")
-            .transition().duration(200).style("opacity", "0.2");
-        
-        TempG.selectAll("line.addline-pointer").data(points).enter()
-            .append("line")
-            .attr("class", "addline-arrow")
-            .attr("x1", function(data,i){
-                var x1 = data[0]+d.x;
-                if(i === 1){
-                    x1 += 5;
-                } else if( i === 3){
-                    x1 -= 5;
-                } 
-                return x1;
-            })
-            .attr("y1", function(data,i){
-                var y1 = data[1]+d.y;
-                if(i === 0){
-                    y1 -= 5;
-                } else if( i === 2){
-                    y1 += 5;
-                } 
-                return y1;
-            })
-            .attr("x2", function(data,i){
-                var x2 = data[0]+d.x;
-                if(i === 1){
-                    x2 += 35;
-                } else if( i === 3){
-                    x2 -= 35;
-                } 
-                return x2;
-            })
-            .attr("y2", function(data,i){
-                var y2 = data[1]+d.y;
-                if(i === 0){
-                    y2 -= 35;
-                } else if( i === 2){
-                    y2 += 35;
-                } 
-                return y2;
-            })
-            .attr("fill", "none")
-            .attr("stroke", "#000000")
-            .attr("stroke-width", "10px")
-            .style("cursor", "pointer")
-            .style("opacity", "0")
-            .call(dragNewLink)
-        /*.classed("flowline", true)
-        .on("mousemove", lineMousepoint)
-        .on("mouseover", lineMouseover)*/
-            ;
+        if(!d.nConn){
+            TempG.selectAll("line.addline-arrow").data(points).enter()
+                .append("line")
+                .attr("class", "addline-arrow")
+                .attr("x1", function(data,i){
+                    var x1 = data[0]+d.x;
+                    if(i === 1){
+                        x1 += 5;
+                    } else if( i === 3){
+                        x1 -= 5;
+                    } 
+                    return x1;
+                })
+                .attr("y1", function(data,i){
+                    var y1 = data[1]+d.y;
+                    if(i === 0){
+                        y1 -= 5;
+                    } else if( i === 2){
+                        y1 += 5;
+                    } 
+                    return y1;
+                })
+                .attr("x2", function(data,i){
+                    var x2 = data[0]+d.x;
+                    if(i === 1){
+                        x2 += 35;
+                    } else if( i === 3){
+                        x2 -= 35;
+                    } 
+                    return x2;
+                })
+                .attr("y2", function(data,i){
+                    var y2 = data[1]+d.y;
+                    if(i === 0){
+                        y2 -= 35;
+                    } else if( i === 2){
+                        y2 += 35;
+                    } 
+                    return y2;
+                })
+                .attr("fill", "none")
+                .attr("stroke", "#000000")
+                .attr("stroke-width", "2px")
+                .attr("marker-end", "url(#arrowhead)")
+                .style("opacity", "0")
+                .transition().duration(200).style("opacity", "0.2");
+            
+            TempG.selectAll("line.addline-pointer").data(points).enter()
+                .append("line")
+                .attr("class", "addline-arrow")
+                .attr("x1", function(data,i){
+                    var x1 = data[0]+d.x;
+                    if(i === 1){
+                        x1 += 5;
+                    } else if( i === 3){
+                        x1 -= 5;
+                    } 
+                    return x1;
+                })
+                .attr("y1", function(data,i){
+                    var y1 = data[1]+d.y;
+                    if(i === 0){
+                        y1 -= 5;
+                    } else if( i === 2){
+                        y1 += 5;
+                    } 
+                    return y1;
+                })
+                .attr("x2", function(data,i){
+                    var x2 = data[0]+d.x;
+                    if(i === 1){
+                        x2 += 35;
+                    } else if( i === 3){
+                        x2 -= 35;
+                    } 
+                    return x2;
+                })
+                .attr("y2", function(data,i){
+                    var y2 = data[1]+d.y;
+                    if(i === 0){
+                        y2 -= 35;
+                    } else if( i === 2){
+                        y2 += 35;
+                    } 
+                    return y2;
+                })
+                .attr("fill", "none")
+                .attr("stroke", "#000000")
+                .attr("stroke-width", "10px")
+                .style("cursor", "pointer")
+                .style("opacity", "0")
+                .call(dragNewLink)
+            /*.classed("flowline", true)
+            .on("mousemove", lineMousepoint)
+            .on("mouseover", lineMouseover)*/
+                ;
+        }    
         if(UserFn)UserFn(d); 
 
     }
@@ -1258,8 +1352,29 @@ function Diagram(){
             tmpClear();
         });
 
-        svg.on("keypress", function(){
-            console.log("keypress" + d3.event.keyCode);
+        svg.on("keyup", function(){
+            if(d3.event.ctrlKey && d3.event.srcElement.nodeName === "svg"){
+                if(d3.event.keyCode === 67){ //ctrl + c
+                    var tmpId = TempG.attr("target_id");
+                    if(tmpId){
+                        tmpId = tmpId.replace("nd-", "")
+                        var tmp = DATA.nodes.find(function(e){
+                            return (e.id == tmpId);
+                        });
+                        if(tmp){
+                            clipboard = JSON.parse(JSON.stringify(tmp));
+                        }
+                    }else{
+                        clipboard = null;
+                    }
+                } else if(d3.event.keyCode === 86){ //ctrl + v
+                    if(clipboard){
+                        clipboard.x += 10;
+                        clipboard.y += 10;
+                        addBox(JSON.parse(JSON.stringify(clipboard)));
+                    }
+                }
+            }
         });
 
         initNodeList();
@@ -1337,7 +1452,7 @@ function Diagram(){
     }
     function tmpClear(){
         TempG.selectAll("*").remove();
-
+        TempG.attr("target_id", null);
         if(UserFn)UserFn();
     }
     function clearAll(){
@@ -1447,8 +1562,11 @@ function Diagram(){
             })
             .call(dragNode)
             .on("mouseenter", function(){
-                MouseOverNode.node = d3.select(this).select("path").node();
-                MouseOverNode.data = d3.select(this).datum();
+                var data = d3.select(this).datum();
+                if(!data.nConn){
+                    MouseOverNode.node = d3.select(this).select("path").node();
+                    MouseOverNode.data = data;
+                }
             })
             .on("mouseleave", function(){
                 MouseOverNode.node = null;

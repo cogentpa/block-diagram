@@ -20354,13 +20354,13 @@ jStat.extend(jStat.fn, {
       var sd = (typeof sigma === 'undefined') ? Formula.STDEVS(range) : sigma;
       return 1 - Formula.NORMSDIST((Formula.AVERAGE(range) - x) / (sd / Math.sqrt(n)), Formula.TRUE);
     };
-
+    
     Formula.VLOOKUP = function (needle, table, index, rangeLookup) {
       if (!needle || !table || !index) {
         return '#N/A';
       }
       table = Formula.FLATTEN(table);
-    
+      
       rangeLookup = rangeLookup || false;
       for (var i = 0; i < table.length; i++) {
         var row = table[i];
@@ -20370,28 +20370,27 @@ jStat.extend(jStat.fn, {
           return (index < (row.length + 1) ? row[index - 1] : '#REF!');
         }
       }
-    
+      
       return '#N/A';
-    };
+    }; 
     Formula.MINIF = function (range, testRange, testValue) {
-      range = Formula.FLATTEN(range);
-      testRange = Formula.FLATTEN(testRange); 
+        range = Formula.FLATTEN(range);
+        testRange = Formula.FLATTEN(testRange); 
 
-      var rn = range.length;
-      var tn = testRange.length;
+        var rn = range.length;
+        var tn = testRange.length;
 
-      if(rn !== tn) return '#REF!';
-    
-      var min = (n > 0) ? range[0] : 0;
+        if(rn !== tn) return '#REF!';
+      
+        var min = (n > 0) ? range[0] : 0;
 
-      for (var i = 0; i < n; i++) {
-        if(testRange[i] > testValue){
-          min = (range[i] < min && (range[i] !== true) && (range[i] !== false)) ? range[i] : min;
+        for (var i = 0; i < n; i++) {
+          if(testRange[i] > testValue){
+            min = (range[i] < min && (range[i] !== true) && (range[i] !== false)) ? range[i] : min;
+          }
         }
-      }
-      return min;
-    };
-
+        return min;
+      };
 
     // Text functions
 
@@ -21743,7 +21742,7 @@ var ruleJS = (function (root) {
      * @type {Array}
      */
     this.data = [];
-
+    
     this.eventIds = [];
 
     /**
@@ -21868,6 +21867,7 @@ var ruleJS = (function (root) {
       var cellExist = instance.matrix.data.filter(function (cell) {
         return cell.id === cellId;
       })[0];
+      
 
       if (!cellExist) {
         instance.matrix.data.push(item);
@@ -22016,12 +22016,12 @@ var ruleJS = (function (root) {
     var recalculateElementDependencies = function (element) {
       var allDependencies = instance.matrix.getElementDependencies(element),
           id = element.getAttribute('id');
-
+      
       allDependencies.forEach(function (refId) {
         var item = instance.matrix.getItem(refId);
         if (item && item.formula) {
           var refElement = document.getElementById(refId);
-          calculateElementFormula(item.formula, refElement);
+          calculateElementFormula(item.formula, refElement, item.format);
         }
       });
     };
@@ -22032,15 +22032,24 @@ var ruleJS = (function (root) {
      * @param {Element} element
      * @returns {Object}
      */
-    var calculateElementFormula = function (formula, element) {
+    var calculateElementFormula = function (formula, element, format) {
       // to avoid double translate formulas, update item data in parser
       var parsed = parse(formula, element),
           value = parsed.result,
           error = parsed.error,
           nodeName = element.nodeName.toUpperCase();
-
       instance.matrix.updateElementItem(element, {value: value, error: error});
-
+      
+      if("number" === typeof value){
+    	  if(format){
+    		  value = format(value);
+    	  }else{    	  
+	    	  value = Math.round(value*1000)/1000;
+		      value = value === 0 ? "0" : value;
+    	  }
+	      
+      }
+      
       if (['INPUT'].indexOf(nodeName) === -1) {
         element.innerText = value || error;
       }
@@ -22058,15 +22067,50 @@ var ruleJS = (function (root) {
     var registerElementInMatrix = function (element) {
 
       var id = element.getAttribute('id'),
-          formula = element.getAttribute('data-formula');
+          formula = element.getAttribute('data-formula'),
+          format = element.getAttribute('format');
+      
+      if(format){
+    	  try{
+    		  var formatArr = format.split(";");
+    		  var formatObj = {};
+    		  formatArr.forEach(function(e){
+    			  var kV = e.split(":");
+    			  formatObj[kV[0]] = kV[1];  
+    		  });
+    		  
+    		  var formatFn = function(num){
+        		  var fn = num;
+        		  if(formatObj.fixed || formatObj.fixed === 0){
+        			  fn = fn.toFixed(formatObj.fixed);
+        		  }
+        		  if(formatObj.comma){
+        			  fn = fn.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+        		  }
+        		  return fn
+        	  }
+    		  format = formatFn;
+    	  }catch(e){
+    		  format = null;
+    	  }
+      }
+      
+      //formula가 "" 이면 등록이 안되는 문제 ?
+      /*
+      var value = element.value;
+      if(formula === ""){
+    	  formula = (isNaN(value)) ? "'"+value+"'" : value; 
+      } 
+      */
       if (formula) {
         // add item with basic properties to data array
         instance.matrix.addItem({
           id: id,
-          formula: formula
+          formula: formula,
+          format: format
         });
 
-        calculateElementFormula(formula, element);
+        calculateElementFormula(formula, element, format);
       }
 
     };
@@ -22077,14 +22121,14 @@ var ruleJS = (function (root) {
      */
     var registerElementEvents = function (element) {
       var id = element.getAttribute('id');
-
-      //이벤트 중복 제거
+      
       var exist = instance.matrix.eventIds.filter(function(e){
     	  return e === id;
       })[0];
+      
       if(exist) return;
       instance.matrix.eventIds.push(id);
-
+            
       // on db click show formula
       element.addEventListener('dblclick', function () {
         var item = instance.matrix.getItem(id);
@@ -22156,7 +22200,7 @@ var ruleJS = (function (root) {
      */
     this.scan = function () {
       var $totalElements = rootElement.querySelectorAll(formElements);
-
+  
       // iterate through elements contains specified attributes
       [].slice.call($totalElements).forEach(function ($item) {
         registerElementInMatrix($item);
@@ -22167,6 +22211,31 @@ var ruleJS = (function (root) {
       registerElementInMatrix(item);
       registerElementEvents(item);
     };
+
+   /**
+   * 전체 재계산
+   */
+    this.recalculate = function () {
+      instance.matrix.data.forEach(function(item){
+        var refElement = document.getElementById(item.id);
+        calculateElementFormula(item.formula, refElement, item.format);
+      });
+    }
+    /**
+     * 대상id 관련 재계산
+     * @param {String} id
+     */
+    this.recalculateById = function (id) {
+      var allDependencies = instance.matrix.getDependencies(id);
+      
+      allDependencies.forEach(function (refId) {
+        var item = instance.matrix.getItem(refId);
+        if (item && item.formula) {
+          var refElement = document.getElementById(refId);
+          calculateElementFormula(item.formula, refElement, item.format);
+        }
+      });
+    }  
   };
 
   /**
@@ -22931,6 +23000,7 @@ var ruleJS = (function (root) {
     
     if (rootElement) {
       instance.matrix.scan();
+      instance.matrix.recalculate();
     }
   };
   var addItem = function(item){
@@ -22939,6 +23009,24 @@ var ruleJS = (function (root) {
   var reload = function() {
     instance.matrix.scan();
   };
+  var recalculate = function() {
+    instance.matrix.recalculate();
+  }
+  var updateFormulas = function(map){
+    var id;
+    for(id in map){
+      instance.matrix.updateItem(id, {formula:map[id]});
+    }
+    /*
+    //먼저 formula 다 등록하고 대상 Id 관련 재 계산
+    //수가 많아서 전체랑 별차이 없음
+    for(id in map){
+      instance.matrix.recalculateById(id);
+    }
+    */
+    instance.matrix.recalculate();
+
+  }
 
   return {
     init: init,
@@ -22947,6 +23035,8 @@ var ruleJS = (function (root) {
     helper: helper,
     parse: parse,
     reload:reload,
-    addItem:addItem
+    recalculate:recalculate,
+    addItem:addItem,
+    updateFormulas:updateFormulas
   };
 });

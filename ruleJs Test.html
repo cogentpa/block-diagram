@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="js/ruleJS.all.full.js"></script>
+    </head>
+    <body id="rjBody">
+        <div>TEST</div>
+        <span id="A4" data-formula="1"></span>
+        <span id="A5" data-formula="2"></span>
+        <input type="text" id="F28" data-formula="60">
+
+        <span id="A20" data-formula="MAX(A4:A6) + F28"></span>
+        <span id="A6" data-formula="''"></span>
+    </body>
+    <script>
+        var rjs = new ruleJS("rjBody");
+        rjs.init();
+        rjs.recalculate();
+    </script>
+</html>

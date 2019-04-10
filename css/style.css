@@ -126,14 +126,14 @@ label{margin-bottom:1px;}
     left:100px;
     top:10px;
     z-index:100;
-    width:150px;
-    background:#595959;
+    width:100px;
+    background:#595959cb;
     float:left;
     border-radius:15px;
 }
 .calDiv input {
     border:1px dotted #595959;
-    width:80%;
+    width:70%;
     float:right;
     padding-left:5px;
 }
@@ -198,6 +198,7 @@ label{margin-bottom:1px;}
 
 #svg-container .textPath {
     stroke:#CCC;
+    stroke-opacity:0.5;
     fill:#fff;
     fill-opacity: 0.1;
 }

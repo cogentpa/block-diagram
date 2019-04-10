@@ -8,12 +8,12 @@ $("#propModal").on("show.bs.modal", function (e) {
     Layout.setPageInfo("height", $("#svg-container").height());
 });
 
-$("#newModal_newBtn").bind("click", function(){
+$("#newModal_newBtn").on("click", function(){
     Diagrams.setData({});
     Cal.destory();
     $("#newModal").modal('hide');
 });
-$("#propModal_applyBtn").bind("click", function(){
+$("#propModal_applyBtn").on("click", function(){
     $("#svg-container").width($("#bgWidth").val());
     $("#svg-container").height($("#bgHeight").val());
     Layout.setPageInfo("width", $("#bgWidth").val());
@@ -22,46 +22,56 @@ $("#propModal_applyBtn").bind("click", function(){
     $("#propModal").modal('hide');
 });
 
-$("#mode_design").bind("click", function(){
+$("#mode_design").on("click", function(){
     $("#mode_view").removeClass("active");
     $(this).addClass("active");
     $("#cal-group").removeClass("view");
     $("#svg-container").removeClass("view");
 });
-$("#mode_view").bind("click", function(){
+$("#mode_view").on("click", function(){
     $("#mode_design").removeClass("active");
     $(this).addClass("active");
     $("#cal-group").addClass("view");
     $("#svg-container").addClass("view");
 });
 
+$("#printSvg").on("click", function(){
+    printArea();
+});
+
 $("#leftMenus").find("li.item-menu").each(function(){
-    $(this).bind("click", function(){
+    $(this).on("click", function(){
         var _item = $(this);
+        var targetEl = document.querySelector("#container>.center");
+        var x = targetEl.scrollLeft + 50;
+        var y =targetEl.scrollTop + _item.position().top + 10;
+        
         if(_item.hasClass("item0")){
-            Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:40});
+            Diagrams.addBox({type:"rect",x:x,y:y,width:100,height:40});
         }else if(_item.hasClass("item1")){
-            Diagrams.addBox({type:"circle",x:50,y:50,width:100,height:100});
+            Diagrams.addBox({type:"circle",x:x,y:y,width:100,height:100});
         }else if(_item.hasClass("item2")){
-            Diagrams.addBox({type:"mb",x:150,y:50,width:100,height:30,mb:[]});
+            Diagrams.addBox({type:"mb",x:x,y:y,width:100,height:30,mb:[]});
         }else if(_item.hasClass("item3")){
-            Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:40,isStart:true});
+            Diagrams.addBox({type:"rect",x:x,y:y,width:100,height:40,isStart:true});
         }else if(_item.hasClass("item4")){
-            Diagrams.addBox({type:"rect",x:50,y:50,width:120,height:40, isEnd:true});
+            Diagrams.addBox({type:"rect",x:x,y:y,width:100,height:40, isEnd:true});
         }else if(_item.hasClass("item5")){
-            Diagrams.addBox({type:"pou",x:50,y:50,width:120,height:100});
+            Diagrams.addBox({type:"pou",x:x,y:y,width:100,height:100});
         }else if(_item.hasClass("item6")){
-            Diagrams.addBox({type:"tb",x:50,y:50,width:120,height:40});
+            Diagrams.addBox({type:"tb",x:x,y:y,width:100,height:20});
+        }else if(_item.hasClass("item7")){
+            Diagrams.addBox({type:"scope",x:x,y:y,width:30,height:60});
         }else if(_item.hasClass("itemC")){
             var calNo = CalData.getCalNo();
             CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
-            var calDiv = Cal.add(calNo);
+            var calDiv = Cal.add(calNo, {x:x,y:y});
         }
     });
 });
 
 var svg = d3.select("#diagram");
-$("#prop_blockNmInput").bind("change", function(e){
+$("#prop_blockNmInput").on("change", function(e){
         var selectNode = Layout.getBlock();
         if(selectNode.type && selectNode.id){
             selectNode.name = this.value;
@@ -69,7 +79,7 @@ $("#prop_blockNmInput").bind("change", function(e){
             Diagrams.selectItem(selectNode);
         }
 });
-$("#prop_blockWidthInput").bind("change", function(){
+$("#prop_blockWidthInput").on("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.width = parseInt(this.value);
@@ -78,7 +88,7 @@ $("#prop_blockWidthInput").bind("change", function(){
     }
 
 });
-$("#prop_blockHeightInput").bind("change", function(){
+$("#prop_blockHeightInput").on("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.height = parseInt(this.value);
@@ -86,7 +96,7 @@ $("#prop_blockHeightInput").bind("change", function(){
         Diagrams.selectItem(selectNode);
     }
 });
-$("#prop_blockXInput").bind("change", function(){
+$("#prop_blockXInput").on("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.x = parseInt(this.value);
@@ -94,7 +104,7 @@ $("#prop_blockXInput").bind("change", function(){
         Diagrams.selectItem(selectNode);
     }
 });
-$("#prop_blockYInput").bind("change", function(){
+$("#prop_blockYInput").on("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
         selectNode.y = parseInt(this.value);
@@ -102,14 +112,24 @@ $("#prop_blockYInput").bind("change", function(){
         Diagrams.selectItem(selectNode);
     }
 });
-$("#prop_blockRemove").bind("click", function(){
+$("#prop_blockRemove").on("click", function(){
     var selectNode = Layout.getBlock();
     var selectId = selectNode.id;
     if(selectId){
         Layout.removeNode(selectId);
     }
 });
-$("#prop_blockStroke").bind("change", function(){
+
+$("#prop_fill").on("change", function(){
+    var selectNode = Layout.getBlock();
+    if(selectNode.id){
+        selectNode.fill = ($(this).is(":checked")) ? "" : "none";
+        Diagrams.updateNode();
+        Diagrams.selectItem(selectNode);
+    }
+});
+
+$("#prop_blockStroke").on("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.id){
         selectNode.stroke = this.value;
@@ -117,7 +137,7 @@ $("#prop_blockStroke").bind("change", function(){
         Diagrams.selectItem(selectNode);
     }
 });
-$("#prop_blockStrokeWidth").bind("change", function(){
+$("#prop_blockStrokeWidth").on("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.id){
         selectNode.strokeWidth = parseInt(this.value);
@@ -127,7 +147,7 @@ $("#prop_blockStrokeWidth").bind("change", function(){
 });
 
 
-$("#prop_calStart").bind("click", function(){
+$("#prop_calStart").on("click", function(){
     var selectCal = CalData.getSelect();
     if(!selectCal.id)return;
     if(this.checked){
@@ -137,7 +157,7 @@ $("#prop_calStart").bind("click", function(){
     }
     CalData.setAttr(selectCal.id, "start", this.checked);
 });
-$("#prop_calEnd").bind("click", function(){
+$("#prop_calEnd").on("click", function(){
     var selectCal = CalData.getSelect();
     if(!selectCal.id)return;
     if(this.checked){
@@ -166,7 +186,8 @@ function initNodeProp(){
     $("#prop_blockHeightInput").val("");
     $("#prop_blockXInput").val("");
     $("#prop_blockYInput").val("");
-
+    
+    $("#prop_fill").prop("checked", true);
     $("#prop_blockColor").spectrum("set", "#000000");
     $("#prop_blockStroke").val("");
     $("#prop_blockStrokeWidth").val(2);
@@ -194,6 +215,7 @@ function nodeSelect(obj){
         $("#prop_blockXInput").val(nodeObj.x||"");
         $("#prop_blockYInput").val(nodeObj.y||"");
     }
+    $("#prop_fill").prop("checked", (nodeObj.fill) ? false : true);
     $("#prop_blockStroke").val(nodeObj.stroke);
     $("#prop_blockStrokeWidth").val(nodeObj.strokeWidth||2);
     $("#prop_blockColor").spectrum("set", nodeObj.color||"#000000");
@@ -253,28 +275,28 @@ function setCalBlockSelect(sId){
     var blockSelect = cfn_setSelect("#prop_blockSelect", select);
 }
 
-$("#prop_blockSelect").bind("change", function(){
+$("#prop_blockSelect").on("change", function(){
     if(this.value != ""){
         var d = CalData.getSelect();
         CalData.setAttr(d.id, "bl", this.value);
     }
 });
 
-$("#prop_calName").bind("change", function(e){
+$("#prop_calName").on("change", function(e){
     setCalName(this.value);
 });
 
-$("#prop_calFormula").bind("change", function(e){
+$("#prop_calFormula").on("change", function(e){
     setFormula(this.value);
 });
 
-$("#prop_calRemove").bind("click",function(){
+$("#prop_calRemove").on("click",function(){
     var selectCal = CalData.getSelect();
     $("#"+selectCal.id+"_div").remove();
     CalData.delCalById(selectCal.id);
 });
 
-$("#prop_calCal2").bind("click", function(){
+$("#prop_calCal2").on("click", function(){
     var selectCal = CalData.getSelect();
     
     $("#"+selectCal.id).val($("#prop_calValue").val());
@@ -282,12 +304,12 @@ $("#prop_calCal2").bind("click", function(){
     rules.init();
 });
 
-$("#prop_calCal").bind("click", function(){
+$("#prop_calCal").on("click", function(){
     var selectCal = CalData.getSelect();
     Cal.refresh();
 });
 
-$("#prop_calRev").bind("click", function(){
+$("#prop_calRev").on("click", function(){
     var selectCal = CalData.getSelect();
     var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
     console.log("reverse start");
@@ -301,11 +323,11 @@ $("#prop_calRev").bind("click", function(){
     }
 });
 
-$("#prop_calSave").bind("click", function(e){
+$("#prop_calSave").on("click", function(e){
     window.cals = CalData.save();
 });
 
-$("#prop_calOpen").bind("click", function(){
+$("#prop_calOpen").on("click", function(){
     Cal.destory();
     Cal.open(window.cals);
 });
@@ -318,11 +340,11 @@ function window_resize(){
         winHeight = document.body.clientHeight;
     }
     $("#container").height(winHeight-87);
-    $("#svg-container").width(2000);
-    $("#svg-container").height(2000);
+    $("#svg-container").width(2500);
+    $("#svg-container").height(1760);
 }
 window_resize();
-$(window).bind("resize", function(){
+$(window).on("resize", function(){
     window_resize();
 });
 
@@ -342,17 +364,70 @@ function layout_init(){
             ["#600","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]
         ]
     });
-    $("#prop_blockColor").bind("change", function(){
+    $("#prop_blockColor").on("change", function(){
         var selectNode = Layout.getBlock();
         if(selectNode){
             selectNode.color = $(this).spectrum("get").toHexString();
             Diagrams.updateNode();
         }
     });
-
+    $(window).on('beforeunload', function() {
+        return "?";
+     });
+        
     var Scrollbar = window.Scrollbar;
     Scrollbar.init(document.querySelector('#container .right'), {});
-    Scrollbar.init(document.querySelector('#container .center'), {damping:0.5, alwaysShowTracks:true});
+}
+
+function printArea()
+{
+    var html = "";
+    var nowView;
+
+    nowView = $("#svg-container").hasClass("view");
+    $("pattern#grid").hide();
+    
+    $("#svg-container").addClass("view");
+    $("#cal-group").addClass("view");
+    $("#cal-group input").each(function(){
+                        $(this).attr("value", $(this).val());
+                    });
+    
+
+    html = $("#container .center").html();
+
+    $("pattern#grid").show();
+    if(!nowView){
+        $("#svg-container").removeClass("view");
+        $("#cal-group").removeClass("view");
+        $("#cal-group input").each(function(){
+                           $(this).removeAttr("value");
+                       });
+    }
+
+    win = window.open();
+    win.document.write("<html>");
+    win.document.write("<head>");
+    win.document.write("<title></title>");
+    win.document.write("<link rel='stylesheet' href='/resources/hts/css/blockDiagram/style.css' type='text/css' />");
+    /*win.document.write("<link rel='stylesheet' href='css/style.css' type='text/css' />");*/
+    win.document.write("<style>");
+    win.document.write("#center{padding:0.35cm 0.5cm; transform-origin:top left; transform:scale(0.44);}");
+    win.document.write("</style>");
+    win.document.write("<style type='text/css' media='print'>@page {size: auto;margin: 0;}</style>");
+    win.document.write("</head>");
+    win.document.write("<body>");
+    win.document.write("<div id='center'>");
+    win.document.write(html);
+    win.document.write("</div>");
+    win.document.write("</body>");
+    win.document.write("</html>");
+    win.document.close();
+    setTimeout(function () {
+        win.focus();
+        win.print();
+        win.close();
+    }, 200);
 }
 
 layout_init();
