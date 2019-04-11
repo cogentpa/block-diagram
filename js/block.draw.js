@@ -50,6 +50,13 @@ function Diagram(){
         }
     }
 
+    function removeFromTo(array, from, to) {
+        array.splice(from,
+            !to ||
+            1 + to - from + (!(to < 0 ^ from >= 0) && (to < 0 || -1) * array.length));
+        return array.length;
+    }
+
     /** variables */
     var D3SVG;
     var LinkG;
@@ -682,6 +689,122 @@ function Diagram(){
         },
     };
 
+    var UndoManager = function() {
+        var dataStack = [],
+            index = -1,
+            limit = 0,
+            isExecuting = false,
+            callback;
+
+        return {
+            add: function (data) {
+                if (isExecuting) {return this;}
+                dataStack.splice(index + 1, dataStack.length - index);
+                dataStack.push(JSON.stringify(data));
+                
+                // if limit is set, remove items from the start
+                if (limit && dataStack.length > limit) {
+                    removeFromTo(dataStack, 0, -(limit+1));
+                }
+                index = dataStack.length - 1;
+                return this;
+            },
+            setCallback: function (callbackFunc) {
+                callback = callbackFunc;
+            },
+            undo: function () {
+                var dataString = dataStack[index-1];
+                if (!dataString) {return this;}
+                isExecuting = true;
+                index -= 1;
+                if (callback) {callback(dataString);}
+                isExecuting = false;
+                return this;
+            },
+            redo: function () {
+                var dataString = dataStack[index+1];
+                if (!dataString) {return this;}
+                isExecuting = true;
+                index += 1;
+                if (callback) {callback(dataString);}
+                isExecuting = false;
+                return this;
+            },
+            clear: function () {
+                dataStack = [];
+                index = -1;
+            },
+            hasUndo: function () {
+                return index !== -1;
+            },
+            hasRedo: function () {
+                return index < (dataStack.length - 1);
+            },
+            getDataStack: function () {
+                return dataStack;
+            },
+            getIndex: function() {
+                return index;
+            },
+            setLimit: function (l) {
+                limit = l;
+            }
+        };
+    }();
+
+    var moveNode = function(){
+        var targetNode, d;
+        var moveEvt = {};
+        moveEvt.start = function(targetId, keyCode){
+            if(targetId){
+                var tmpId = targetId.replace("nd-", "");
+                d = DATA.nodes.find(function(e){
+                    return (e.id == tmpId);
+                });
+
+                if(d){
+                    tmpClear();
+                    targetNode = d3.select("#"+targetId);
+                    this.keyDown(keyCode);
+                }
+            }
+            //if(parseInt(window.getComputedStyle(D3SVG.node()).width)-tmp.x-10 > 0){
+        }
+        moveEvt.keyDown = function(keyCode){
+            if(targetNode){
+                d3.event.preventDefault();
+                switch (keyCode) {
+                    case 37://left
+                        if(d.x >= 10){d.x-=10;}
+                        break;
+                    case 38://up
+                        if(d.y >= 10){d.y-=10;}
+                        break;
+                    case 39://right
+                        d.x+=10;
+                        break;
+                    case 40://down
+                        d.y+=10;
+                        break;
+                    default:
+                        break;
+                }
+                drawNode();
+            }
+        }
+        moveEvt.keyUp = function(){
+            if(targetNode){
+                d3.event.preventDefault();
+                updateDiagrams();
+                selectNode(targetNode, d);
+                targetNode = null;
+                d = null;
+            }
+        }
+        
+        return moveEvt;
+    }();
+
     var dragNode = function(){
         var tempNode;
         var targetNode;
@@ -715,7 +838,7 @@ function Diagram(){
                       }
                       selectNode(targetNode, d);
                   });
-             }(); 
+             }();
              
     var dragSizeCircle = function(){
         var tempNode;
@@ -872,9 +995,10 @@ function Diagram(){
                     linkData.sOffsetY = tmpWaypoints[1]-sourceNode.y;
                     linkData.tOffsetX = tmpWaypoints[tmpWaypoints.length-2]-targetNode.x;
                     linkData.tOffsetY = tmpWaypoints[tmpWaypoints.length-1]-targetNode.y;
-                    
+
                     tmpClear();
                     updateDiagrams();
+                    
                 })
                 ;
     }();
@@ -1209,6 +1333,7 @@ function Diagram(){
     function selectLine(d){
         if(arguments.length > 1)d3.event.stopPropagation();
         tmpClear();
+        TempG.attr("target_id", "ln-"+d.id);
         var points = LinkG.select("#ln-"+d.id).attr("points").split(",");
         var circlePoints = [];
 
@@ -1247,7 +1372,7 @@ function Diagram(){
                 );
             }
         }
-        d.circlePoints = circlePoints;
+        //d.circlePoints = circlePoints;
         TempG.selectAll(".temp-point")
             .data(circlePoints)
             .enter()
@@ -1347,33 +1472,82 @@ function Diagram(){
 
         D3SVG = svg;
         DATA = {nodes:[], links:[]};
+        
+        UndoManager.setLimit(100);
+        UndoManager.setCallback(function(data){
+            DATA = JSON.parse(data);
+            setDataRef();
+            updateDiagrams();
+        });
+        UndoManager.add(DATA);
+        
 
         svg.on("click", function(){
             tmpClear();
         });
 
-        svg.on("keyup", function(){
-            if(d3.event.ctrlKey && d3.event.srcElement.nodeName === "svg"){
-                if(d3.event.keyCode === 67){ //ctrl + c
-                    var tmpId = TempG.attr("target_id");
-                    if(tmpId){
-                        tmpId = tmpId.replace("nd-", "")
-                        var tmp = DATA.nodes.find(function(e){
-                            return (e.id == tmpId);
-                        });
-                        if(tmp){
-                            clipboard = JSON.parse(JSON.stringify(tmp));
+        svg.on("keydown", function(){
+            if(d3.event.srcElement.nodeName !== "svg")return;
+            var keyCode = d3.event.keyCode;
+            var tmpId, tmp;
+            //ctrl + key 
+            if(d3.event.ctrlKey){
+                switch (keyCode) {
+                    case 67: //ctrl + c
+                        tmpId = TempG.attr("target_id");
+                        if(tmpId){
+                            tmpId = tmpId.replace("nd-", "")
+                            tmp = DATA.nodes.find(function(e){
+                                return (e.id == tmpId);
+                            });
+                            if(tmp){
+                                clipboard = JSON.parse(JSON.stringify(tmp));
+                            }
+                        }else{
+                            clipboard = null;
                         }
-                    }else{
-                        clipboard = null;
-                    }
-                } else if(d3.event.keyCode === 86){ //ctrl + v
-                    if(clipboard){
-                        clipboard.x += 10;
-                        clipboard.y += 10;
-                        addBox(JSON.parse(JSON.stringify(clipboard)));
-                    }
+                        break;
+                    case 86://ctrl + v 
+                        if(clipboard){
+                            clipboard.x += 10;
+                            clipboard.y += 10;
+                            addBox(JSON.parse(JSON.stringify(clipboard)));
+                        }
+                        break;
+                    case 90: //ctrl + z 
+                        UndoManager.undo();
+                        d3.event.preventDefault();
+                        break;
+                    case 89: //ctrl + y 
+                        UndoManager.redo();
+                        d3.event.preventDefault();
+                        break;
+                    default:
+                        break;
                 }
+            }
+            //delete
+            if(keyCode === 46){
+                tmpId = TempG.attr("target_id");
+                if(tmpId){
+                    var id = tmpId.replace("nd-", "").replace("ln-", "");
+                    deleteItem(id);
+                }
+            }
+            //left:37 up:38 right:39 down:40
+            if(keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40 ){
+                if(d3.event.repeat){
+                    moveNode.keyDown(keyCode);
+                }else{
+                    moveNode.start(TempG.attr("target_id"), keyCode);
+                }
+            }
+        });
+        svg.on("keyup", function(){
+            if(d3.event.srcElement.nodeName !== "svg")return;
+            var keyCode = d3.event.keyCode;
+            if(keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40 ){
+                moveNode.keyUp();
             }
         });
 
@@ -1465,6 +1639,8 @@ function Diagram(){
         tmpClear();
         drawLine();
         drawNode();
+
+        UndoManager.add(DATA);
     }
 
     function drawLine(){
@@ -1554,9 +1730,6 @@ function Diagram(){
             .enter()
             .append("g")
             .attr("class", "node")
-            .attr("id", function(d){
-                return "nd-" + d.id;
-            })
             .on("click", function(d){
                 d3.event.stopPropagation();
             })
@@ -1576,7 +1749,9 @@ function Diagram(){
         
         ng = ng.merge(nodes);
 
-        ng.attr("transform", function(d){
+        ng.attr("id", function(d){
+            return "nd-" + d.id;
+        }).attr("transform", function(d){
             return "translate(" + d.x + "," + d.y + ")";
         });
         /*
@@ -1600,11 +1775,7 @@ function Diagram(){
         });
     }
 
-    function setData(d){
-        clearAll();
-        DATA.nodes = d.nodes || [];
-        DATA.links = d.links || [];
-
+    function setDataRef(){
         //데이터 정제
         DATA.links.forEach(function(v){
             if(!v.tOffsetX) v.tOffsetX = 0;
@@ -1621,6 +1792,16 @@ function Diagram(){
             v.sd = sourceNode;
             v.td = targetNode;
         });
+    }
+
+    function setData(d){
+        clearAll();
+        DATA.nodes = d.nodes || [];
+        DATA.links = d.links || [];
+
+        setDataRef();
+        
+        UndoManager.clear();
         updateDiagrams();
     }
 
@@ -1654,15 +1835,44 @@ function Diagram(){
         node.id = node.type + "-" + (parseInt(maxNum)+1);
         
         if(node.type == "mb"){
-            node.mb = [[{text:"New"}]];
-            node.item = {};
-            node.item.x = 0;
-            node.item.y = 0;
-            node.item.width = 100;
-            node.item.height = 30;
+            if(!node.mb || node.mb.length === 0){
+                node.mb = [[{text:"New"}]];
+            }    
+            if(!node.item){
+                node.item = {};
+                node.item.x = 0;
+                node.item.y = 0;
+                node.item.width = 100;
+                node.item.height = 30;
+            }
         }
         
         DATA.nodes.push(node);
+        updateDiagrams();
+    }
+
+    function deleteItem(data){
+        var id = (typeof data === "string") ? data : data.id;
+        DATA.links.map(function(d, i){
+            if(d.target === id){
+                DATA.links.splice(i, 1);
+            }
+        });
+        DATA.links.map(function(d, i){
+            if(d.source === id){
+                DATA.links.splice(i, 1);
+            }
+        });
+        DATA.nodes.map(function(d, i){
+            if(d.id === id){
+                DATA.nodes.splice(i, 1);
+            }
+        });
+        DATA.links.map(function(d, i){
+            if(d.id == id){
+                DATA.links.splice(i, 1);
+            }
+        });
         updateDiagrams();
     }
 
@@ -1684,6 +1894,7 @@ function Diagram(){
     diagrams.addBox = addBox;
     diagrams.updateNode = updateDiagrams;
     diagrams.selectItem = selectItem;
+    diagrams.deleteItem = deleteItem;
 
     return diagrams;
 }
