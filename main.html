@@ -466,6 +466,24 @@
     <script>
         var Diagrams = Diagram();
         Diagrams.init("#diagram", {extNodes:extNodes, extUndoCallback:calUndoCallback,fn:nodeSelect});
+        svgPanZoom('#diagram', {
+            viewportSelector: 'svg-pan-zoom_viewport'
+        });
+        $("#slider").slider({
+            min : 0,
+            max : 20,
+            value : 10,
+            slide: function(event, ui) {
+                var panZoomTiger = svgPanZoom('#diagram');
+                var zoom = ui.value/10;
+                panZoomTiger.zoom(zoom);
+            }
+        });
+        $("#zoomReset").on("click", function(){
+            var panZoomTiger = svgPanZoom('#diagram');
+            $("#slider").slider( "value", 10);
+            panZoomTiger.zoom(1);
+        });
     </script>
     </body>
 </html>

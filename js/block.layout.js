@@ -568,13 +568,10 @@ function layout_init(){
     });
     var Scrollbar = window.Scrollbar;
     Scrollbar.init(document.querySelector('#container .right'), {});
-    /*
+    
     var viewportGroupElement = document.getElementById('diagram').querySelector('.viewport');
-    svgPanZoom('#diagram', {
-        viewportSelector: viewportGroupElement
-      });
-    */  
-    window.panZoom = svgPanZoom('#diagram', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false, dblClickZoomEnabled:false, center:true});
+      
+    //window.panZoom = svgPanZoom('#diagram', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false, dblClickZoomEnabled:false, center:true});
 }
 
 
