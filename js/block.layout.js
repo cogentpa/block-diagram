@@ -1,25 +1,109 @@
 var rules = Cal.init();
 
-$("#propModal").on("show.bs.modal", function (e) {
-    $("#propPageNm").val(Layout.getPageInfo("name"));
-    $("#bgWidth").val($("#svg-container").width());
-    $("#bgHeight").val($("#svg-container").height());
-    Layout.setPageInfo("width",$("#svg-container").width());
-    Layout.setPageInfo("height", $("#svg-container").height());
-});
+var extNodes = {
+    cal : function(){
+        var cal = new Node();
+
+        cal.draw = function(svgObj, data){
+
+            data.nConn = true;
+
+            this.drawPath(svgObj, data);
+        };
+        cal.leftRoundedRect = function(x, y, width, height, radius) {
+            return "M" + (x + radius) + "," + y
+                 + "h" + (width - radius)
+                 + "v" + height
+                 + "h" + (radius - width)
+                 + "a" + radius + "," + radius + " 0 0 1 " + (-radius) + "," + (-radius)
+                 + "v" + (2 * radius - height)
+                 + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + (-radius)
+                 + "z";
+        };
+
+        cal.drawPath = function(svgObj, data){
+            var path = svgObj.append("path");
+            path.attr("d", this.leftRoundedRect(0,0,data.width,data.height,data.height/2))
+                .attr("stroke-width", 1)
+                .attr("class",function(){
+                    var classStr = "calNo";
+                    if(data.isStart)classStr += " cal_start";
+                    if(data.isEnd)classStr += " cal_end";
+                    return classStr;
+                });
+            svgObj.append("rect")
+                .attr("x", data.height)
+                .attr("y", 0)
+                .attr("width", data.width-data.height)
+                .attr("height", data.height)
+                .attr("class", "cal_rect")
+                .attr("fill", "#FFF");
+            svgObj.append("text")
+                .attr("x", data.height/2)
+                .attr("y", data.height/2)
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "middle")
+                .attr("fill", "#fff")
+                .attr("class", "cal_id")
+                .style("font-size", "14px")
+                .text(data.id);
+            svgObj.append("text")
+                .attr("x", data.height+5)
+                .attr("y", data.height/2)
+                .attr("dominant-baseline", "middle")
+                .attr("fill", "#000")
+                .style("font-size", "14px")
+                .text(data.name);
+        };
+        cal.fnAdd= function(data){
+            var calNo = CalData.getCalNo();
+            data.id = calNo;
+            CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
+            Cal.add(calNo, {x:data.x,y:data.y});
+        };
+        cal.fnDel= function(data){
+            $("#"+data.id+"_div").remove();
+            CalData.delCalById(data.id);
+        };
+
+        return cal;
+    }
+};
+
+function setCalNodeValue(){
+    var diagramData = Diagrams.getData();
+    var calList = diagramData.nodes.filter(function(d, i){
+        return (d.type === "cal");
+    });
+
+    $("#cal-group").find(".calInput").each(function(){
+        var id = this.id;
+        var value = this.value;
+        calList.forEach(function(d){
+            if(d.id == id){
+                d.name = value;
+            }
+        });
+    });
+    Diagrams.updateNode();
+}
+
+function calUndoCallback(param){
+    var calDataString = "{}";
+    if(param === "add"){
+        calDataString = JSON.stringify(CalData.save());
+    }else{
+        Cal.destory();
+        Cal.open(JSON.parse(param));
+    }
+    return calDataString;
+}
+
 
 $("#newModal_newBtn").on("click", function(){
     Diagrams.setData({});
     Cal.destory();
     $("#newModal").modal('hide');
-});
-$("#propModal_applyBtn").on("click", function(){
-    $("#svg-container").width($("#bgWidth").val());
-    $("#svg-container").height($("#bgHeight").val());
-    Layout.setPageInfo("width", $("#bgWidth").val());
-    Layout.setPageInfo("height", $("#bgHeight").val());
-    Layout.setPageInfo("name",  $("#propPageNm").val());
-    $("#propModal").modal('hide');
 });
 
 $("#mode_design").on("click", function(){
@@ -63,22 +147,21 @@ $("#leftMenus").find("li.item-menu").each(function(){
         }else if(_item.hasClass("item7")){
             Diagrams.addBox({type:"scope",x:x,y:y,width:30,height:60});
         }else if(_item.hasClass("itemC")){
-            var calNo = CalData.getCalNo();
-            CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
-            var calDiv = Cal.add(calNo, {x:x,y:y});
+            Diagrams.addBox({type:"cal",x:x,y:y,width:100,height:28});
         }
     });
 });
 
 var svg = d3.select("#diagram");
 $("#prop_blockNmInput").on("change", function(e){
-        var selectNode = Layout.getBlock();
-        if(selectNode.type && selectNode.id){
-            selectNode.name = this.value;
-            Diagrams.updateNode();
-            Diagrams.selectItem(selectNode);
-        }
+    var selectNode = Layout.getBlock();
+    if(selectNode.type && selectNode.id){
+        selectNode.name = this.value;
+        Diagrams.updateNode();
+        Diagrams.selectItem(selectNode);
+    }
 });
+
 $("#prop_blockWidthInput").on("change", function(){
     var selectNode = Layout.getBlock();
     if(selectNode.type && selectNode.id){
@@ -152,20 +235,38 @@ $("#prop_calStart").on("click", function(){
     if(!selectCal.id)return;
     if(this.checked){
         $("#"+selectCal.id).parent().addClass("cal_start");
+        $("#"+selectCal.id).parent().removeClass("cal_end");
     }else{
         $("#"+selectCal.id).parent().removeClass("cal_start");
     }
     CalData.setAttr(selectCal.id, "start", this.checked);
+
+    var selectNode = Layout.getBlock();
+    if(selectNode.type && selectNode.id){
+        selectNode.isStart = this.checked;
+        if(this.checked)selectNode.isEnd = false;
+        Diagrams.updateNode();
+        Diagrams.selectItem(selectNode);
+    }
 });
 $("#prop_calEnd").on("click", function(){
     var selectCal = CalData.getSelect();
     if(!selectCal.id)return;
     if(this.checked){
         $("#"+selectCal.id).parent().addClass("cal_end");
+        $("#"+selectCal.id).parent().removeClass("cal_start");
     }else{
         $("#"+selectCal.id).parent().removeClass("cal_end");
     }
     CalData.setAttr(selectCal.id, "end", this.checked);
+
+    var selectNode = Layout.getBlock();
+    if(selectNode.type && selectNode.id){
+        selectNode.isEnd = this.checked;
+        if(this.checked)selectNode.isStart = false;
+        Diagrams.updateNode();
+        Diagrams.selectItem(selectNode);
+    }
 });
 
 function getDiagramNodeData(bid){
@@ -194,14 +295,37 @@ function initNodeProp(){
     Layout.setBlock({});
 }
 
+function diagramSelect(){
+    $('#rightTab_diagram').tab('show');
+    $("#propPageNm").val(Layout.getPageInfo("name"));
+    $("#bgWidth").val($("#svg-container").width());
+    $("#bgHeight").val($("#svg-container").height());
+    Layout.setPageInfo("width",$("#svg-container").width());
+    Layout.setPageInfo("height", $("#svg-container").height());
+}
+function diagramChange(){
+    $("#svg-container").width($("#bgWidth").val());
+    $("#svg-container").height($("#bgHeight").val());
+    Layout.setPageInfo("width", $("#bgWidth").val());
+    Layout.setPageInfo("height", $("#bgHeight").val());
+    Layout.setPageInfo("name",  $("#propPageNm").val());
+}
+
 function nodeSelect(obj){
     if(obj == null){
         initNodeProp();
+        calSelect();
+        diagramSelect();
         return;
     }
-
-    var bid = obj.id;
     Layout.setBlock(obj);
+
+    if(obj.type == "cal"){
+        calSelect(obj.id);
+        $('#rightTab_cal').tab('show');
+        return;
+    }
+    var bid = obj.id;
     var nodeObj = obj;
     var objType = "node";
     if(!nodeObj.type){
@@ -222,19 +346,22 @@ function nodeSelect(obj){
     $('#rightTab_block').tab('show');
 }
 function calClick(id){
-    var d = CalData.getCalById(id);
+    Diagrams.selectItem();
+    calSelect(id);
+    $('#rightTab_cal').tab('show');
+}
+function calSelect(id){
+    var d = CalData.getCalById(id) || {};
     CalData.setSelect(d);
-
     $("#prop_calStart").get(0).checked = $("#"+id).parent().hasClass("cal_start");
     $("#prop_calEnd").get(0).checked = $("#"+id).parent().hasClass("cal_end");
     
     $("#cal-group").find(".calDiv").removeClass("select");
     $("#"+id).parent().addClass("select");
     
-    $("#prop_calFormula").val("="+d.fm);
+    $("#prop_calFormula").val("="+(d.fm||""));
     $("#prop_calValue").val($("#"+id).val());
     $("#prop_calName").val(d.nm||"");
-    $('#rightTab_cal').tab('show');
     setCalBlockSelect(d.bl);
 }
 
@@ -270,10 +397,14 @@ function setCalBlockSelect(sId){
     var select = [];
     var diagramData = Diagrams.getData();
     diagramData.nodes.map(function(d, i){
-        select.push({code:d.id,name:(d.name)?d.name+":"+d.id:d.id,select:sId == d.id?true:false});
+        if(d.type !== "cal")select.push({code:d.id,name:(d.name)?d.name+":"+d.id:d.id,select:sId == d.id?true:false});
     });
     var blockSelect = cfn_setSelect("#prop_blockSelect", select);
 }
+
+$("#right-diagram input").on("change", function(){
+    diagramChange();
+});
 
 $("#prop_blockSelect").on("change", function(){
     if(this.value != ""){
@@ -288,6 +419,12 @@ $("#prop_calName").on("change", function(e){
 
 $("#prop_calFormula").on("change", function(e){
     setFormula(this.value);
+    var selectNode = Layout.getBlock();
+    if(selectNode.type && selectNode.id){
+        selectNode.name = this.value;
+        Diagrams.updateNode();
+        Diagrams.selectItem(selectNode);
+    }
 });
 
 $("#prop_calRemove").on("click",function(){
@@ -302,24 +439,26 @@ $("#prop_calCal2").on("click", function(){
     $("#"+selectCal.id).val($("#prop_calValue").val());
     $("#"+selectCal.id).attr("data-formula", $("#prop_calValue").val());
     rules.init();
+    setCalNodeValue();
 });
 
 $("#prop_calCal").on("click", function(){
-    var selectCal = CalData.getSelect();
     Cal.refresh();
+    setCalNodeValue();
 });
 
 $("#prop_calRev").on("click", function(){
     var selectCal = CalData.getSelect();
     var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
-    console.log("reverse start");
+    /*console.log("reverse start");
     console.log("val : "+$("#prop_calValue").val());
     console.log(rc);
-    console.log("reverse end");
+    console.log("reverse end");*/
     if(rc){
         $("#"+rc.skey).val(rc.x);
         $("#"+rc.skey).attr("data-formula", rc.x);
         rules.init();
+        setCalNodeValue();
     }
 });
 
@@ -347,37 +486,6 @@ window_resize();
 $(window).on("resize", function(){
     window_resize();
 });
-
-function layout_init(){
-    Cal.destory();
-    $("#prop_blockColor").spectrum({
-        color: "#000000",
-        showPalette: true,
-        palette: [
-            ["#000","#444","#666","#999","#ccc","#eee","#f3f3f3","#fff"],
-            ["#f00","#f90","#ff0","#0f0","#0ff","#00f","#90f","#f0f"],
-            ["#f4cccc","#fce5cd","#fff2cc","#d9ead3","#d0e0e3","#cfe2f3","#d9d2e9","#ead1dc"],
-            ["#ea9999","#f9cb9c","#ffe599","#b6d7a8","#a2c4c9","#9fc5e8","#b4a7d6","#d5a6bd"],
-            ["#e06666","#f6b26b","#ffd966","#93c47d","#76a5af","#6fa8dc","#8e7cc3","#c27ba0"],
-            ["#c00","#e69138","#f1c232","#6aa84f","#45818e","#3d85c6","#674ea7","#a64d79"],
-            ["#900","#b45f06","#bf9000","#38761d","#134f5c","#0b5394","#351c75","#741b47"],
-            ["#600","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]
-        ]
-    });
-    $("#prop_blockColor").on("change", function(){
-        var selectNode = Layout.getBlock();
-        if(selectNode){
-            selectNode.color = $(this).spectrum("get").toHexString();
-            Diagrams.updateNode();
-        }
-    });
-    $(window).on('beforeunload', function() {
-        return "?";
-     });
-        
-    var Scrollbar = window.Scrollbar;
-    Scrollbar.init(document.querySelector('#container .right'), {});
-}
 
 function printArea()
 {
@@ -429,5 +537,39 @@ function printArea()
         win.close();
     }, 200);
 }
+
+function layout_init(){
+    Cal.destory();
+    $("#prop_blockColor").spectrum({
+        color: "#000000",
+        showPalette: true,
+        palette: [
+            ["#000","#444","#666","#999","#ccc","#eee","#f3f3f3","#fff"],
+            ["#f00","#f90","#ff0","#0f0","#0ff","#00f","#90f","#f0f"],
+            ["#f4cccc","#fce5cd","#fff2cc","#d9ead3","#d0e0e3","#cfe2f3","#d9d2e9","#ead1dc"],
+            ["#ea9999","#f9cb9c","#ffe599","#b6d7a8","#a2c4c9","#9fc5e8","#b4a7d6","#d5a6bd"],
+            ["#e06666","#f6b26b","#ffd966","#93c47d","#76a5af","#6fa8dc","#8e7cc3","#c27ba0"],
+            ["#c00","#e69138","#f1c232","#6aa84f","#45818e","#3d85c6","#674ea7","#a64d79"],
+            ["#900","#b45f06","#bf9000","#38761d","#134f5c","#0b5394","#351c75","#741b47"],
+            ["#600","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]
+        ]
+    });
+    diagramSelect();
+    $("#prop_blockColor").on("change", function(){
+        var selectNode = Layout.getBlock();
+        if(selectNode){
+            selectNode.color = $(this).spectrum("get").toHexString();
+            Diagrams.updateNode();
+            Diagrams.selectItem(selectNode);
+        }
+    });
+    $(window).on('beforeunload', function() {
+        return "?";
+    });
+    var Scrollbar = window.Scrollbar;
+    Scrollbar.init(document.querySelector('#container .right'), {});
+}
+
+
 
 layout_init();

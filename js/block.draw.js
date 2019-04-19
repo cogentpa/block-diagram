@@ -1,3 +1,6 @@
+/** node */
+function Node(){}
+
 function Diagram(){
     "use strict";
     /** Util Fnc */
@@ -77,9 +80,6 @@ function Diagram(){
         "dash2" : "10,5",
         "dash3" : "15, 10, 5, 10",
     };
-
-    /** node */
-    function Node(){}
 
     Node.prototype = {
         genPath : d3.line().x(function(d) { return d.x; })
@@ -236,7 +236,7 @@ function Diagram(){
                 
                 this.addItem(svgObj, data);
                 this.drawPath(svgObj, data);
-            }
+            };
             mb.addItem = function(svgObj, data){
                 var item = svgObj.append("g").attr("class","mbItem");
                 var itemWidth = data["item"]["width"];
@@ -350,7 +350,7 @@ function Diagram(){
                     });
                 }
                 return item;
-            }
+            };
             mb.addIcon = function(svgObj, data, pos){
                 var iconG = svgObj.append("g").attr("class","mbIcon");
                 iconG.attr("transform", "translate("+pos.x+","+pos.y+")");
@@ -500,8 +500,6 @@ function Diagram(){
                                         p_el.select("foreignObject").remove();
                                     })
                                     .on("keypress", function() {
-                                        console.log("keypress", this, arguments);
-            
                                         // IE fix
                                         if (!d3.event)
                                             d3.event = window.event;
@@ -560,7 +558,7 @@ function Diagram(){
                 path.attr("d", this.genPath(points))
                     .attr("class", "textPath")
                     .attr("stroke-width", data.strokeWidth||2)
-           }
+            };
             tb.drawText = function(svgObj, data){
                 var text = svgObj.append("text");
                 text.attr("x", data.width/2)
@@ -633,7 +631,7 @@ function Diagram(){
                     });
 
 
-            }
+            };
             
             return tb;
         },
@@ -686,46 +684,64 @@ function Diagram(){
            };
 
             return scope;
-        },
+        }
     };
 
     var UndoManager = function() {
         var dataStack = [],
+            dataStack2 = [],
             index = -1,
             limit = 0,
             isExecuting = false,
-            callback;
+            callback,
+            callback2;
 
         return {
             add: function (data) {
                 if (isExecuting) {return this;}
                 dataStack.splice(index + 1, dataStack.length - index);
                 dataStack.push(JSON.stringify(data));
-                
+               
                 // if limit is set, remove items from the start
                 if (limit && dataStack.length > limit) {
                     removeFromTo(dataStack, 0, -(limit+1));
                 }
+
+                if(callback2){
+                    dataStack2.splice(index + 1, dataStack2.length - index);
+                    dataStack2.push(callback2("add"));
+                    if (limit && dataStack2.length > limit) {
+                        removeFromTo(dataStack2, 0, -(limit+1));
+                    }
+                }
+
                 index = dataStack.length - 1;
                 return this;
             },
             setCallback: function (callbackFunc) {
                 callback = callbackFunc;
             },
+            setExtCallback: function (callbackFunc) {
+                callback2 = callbackFunc;
+            },
             undo: function () {
                 var dataString = dataStack[index-1];
+                var dataString2 = dataStack2[index-1];
                 if (!dataString) {return this;}
                 isExecuting = true;
                 index -= 1;
+                if (callback2) {callback2(dataString2);}
                 if (callback) {callback(dataString);}
                 isExecuting = false;
                 return this;
             },
             redo: function () {
                 var dataString = dataStack[index+1];
+                var dataString2 = dataStack2[index+1];
                 if (!dataString) {return this;}
                 isExecuting = true;
                 index += 1;
+                if (callback2) {callback2(dataString2);}
                 if (callback) {callback(dataString);}
                 isExecuting = false;
                 return this;
@@ -763,13 +779,13 @@ function Diagram(){
                 });
 
                 if(d){
-                    tmpClear();
+                    tmpClear(false);
                     targetNode = d3.select("#"+targetId);
                     this.keyDown(keyCode);
                 }
             }
             //if(parseInt(window.getComputedStyle(D3SVG.node()).width)-tmp.x-10 > 0){
-        }
+        };
         moveEvt.keyDown = function(keyCode){
             if(targetNode){
                 d3.event.preventDefault();
@@ -791,7 +807,7 @@ function Diagram(){
                 }
                 drawNode();
             }
-        }
+        };
         moveEvt.keyUp = function(){
             if(targetNode){
                 d3.event.preventDefault();
@@ -800,7 +816,7 @@ function Diagram(){
                 targetNode = null;
                 d = null;
             }
-        }
+        };
         
         return moveEvt;
     }();
@@ -813,11 +829,11 @@ function Diagram(){
         return d3.drag()
                   .clickDistance(0)
                   .on("start",function(d, i){
-                      tmpClear();
                       dragFlag = false;
                       targetNode = d3.select(this);
                       stX = d.x;
                       stY = d.y;
+                      tmpClear(false);
                   })
                   .on("drag",function(d, i){
                       if(!dragFlag){
@@ -835,6 +851,8 @@ function Diagram(){
                       if(dragFlag){
                         tempNode.remove();
                         updateDiagrams();
+                      }else{
+                        tmpClear(false);
                       }
                       selectNode(targetNode, d);
                   });
@@ -1186,6 +1204,9 @@ function Diagram(){
         var points = tPoints.map(function(v,i){
             return closestPoint(pathNode, v);
         });
+        
+        targetNode.classed('select', true);
+
         TempG.attr("target_id", targetNode.attr("id"));
 
         TempG.selectAll("circle").append("circle")
@@ -1448,8 +1469,9 @@ function Diagram(){
     }
 
     /** function */
-    function init(trgtId, fn){
+    function init(trgtId, option){
         var svg = d3.select(trgtId);
+        var tmpExtNodes;
 
         appendDef(svg);
 
@@ -1467,20 +1489,27 @@ function Diagram(){
         LinkG = viewportG.append("g").attr("id", "link-group");
         NodeG = viewportG.append("g").attr("id", "node-group");
         TempG = viewportG.append("g").attr("id", "temp-group");
-
-        UserFn = fn;
+        
 
         D3SVG = svg;
         DATA = {nodes:[], links:[]};
-        
+
+        if(option){
+            if(option.fn)UserFn = option.fn;
+            if(option.extNodes)tmpExtNodes = option.extNodes;
+            if(option.extUndoCallback)UndoManager.setExtCallback(option.extUndoCallback);
+        }
+
         UndoManager.setLimit(100);
         UndoManager.setCallback(function(data){
             DATA = JSON.parse(data);
             setDataRef();
             updateDiagrams();
         });
+
         UndoManager.add(DATA);
         
+        initNodeList(tmpExtNodes);
 
         svg.on("click", function(){
             tmpClear();
@@ -1496,7 +1525,7 @@ function Diagram(){
                     case 67: //ctrl + c
                         tmpId = TempG.attr("target_id");
                         if(tmpId){
-                            tmpId = tmpId.replace("nd-", "")
+                            tmpId = tmpId.replace("nd-", "");
                             tmp = DATA.nodes.find(function(e){
                                 return (e.id == tmpId);
                             });
@@ -1550,8 +1579,6 @@ function Diagram(){
                 moveNode.keyUp();
             }
         });
-
-        initNodeList();
     }
 
     function appendDef(d3Svg){
@@ -1616,18 +1643,25 @@ function Diagram(){
         }
     }
 
-    function initNodeList(){
+    function initNodeList(extNodes){
 
         NodeList = {};
 
         for(var name in NodesInit){
             NodeList[name] = NodesInit[name]();
         }
+        if(extNodes){
+            for(var name in extNodes){
+                NodeList[name] = extNodes[name]();
+            }
+        }
     }
-    function tmpClear(){
+    function tmpClear(notSelect){
+        NodeG.selectAll("g.select").classed('select', false);
         TempG.selectAll("*").remove();
         TempG.attr("target_id", null);
-        if(UserFn)UserFn();
+        if(notSelect !== false && UserFn)UserFn();
+        
     }
     function clearAll(){
         DATA.links = [];
@@ -1722,7 +1756,7 @@ function Diagram(){
             }
         });
     }
-    function drawNode(){
+    function drawNode(){       
         var nodes = NodeG.selectAll(".node").data(DATA.nodes);
         nodes.exit().remove();
 
@@ -1753,20 +1787,7 @@ function Diagram(){
             return "nd-" + d.id;
         }).attr("transform", function(d){
             return "translate(" + d.x + "," + d.y + ")";
-        });
-        /*
-        nodes.append("path")
-            .attr("class", "shape-path");
-        
-        var paths = nodes.select(".shape-path");
-
-        paths.attr("d", function(d){
-                return NodeList[d.type].getPathData(d);
-            })
-            .attr("stroke", "black")
-            .attr("stroke-width", 2)
-            .attr("fill", "#fff");
-        */    
+        });  
         
         ng.each(function(d){
             var _thisG = d3.select(this);//.selectAll("path").data([d]).enter(); 
@@ -1832,7 +1853,7 @@ function Diagram(){
             }
         });
 
-        node.id = node.type + "-" + (parseInt(maxNum)+1);
+        if(node.type !== "cal")node.id = node.type + "-" + (parseInt(maxNum)+1);
         
         if(node.type == "mb"){
             if(!node.mb || node.mb.length === 0){
@@ -1847,37 +1868,49 @@ function Diagram(){
             }
         }
         
+        if(NodeList[node.type]["fnAdd"]){NodeList[node.type]["fnAdd"](node);}
+
         DATA.nodes.push(node);
+
+        /* 나중에 인덱스 추가.*/ 
+        DATA.nodes.sort(function(a,b){
+            if(a.type === "cal" && b.type === "cal"){
+                return (a.id > b.id) ? 1 : -1;
+            }else if(b.type === "cal"){
+                return -1;
+            }else{
+                return 1;
+            }
+        });
         updateDiagrams();
     }
 
     function deleteItem(data){
         var id = (typeof data === "string") ? data : data.id;
-        DATA.links.map(function(d, i){
-            if(d.target === id){
-                DATA.links.splice(i, 1);
+        var links = DATA.links;
+        var nodes = DATA.nodes;
+        var i, d;
+
+        for(i = links.length - 1; i >= 0; i--) {
+            d = links[i];
+            if(d.target == id || d.source == id || d.id == id) {
+                links.splice(i, 1);
             }
-        });
-        DATA.links.map(function(d, i){
-            if(d.source === id){
-                DATA.links.splice(i, 1);
+        }
+
+        for(i = nodes.length - 1; i >= 0; i--) {
+            d = nodes[i];
+            if(d.id == id) {
+                nodes.splice(i, 1);
+                if(NodeList[d.type]["fnDel"]){NodeList[d.type]["fnDel"](d);}
             }
-        });
-        DATA.nodes.map(function(d, i){
-            if(d.id === id){
-                DATA.nodes.splice(i, 1);
-            }
-        });
-        DATA.links.map(function(d, i){
-            if(d.id == id){
-                DATA.links.splice(i, 1);
-            }
-        });
+        }
+        
         updateDiagrams();
     }
 
     function selectItem(data){
-        if(!data)return;
+        if(!data){tmpClear();return;}
         if(data.source){
             selectLine(data);
         }else{

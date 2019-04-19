@@ -29,7 +29,7 @@
         </div>
     </div>
     <div class="container-fluid" id="main" style="padding:0px !important">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <nav class="navbar navbar-expand-lg navbar-dark">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -45,9 +45,6 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="javascript:void(0)" data-toggle="modal" data-target="#saveModal">Save</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="javascript:void(0)" data-toggle="modal" data-target="#propModal">Prop</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="javascript:void(0)" id="printSvg">Print</a>
@@ -66,7 +63,7 @@
                 <div id="svg-container">
                     <svg id="diagram" style="width:100%;height:100%" tabindex="0"></svg>
                 </div>
-                <div id="cal-group"></div>
+                <div id="cal-group" style="display:none;"></div>
             </div>
             <div class="left">
                 <ul id="leftMenus">
@@ -121,7 +118,7 @@
                     <a href="javascript:void(0)">
                         <li class="item-menu itemC">
                             <i class="fas fa-calculator"></i>
-                            <span class="menu">Calcaulate</span>
+                            <span class="menu">Calculate</span>
                         </li>
                     </a>
                 </ul>
@@ -129,81 +126,122 @@
             </div> <!-- end left -->
             <div class="right">
                 <div id="rightTab" class="tab-container">	
-                    <ul class="nav nav-pills">
+                    <ul class="nav nav-pills d-none">
                         <li>
-                            <a  href="#right-tab0" id="rightTab_block" data-toggle="tab" class="active">Block Info</a>
+                            <a href="#right-diagram" id="rightTab_diagram" data-toggle="tab" class="active">Diagram</a>
                         </li>
                         <li>
-                            <a href="#right-tab1" id="rightTab_cal" data-toggle="tab">Calcaulation</a>
+                            <a href="#right-tab0" id="rightTab_block" data-toggle="tab">Block</a>
+                        </li>
+                        <li>
+                            <a href="#right-tab1" id="rightTab_cal" data-toggle="tab">Calculation</a>
                         </li>
                     </ul>
 
                     <div class="tab-content clearfix">
-                        <div class="tab-pane active" id="right-tab0">
-                            <div class="col-lg-12 col-md-12 mx-auto" id="prop_blockInfo">
+                        <div class="tab-pane active" id="right-diagram">
+                            <div class="p-1 pl-2 border-secondary panel-title">DIAGRAM</div>
+                            <div class="penal-item-group">
+                                <div class="text-light item-group-title">PAGE</div>
+                                <div class="form-group">
+                                    <div class="item-v mb-1">
+                                        <label for="propPageNm" class="item-name">Name</label>
+                                        <input type="text" class="item-input" id="propPageNm" autocomplete="off">
+                                    </div>
+                                    <div class="row">
+                                        <label for="bgWidth" class="col-sm-3 col-form-label item-name">Width</label>
+                                        <div class="col-sm-9 pl-2">
+                                            <input type="number" class="item-input" id="bgWidth" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label for="bgWidth" class="col-sm-3 col-form-label item-name">Height</label>
+                                        <div class="col-sm-9 pl-2">
+                                            <input type="number" class="item-input" id="bgHeight" autocomplete="off">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                        <div class="tab-pane" id="right-tab0">
+                            <div class="p-1 pl-2 border-secondary panel-title" id="prop_blockInfo">BLOCK</div>
+                            <div class="penal-item-group">
+                                <div class="text-light item-group-title" >GENERAL</div>
+                                <div class="item-v mb-1">
+                                    <label for="prop_blockIdInput" class="item-name">Id <span class="text-danger">*</span></label>
+                                    <input type="text" class="item-input" id="prop_blockIdInput" readonly>
+                                </div>
+                                <div class="item-v mb-1">
+                                    <label for="prop_blockIdInput" class="item-name">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="item-input" id="prop_blockNmInput" autocomplete="off">
+                                </div>
+                                <div class="item-subgroup mb-1">
+                                    <label for="" class="item-subgroup-name item-name pb-1">Size and Position <span class="text-danger">*</span></label>
+                                    <div class="col-6 d-inline-block border-right border-secondary" style="width:48%">
+                                        <div class="row">
+                                            <label for="prop_blockWidthInput" class="col-3 p-1 col-form-label item-name" title="width">W</label>
+                                            <input type="number" class="col-8 item-input" id="prop_blockWidthInput" autocomplete="off">
+                                        </div>
+                                        <div class="row">
+                                            <label for="prop_blockHeightInput" class="col-3 p-1 col-form-label item-name">H</label>
+                                            <input type="number" class="col-8 item-input" id="prop_blockHeightInput" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-6 d-inline-block" style="width:48%">
+                                        <div class="row">
+                                            <label for="prop_blockXInput" class="col-3 p-1 col-form-label item-name">X</label>
+                                            <input type="number" class="col-8 item-input" id="prop_blockXInput" autocomplete="off">
+                                        </div>
+                                        <div class="row">
+                                            <label for="prop_blockYInput" class="col-3 p-1 col-form-label item-name">Y</label>
+                                            <input type="number" class="col-8 item-input" id="prop_blockYInput" autocomplete="off">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="penal-item-group">
+                                <div class="text-light item-group-title">STYLE</div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <input class="" type="checkbox" value="1" id="prop_fill" checked>
+                                        <label class="item-name" for="prop_fill" title="배경">Background</label>
+                                    </div>
+                                </div>
+                                <div class="item-subgroup mb-1 pt-2">
+                                    <label for="" class="item-subgroup-name item-name pb-1">Stroke</label>
+                                    <div class="col-12">
+                                        <div class="row">
+                                            <label for="prop_blockColor" class="col-8 p-1 col-form-label item-name">Color</label>
+                                            <input class="prop_colorPicker" id="prop_blockColor" placeholder="#000000"/>
+                                        </div>
+                                        <div class="row">
+                                            <label for="prop_blockStroke" class="col-3 p-1 col-form-label item-name">Style</label>
+                                            <div class="col-sm-9 pl-2">
+                                                <select class="item-input p-0" id="prop_blockStroke">
+                                                    <option value="">Default</option>
+                                                    <option value="dash1">Dash Style 1</option>
+                                                    <option value="dash2">Dash Style 2</option>
+                                                    <option value="dash3">Dash Style 3</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label for="prop_blockStrokeWidth" class="col-3 p-1 col-form-label item-name">Width</label>
+                                            <div class="col-sm-9 pl-2">
+                                                <select class="item-input p-0" id="prop_blockStrokeWidth">
+                                                    <option value="1">1px</option>
+                                                    <option value="2" selected>2px</option>
+                                                    <option value="3">3px</option>
+                                                    <option value="4">4px</option>
+                                                    <option value="5">5px</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>        
+                            </div>              
+                            <div class="col-lg-12 col-md-12 mx-auto" >
                                 <form>
-                                    <legend class="text-light"></legend>
-                                    <div class="form-group">
-                                        <label class="text-light">Id <span class="text-danger">*</span></label>
-                                        <input class="form-control form-control-sm" id="prop_blockIdInput" readonly/>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Name <span class="text-danger">*</span></label>
-                                        <input class="form-control form-control-sm" id="prop_blockNmInput"/>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Size <span class="text-danger">*</span></label>
-                                        <div class="form-row">
-                                            <div class="col">
-                                                <input class="form-control form-control-sm" id="prop_blockWidthInput" placeholder="Width"/> 
-                                            </div>
-                                            <span class="text-light">x</span>
-                                            <div class="col">
-                                                <input class="form-control form-control-sm" id="prop_blockHeightInput" placeholder="Height"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Position<span class="text-danger">*</span></label>
-                                        <div class="form-row">
-                                            <div class="col">
-                                                <input class="form-control form-control-sm" id="prop_blockXInput" placeholder="X"/> 
-                                            </div>
-                                            <span class="text-light">,</span>
-                                            <div class="col">
-                                                <input class="form-control form-control-sm" id="prop_blockYInput" placeholder="Y"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group" style="margin:10px 0;">
-                                        <label class="form-check-label" for="prop_fill" title="채우기">
-                                            Background Fill
-                                        </label>
-                                        <input class="form-check-input" type="checkbox" value="1" id="prop_fill" style="margin-left:0.5rem;width:1rem;height:1rem;" checked>
-                                    </div>
-                                    <div class="form-group" style="margin:10px 0;">
-                                        <label class="text-light">Color<span class="text-danger"></span></label>
-                                        <input class="form-control form-control-sm" id="prop_blockColor" placeholder="#000000"/>
-                                    </div>
-                                    <div class="form-group" style="margin:10px 0;">
-                                        <label class="text-light">Stroke Style</label>
-                                        <select class="form-control form-control-sm" id="prop_blockStroke">
-                                            <option value="">Default</option>
-                                            <option value="dash1">Dash Style 1</option>
-                                            <option value="dash2">Dash Style 2</option>
-                                            <option value="dash3">Dash Style 3</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group" style="margin:10px 0;">
-                                            <label class="text-light">Stroke Width</label>
-                                            <select class="form-control form-control-sm" id="prop_blockStrokeWidth">
-                                                <option value="1">1px</option>
-                                                <option value="2" selected>2px</option>
-                                                <option value="3">3px</option>
-                                                <option value="4">4px</option>
-                                                <option value="5">5px</option>
-                                            </select>
-                                        </div>
                                     <div class="form-group" style="margin:10px 0;">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_blockRemove">Remove</button>
                                     </div>
@@ -211,49 +249,58 @@
                             </div>
                         </div>
                         <div class="tab-pane" id="right-tab1">
-                            <div class="col-lg-12 col-md-12 mx-auto" id="prop_calTypeAdd">
-                                <form>
-                                    <legend class="text-light"></legend>
-                                    <div class="form-group">
-                                        <label class="text-light">Name <span class="text-danger">*</span></label>
-                                        <input class="form-control form-control-sm" id="prop_calName"/>
+                            <div class="p-1 pl-2 border-secondary panel-title" id="prop_calTypeAdd">CALCULATION</div>
+                            <div class="penal-item-group">
+                                <div class="text-light item-group-title" >GENERAL</div>
+                                <div class="item-v mb-1">
+                                    <label for="prop_calName" class="item-name">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="item-input" id="prop_calName" autocomplete="off">
+                                </div>
+                            </div>        
+                            <div class="penal-item-group">
+                                <div class="text-light item-group-title" >CALC</div>
+                                <div class="item-v mb-1">
+                                    <label for="prop_calFormula" class="item-name">Formula <span class="text-danger">*</span></label>
+                                    <textarea class="form-control item-textarea" id="prop_calFormula" rows=8></textarea>
+                                </div>
+                                <div class="row">
+                                    <label for="prop_calValue" class="col-sm-3 col-form-label item-name">Value</label>
+                                    <div class="col-sm-9 pl-2">
+                                        <input type="text" class="item-input" id="prop_calValue" autocomplete="off">
                                     </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Formula <span class="text-danger">*</span></label>
-                                        <textarea class="form-control form-control-sm" id="prop_calFormula" rows=10>
-                                        </textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Value <span class="text-danger">*</span></label>
-                                        <input class="form-control form-control-sm" id="prop_calValue"/>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="text-light">With Block <span class="text-danger">*</span></label>
-                                        <select class="form-control form-control-sm" id="prop_blockSelect">
+                                </div>
+                                <div class="row">
+                                    <label for="prop_blockSelect" class="col-sm-3 col-form-label item-name">With Block</label>
+                                    <div class="col-sm-9 pl-2">
+                                        <select class="item-input p-0" id="prop_blockSelect">
                                             <option value="">Select</option>
                                         </select>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="text-light">Type <span class="text-danger">*</span></label>
-                                        <div class="form-row">
-                                            <span class="text-light">Start</span>
-                                            <div class="col">
-                                                <input class="form-control form-control-sm" id="prop_calStart" type="checkbox"/> 
-                                            </div>
-                                            <span class="text-light">End</span>
-                                            <div class="col">
-                                                <input class="form-control form-control-sm" id="prop_calEnd" type="checkbox"/>
-                                            </div>
+                                </div>
+                                <div class="row">
+                                    <label for="prop_blockSelect" class="col-sm-3 col-form-label item-name">Type<span class="text-danger">*</span></label>
+                                    <div class="col-sm-9 pl-2 pt-1">
+                                        <div class="col-5 p-0 d-inline-block">
+                                            <input class="" type="checkbox" id="prop_calStart" checked>
+                                            <label class="item-name" for="prop_calStart" title="Start">Start</label>
                                         </div>
+                                        <div class="col-5 p-0 d-inline-block">
+                                            <input class="" type="checkbox" id="prop_calEnd" checked>
+                                            <label class="item-name" for="prop_calEnd" title="End">End</label>
+                                        </div>          
                                     </div>
+                                </div>
+                            </div>    
+                            <div class="col-lg-12 col-md-12 mx-auto">
+                                <form>
                                     <div class="form-group" style="margin:10px 0;">
-                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calCal">Calculate</button>
+                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calCal" title="전체 Calcaulate의 Formula를 계산합니다.">Calculate</button>
                                     </div> 
                                     <div class="form-group" style="margin:10px 0;">
-                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calRev">Reverse</button>
+                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calRev" title="선택된 Calcaulate의 Value값을 기준으로 전체 Calcaulate를 계산합니다.">Reverse</button>
                                     </div> 
                                     <div class="form-group" style="margin:10px 0;">
-                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calCal2">Calculate 2</button>
+                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calCal2" title="선택된 Calcaulate의 Value값을 기준으로 이후 Calcaulate를 계산합니다.">Calculate 2</button>
                                     </div> 
                                     <div class="form-group" style="margin:10px 0;">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calRemove">Remove</button>
@@ -391,38 +438,7 @@
         </div>
     </div>
     <!-- Prop -->
-    <div class="modal fade" id="propModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Property</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="propForm">
-                        <div class="form-group">
-                            <label for="recipient-name" class="col-form-label">Page Name :</label>
-                            <input type="text" class="form-control" id="propPageNm">
-                        </div>
-                        <div class="form-group">
-                            <label for="recipient-name" class="col-form-label">Width :</label>
-                            <input type="text" class="form-control" id="bgWidth">
-                        </div>
-                        <div class="form-group">
-                            <label for="recipient-name" class="col-form-label">Height :</label>
-                            <input type="text" class="form-control" id="bgHeight">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="propModal_applyBtn">Apply</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -449,7 +465,7 @@
     <script src="js/block.layout.js"></script>
     <script>
         var Diagrams = Diagram();
-        Diagrams.init("#diagram", nodeSelect);
+        Diagrams.init("#diagram", {extNodes:extNodes, extUndoCallback:calUndoCallback,fn:nodeSelect});
     </script>
     </body>
 </html>

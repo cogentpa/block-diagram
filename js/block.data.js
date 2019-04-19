@@ -65,27 +65,24 @@ var Layout = function (){
     }
     function removeNode(id){
         var diagramData = Diagrams.getData();
+        var links = diagramData.links;
+        var nodes = diagramData.nodes;
+        var i, d;
 
-        diagramData.links.map(function(d, i){
-            if(d.target === id){
-                diagramData.links.splice(i, 1);
+        for(i = links.length - 1; i >= 0; i--) {
+            d = links[i];
+            if(d.target == id || d.source == id || d.id == id) {
+                links.splice(i, 1);
             }
-        });
-        diagramData.links.map(function(d, i){
-            if(d.source === id){
-                diagramData.links.splice(i, 1);
+        }
+
+        for(i = nodes.length - 1; i >= 0; i--) {
+            d = nodes[i];
+            if(d.id == id) {
+                nodes.splice(i, 1);
             }
-        });
-        diagramData.nodes.map(function(d, i){
-            if(d.id === id){
-                diagramData.nodes.splice(i, 1);
-            }
-        });
-        diagramData.links.map(function(d, i){
-            if(d.id === id){
-                diagramData.links.splice(i, 1);
-            }
-        });
+        }
+
         Diagrams.updateNode();
     }
     api.setPageInfo = setPageInfo;

@@ -15,6 +15,7 @@ var Cal = function(){
             start: function() {
                 CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
                 CalData.setAttr(calNo, "y", parseInt(calDiv.css("top")));
+                calClick(calNo);
             },
             drag: function() {
                 CalData.setAttr(calNo, "x", parseInt(calDiv.css("left")));
@@ -28,10 +29,13 @@ var Cal = function(){
 
         $("#cal-group").append(calDiv);
         rules.addItem(calInput.get(0));
-
-        calDiv.bind("click", function(){
+        
+        calDiv.on("click", function(){
             calClick(calNo);
         });
+        
+
+         
 
         return calDiv;
     }
@@ -50,8 +54,8 @@ var Cal = function(){
         CalData.init();
     }
 
-    function init(){
-        var rules = new ruleJS("cal-group");
+    function init(id){
+        var rules = new ruleJS( id || "cal-group");
         rules.init();
         return rules;
     }

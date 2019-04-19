@@ -22083,6 +22083,17 @@ var ruleJS = (function (root) {
         		  var fn = num;
         		  if(formatObj.fixed || formatObj.fixed === 0){
         			  fn = fn.toFixed(formatObj.fixed);
+        		  } else if(!isNaN(formatObj.precision)){
+        			  fn = (fn).toPrecision(formatObj.precision);
+        			  var regExp = /(e\+|e\-)(\d+)/g;
+        			  regExp.test(fn);
+
+        			  fn = fn.replace(regExp, function(m, g1, g2){
+        			  	let subNum = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+        			    return ((g1 == "e+") ? "×10" : "×10⁻") + subNum.charAt(g2);
+        			  });
+        		  }else{
+        			  fn = fn+"";
         		  }
         		  if(formatObj.comma){
         			  fn = fn.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
@@ -23008,6 +23019,7 @@ var ruleJS = (function (root) {
   };
   var reload = function() {
     instance.matrix.scan();
+    instance.matrix.recalculate();
   };
   var recalculate = function() {
     instance.matrix.recalculate();
