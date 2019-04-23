@@ -4,8 +4,8 @@ var Layout = function (){
         page : {
             id:"page_123456",
             name:"",
-            width:2000,
-            height:800
+            width:2496,
+            height:1760
         },
         block : {
             selectId:"",

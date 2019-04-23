@@ -126,10 +126,16 @@ $("#printSvg").on("click", function(){
 $("#leftMenus").find("li.item-menu").each(function(){
     $(this).on("click", function(){
         var _item = $(this);
-        var targetEl = document.querySelector("#container>.center");
+        var targetEl = document.querySelector("#svg-container");
         var x = targetEl.scrollLeft + 50;
         var y =targetEl.scrollTop + _item.position().top + 10;
+
+        var transform = $("#diagram>.viewport").attr("transform") || "";
+        var scale = (transform.match(/scale\((-?\d+\.?\d*)\)/)[1] || 1)*1;
         
+        x /= scale;
+        y /= scale;
+
         if(_item.hasClass("item0")){
             Diagrams.addBox({type:"rect",x:x,y:y,width:100,height:40});
         }else if(_item.hasClass("item1")){
@@ -296,19 +302,17 @@ function initNodeProp(){
 }
 
 function diagramSelect(){
+    var pageInfo = Layout.getPageInfo();
     $('#rightTab_diagram').tab('show');
-    $("#propPageNm").val(Layout.getPageInfo("name"));
-    $("#bgWidth").val($("#svg-container").width());
-    $("#bgHeight").val($("#svg-container").height());
-    Layout.setPageInfo("width",$("#svg-container").width());
-    Layout.setPageInfo("height", $("#svg-container").height());
+    $("#propPageNm").val(pageInfo["name"]);
+    $("#bgWidth").val(pageInfo["width"]);
+    $("#bgHeight").val(pageInfo["height"]);
 }
 function diagramChange(){
-    $("#svg-container").width($("#bgWidth").val());
-    $("#svg-container").height($("#bgHeight").val());
     Layout.setPageInfo("width", $("#bgWidth").val());
     Layout.setPageInfo("height", $("#bgHeight").val());
     Layout.setPageInfo("name",  $("#propPageNm").val());
+    Diagrams.updateNode();
 }
 
 function nodeSelect(obj){
@@ -479,8 +483,6 @@ function window_resize(){
         winHeight = document.body.clientHeight;
     }
     $("#container").height(winHeight-87);
-    $("#svg-container").width(2500);
-    $("#svg-container").height(1760);
 }
 window_resize();
 $(window).on("resize", function(){
@@ -491,6 +493,15 @@ function printArea()
 {
     var html = "";
     var nowView;
+    var $diagram = $("#diagram");
+    var $viewport = $("#diagram>.viewport");
+    var tmpW = $diagram.attr("width");
+    var tmpH = $diagram.attr("height"); 
+    var tmpT = $viewport.attr("transform"); 
+
+    $diagram.attr("width", Layout.getPageInfo("width"));
+    $diagram.attr("height", Layout.getPageInfo("height"));
+    $viewport.attr("transform", null);
 
     nowView = $("#svg-container").hasClass("view");
     $("pattern#grid").hide();
@@ -498,11 +509,15 @@ function printArea()
     $("#svg-container").addClass("view");
     $("#cal-group").addClass("view");
     $("#cal-group input").each(function(){
-                        $(this).attr("value", $(this).val());
-                    });
+        $(this).attr("value", $(this).val());
+    });
     
 
     html = $("#container .center").html();
+
+    $diagram.attr("width", tmpW);
+    $diagram.attr("height", tmpH);
+    $viewport.attr("transform", tmpT);
 
     $("pattern#grid").show();
     if(!nowView){
@@ -520,7 +535,7 @@ function printArea()
     win.document.write("<link rel='stylesheet' href='/resources/hts/css/blockDiagram/style.css' type='text/css' />");
     /*win.document.write("<link rel='stylesheet' href='css/style.css' type='text/css' />");*/
     win.document.write("<style>");
-    win.document.write("#center{padding:0.35cm 0.5cm; transform-origin:top left; transform:scale(0.44);}");
+    win.document.write("#center{padding:0.35cm 0.5cm; transform-origin:top left; transform:scale(0.44);}#svg-container{overflow:visible;}");
     win.document.write("</style>");
     win.document.write("<style type='text/css' media='print'>@page {size: auto;margin: 0;}</style>");
     win.document.write("</head>");
@@ -568,10 +583,6 @@ function layout_init(){
     });
     var Scrollbar = window.Scrollbar;
     Scrollbar.init(document.querySelector('#container .right'), {});
-    
-    var viewportGroupElement = document.getElementById('diagram').querySelector('.viewport');
-      
-    //window.panZoom = svgPanZoom('#diagram', {zoomEnabled: true, controlIconsEnabled: false,mouseWheelZoomEnabled: false, dblClickZoomEnabled:false, center:true});
 }
 
 

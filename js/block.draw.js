@@ -4,6 +4,10 @@ function Node(){}
 function Diagram(){
     "use strict";
     /** Util Fnc */
+    function isNull(params) {
+        return (params === undefined || params === null) ? true : false;
+    }
+
     function closestPoint(pathNode, point) {
         var pathLength = pathNode.getTotalLength(),
             precision = 8,
@@ -60,11 +64,15 @@ function Diagram(){
         return array.length;
     }
 
+    const DWIDTH = 2496;
+    const DHEIGHT = 1760;
+
     /** variables */
     var D3SVG;
     var LinkG;
     var NodeG;
     var TempG;
+    var PageRect;
     var DATA;
     var NodeList;
     var NodesInit;
@@ -1032,7 +1040,7 @@ function Diagram(){
         return d3.drag()
             .on("start", function(){
 
-                scrollEl = document.querySelector("#container>.center");
+                scrollEl = D3SVG.node().parentNode;
                 conH = scrollEl.clientHeight;
                 conW = scrollEl.clientWidth;
                 
@@ -1474,11 +1482,10 @@ function Diagram(){
         var tmpExtNodes;
 
         appendDef(svg);
-
         var viewportG = svg.append("g")
             .attr("class", "viewport");
 
-        viewportG.append("rect")
+        PageRect = viewportG.append("rect")
             .attr("id", "grid-bg")
             .attr("fill", "url(#grid)")
             .attr("x", 0)
@@ -1492,13 +1499,17 @@ function Diagram(){
         
 
         D3SVG = svg;
-        DATA = {nodes:[], links:[]};
+        DATA = {nodes:[], links:[], page:{width:DWIDTH, height:DHEIGHT}};
 
-        if(option){
-            if(option.fn)UserFn = option.fn;
-            if(option.extNodes)tmpExtNodes = option.extNodes;
-            if(option.extUndoCallback)UndoManager.setExtCallback(option.extUndoCallback);
+        if(!!option){
+            if(!!option.pageInfo && typeof option.pageInfo === 'object')DATA.page = option.pageInfo;
+            if(!!option.fn)UserFn = option.fn;
+            if(!!option.extNodes)tmpExtNodes = option.extNodes;
+            if(!!option.extUndoCallback)UndoManager.setExtCallback(option.extUndoCallback);
         }
+
+        svg.attr("width", DATA.page.width)
+            .attr("height", DATA.page.height);
 
         UndoManager.setLimit(100);
         UndoManager.setCallback(function(data){
@@ -1515,7 +1526,13 @@ function Diagram(){
             tmpClear();
         });
 
-        svg.on("keydown", function(){
+        setDrawingPage();
+        setKeyEvent(svg);
+        setZoomEvent(svg);
+    }
+    
+    function setKeyEvent(d3Svg){
+        d3Svg.on("keydown", function(){
             if(d3.event.srcElement.nodeName !== "svg")return;
             var keyCode = d3.event.keyCode;
             var tmpId, tmp;
@@ -1572,13 +1589,87 @@ function Diagram(){
                 }
             }
         });
-        svg.on("keyup", function(){
+        d3Svg.on("keyup", function(){
             if(d3.event.srcElement.nodeName !== "svg")return;
             var keyCode = d3.event.keyCode;
             if(keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40 ){
                 moveNode.keyUp();
             }
         });
+    }
+
+    function setZoomEvent(d3Svg){
+        const wrapper = d3Svg.node().parentNode;
+        const wrapperD3 = d3.select(wrapper); 
+        const scaleG = d3Svg.select('.viewport');
+        const pInfo = DATA.page;
+
+        const zoom = d3.zoom()
+            .scaleExtent([0.25, 2])
+            .filter(function () {
+                return d3.event.ctrlKey;
+            })
+            .translateExtent([[0,0],[pInfo.width,pInfo.height]])
+            .on("zoom", function(){
+                const scale = d3.event.transform.k;
+
+                d3Svg.attr('width', pInfo.width*scale)
+                    .attr('height', pInfo.height*scale);
+
+                scaleG.attr('transform', 'scale('+scale+')');
+                wrapper.scrollLeft = -d3.event.transform.x;
+                wrapper.scrollTop = -d3.event.transform.y;
+
+                /*const dx = d3.max([0, wrapper.clientWidth / 2 - pInfo.width / 2]);
+                const dy = d3.max([0, wrapper.clientHeight / 2 - pInfo.height / 2]);
+                d3Svg.attr('transform', `translate(${dx}, ${dy})`);*/
+                
+                slider.property("value", scale);
+            });
+        const scroll = function() {
+            const x = wrapper.scrollLeft + wrapper.clientWidth / 2;
+            const y = wrapper.scrollTop + wrapper.clientHeight / 2;
+            const scale = d3.zoomTransform(wrapper).k;
+            // Update zoom parameters based on scrollbar positions.
+            wrapperD3.call(d3.zoom().translateTo, x / scale, y / scale);
+        };
+
+        const minus = d3.select("#zoombar").append("span").attr("class", "zoom-icon")
+            .append("i").attr("class", "fas fa-minus")
+            .on("click",function(){                
+                zoom.scaleTo(wrapperD3, d3.zoomTransform(wrapper).k-((zoom.scaleExtent()[1] - zoom.scaleExtent()[0]) / 20));
+            });
+        const slider = d3.select("#zoombar").append("div").attr("class", "zoom-slider")
+            .append("input")
+            .datum({})
+            .attr("type", "range")
+            .attr("value", 1)
+            .attr("min", zoom.scaleExtent()[0])
+            .attr("max", zoom.scaleExtent()[1])
+            .attr("step", (zoom.scaleExtent()[1] - zoom.scaleExtent()[0]) / 100)
+            .on("input", slided);
+        const plus = d3.select("#zoombar").append("span").attr("class", "zoom-icon")
+            .append("i").attr("class", "fas fa-plus")
+            .on("click",function(){                
+                zoom.scaleTo(wrapperD3, d3.zoomTransform(wrapper).k+((zoom.scaleExtent()[1] - zoom.scaleExtent()[0]) / 20));
+            });
+        const reset = d3.select("#zoombar").append("span").attr("class", "zoom-icon font-weight-bold")
+            .text("R")
+            .on("click",function(){                
+                zoom.scaleTo(wrapperD3, 1);
+            });
+        
+        function slided() {
+            zoom.scaleTo(wrapperD3, slider.property("value"));
+        }
+
+        wrapperD3.call(zoom)
+        .on('scroll', scroll)
+        .on('wheel', function() {
+            if(d3.event.ctrlKey)d3.event.preventDefault();
+        });
+
+        zoom.scaleTo(wrapperD3, 1);
     }
 
     function appendDef(d3Svg){
@@ -1656,6 +1747,7 @@ function Diagram(){
             }
         }
     }
+
     function tmpClear(notSelect){
         NodeG.selectAll("g.select").classed('select', false);
         TempG.selectAll("*").remove();
@@ -1671,10 +1763,17 @@ function Diagram(){
 
     function updateDiagrams(){
         tmpClear();
+        setDrawingPage();
         drawLine();
         drawNode();
 
         UndoManager.add(DATA);
+    }
+
+    function setDrawingPage() {
+        var pInfo = DATA.page;
+        PageRect.attr("width", parseInt(pInfo.width)+1)
+                .attr("height", parseInt(pInfo.height)+1);
     }
 
     function drawLine(){
@@ -1819,8 +1918,16 @@ function Diagram(){
         clearAll();
         DATA.nodes = d.nodes || [];
         DATA.links = d.links || [];
-
         setDataRef();
+        if(!!d.page){
+            DATA.page.width = d.page.width || DWIDTH;
+            DATA.page.height = d.page.height || DHEIGHT;
+            DATA.page.name = d.page.name || "";
+        }else{
+            DATA.page.width = DWIDTH;
+            DATA.page.height = DHEIGHT;
+            DATA.page.name = "";
+        }
         
         UndoManager.clear();
         updateDiagrams();
