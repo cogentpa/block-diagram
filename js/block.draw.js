@@ -779,14 +779,38 @@ function Diagram(){
     var moveNode = function(){
         var targetNode, d;
         var moveEvt = {};
+        var lineObj;
         moveEvt.start = function(targetId, keyCode){
             if(targetId){
                 var tmpId = targetId.replace("nd-", "");
+                lineObj = {x : [],y : []};
+                
                 d = DATA.nodes.find(function(e){
                     return (e.id == tmpId);
                 });
 
                 if(d){
+                    DATA.links.forEach(function(l){
+                        if(l.waypoints.length > 1){
+                            if(l.source === tmpId) {
+                                if(d.x + l.sOffsetX === l.waypoints[0]){
+                                    //x값이 같으면 x값이 같이 움직이게
+                                    lineObj.x.push([l.waypoints,0]);
+                                }else if(d.y + l.sOffsetY === l.waypoints[1]){
+                                    //y값이 같으면 y값이 같이 움직이게
+                                    lineObj.y.push([l.waypoints,1]);
+                                }    
+                            }
+                            if(l.target === tmpId){
+                                if(d.x + l.tOffsetX === l.waypoints[l.waypoints.length-2]){
+                                    lineObj.x.push([l.waypoints,l.waypoints.length-2]);
+                                }else if(d.y + l.tOffsetY === l.waypoints[l.waypoints.length-1]){
+                                    lineObj.y.push([l.waypoints,l.waypoints.length-1]);
+                                } 
+                            }
+                        }
+                    });
+
                     tmpClear(false);
                     targetNode = d3.select("#"+targetId);
                     this.keyDown(keyCode);
@@ -799,16 +823,32 @@ function Diagram(){
                 d3.event.preventDefault();
                 switch (keyCode) {
                     case 37://left
-                        if(d.x >= 10){d.x-=10;}
+                        if(d.x >= 10){
+                            d.x-=10;
+                            lineObj.x.forEach(function(l){
+                                l[0][l[1]]-=10;
+                            });
+                        }
                         break;
                     case 38://up
-                        if(d.y >= 10){d.y-=10;}
+                        if(d.y >= 10){
+                            d.y-=10;
+                            lineObj.y.forEach(function(l){
+                                l[0][l[1]]-=10;
+                            });
+                        }
                         break;
                     case 39://right
                         d.x+=10;
+                        lineObj.x.forEach(function(l){
+                            l[0][l[1]]+=10;
+                        });
                         break;
                     case 40://down
                         d.y+=10;
+                        lineObj.y.forEach(function(l){
+                            l[0][l[1]]+=10;
+                        });
                         break;
                     default:
                         break;
@@ -857,6 +897,29 @@ function Diagram(){
                   })
                   .on("end",function(d, i){
                       if(dragFlag){
+                        let diffX = d.x - stX;
+                        let diffY = d.y - stY;
+                        DATA.links.forEach(function(l){
+                            if(l.waypoints.length > 1){
+                                if(l.source === d.id) {
+                                    if(stX + l.sOffsetX === l.waypoints[0]){
+                                        //x값이 같으면 x값이 같이 움직이게
+                                        l.waypoints[0] += diffX;
+                                    }else if(stY + l.sOffsetY === l.waypoints[1]){
+                                        //y값이 같으면 y값이 같이 움직이게
+                                        l.waypoints[1] += diffY;
+                                    }    
+                                }
+                                if(l.target === d.id){
+                                    if(stX + l.tOffsetX === l.waypoints[l.waypoints.length-2]){
+                                        l.waypoints[l.waypoints.length-2] += diffX;
+                                    }else if(stY + l.tOffsetY === l.waypoints[l.waypoints.length-1]){
+                                        l.waypoints[l.waypoints.length-1] += diffY;
+                                    } 
+                                }
+                            }
+                        });
+
                         tempNode.remove();
                         updateDiagrams();
                       }else{
@@ -1033,10 +1096,13 @@ function Diagram(){
         var line;
         var tmpBox;
         var sp1, sp2;
+        var diffX, diffY;
         var sData;
         var scrollEl;
         var conH;
         var conW;
+        var bVertical;
+        const padd = 20;
         return d3.drag()
             .on("start", function(){
 
@@ -1044,28 +1110,30 @@ function Diagram(){
                 conH = scrollEl.clientHeight;
                 conW = scrollEl.clientWidth;
                 
-                var d3this = d3.select(this);
-                var sourceNode = d3.select("#" + TempG.attr("target_id"));
+                let d3this = d3.select(this);
+                let sourceNode = d3.select("#" + TempG.attr("target_id"));
                 sData = sourceNode.datum();
 
-                var points1 = closestPoint(sourceNode.select("path").node(), [parseInt(d3this.attr("x1")-sData.x),parseInt(d3this.attr("y1"))-sData.y]);
+                let points1 = closestPoint(sourceNode.select("path").node(), [parseInt(d3this.attr("x1")-sData.x),parseInt(d3this.attr("y1"))-sData.y]);
                 
-                sp1 = [((sData.x + points1[0])/10).toFixed(0)*10, ((sData.y + points1[1])/10).toFixed(0)*10];
-                sp2 = [(parseInt(d3this.attr("x2")/10).toFixed(0)*10),(parseInt(d3this.attr("y2"))/10).toFixed(0)*10];
+                diffX = (parseInt(d3this.attr("x2")) - parseInt(d3this.attr("x1")))/30;
+                diffY = (parseInt(d3this.attr("y2")) - parseInt(d3this.attr("y1")))/30;
 
-                var m = d3.mouse(this);
+                sp1 = [((sData.x + points1[0])/10).toFixed(0)*10, ((sData.y + points1[1])/10).toFixed(0)*10];
+                sp2 = [sp1[0]+(diffX?diffX*10:0), sp1[1]+(diffY?diffY*10:0)];
+                bVertical = (d3this.attr("x1") === d3this.attr("x2"));
 
                 line = LinkG.append("polyline")
                 .attr("stroke", "#000000")
                     .attr("stroke-width", "2px")
                     .attr("fill", "none")
-                    .attr("points", [sp1, sp2, d3.event.x-2, d3.event.y-2])
+                    .attr("points", [sp1, /*sp2,*/ d3.event.x-2, d3.event.y-2])
                     .attr("marker-end", "url(#arrowhead)");
                  
-                TempG.selectAll("*").transition().duration(200)
-                .attr("opacity", 0)
-                .remove()
-                ;
+                TempG.selectAll("*")
+                    .transition().duration(200)
+                    .attr("opacity", 0)
+                    .remove();
 
                 tmpBox = NodeG.selectAll(".node")
                         .append("rect")
@@ -1084,6 +1152,8 @@ function Diagram(){
             })
             .on("drag", function(){
                 clearInterval(scrollTimer);
+                
+                /* side scroll Start*/
                 var mx = d3.event.x-scrollEl.scrollLeft;
                 var my = d3.event.y-scrollEl.scrollTop;
                 var sx = 0;
@@ -1105,40 +1175,109 @@ function Diagram(){
                         scrollEl.scroll(scrollEl.scrollLeft+sx, scrollEl.scrollTop+sy)
                     },30)
                 }
+                /* side scroll End*/
 
-                var lPoint = [d3.event.x, d3.event.y];
-
+                let lPoint = [d3.event.x, d3.event.y];
+                
                 if(MouseOverNode.node){
-                    var points = closestPoint(MouseOverNode.node, [d3.event.x - MouseOverNode.data.x,d3.event.y-MouseOverNode.data.y]);
+                    let nx = MouseOverNode.data.x;
+                    let ny = MouseOverNode.data.y;
+                    let nw = MouseOverNode.data.width;
+                    let nh = MouseOverNode.data.height;
 
-                    var lx = (points[0]/10).toFixed(0)*10;
-                    var ly = (points[1]/10).toFixed(0)*10;
+                    let points = closestPoint(MouseOverNode.node, [d3.event.x - nx,d3.event.y-ny]);
+                    let p3 = [];
 
-                    var lx2 = MouseOverNode.data.x + lx;
-                    var ly2 = MouseOverNode.data.y + ly;
+                    let lx = (points[0]/10).toFixed(0)*10;
+                    let ly = (points[1]/10).toFixed(0)*10;
+                    
+                    let lx2 = nx+lx;
+                    let ly2 = ny+ly;
 
                     //위
                     if(ly === 0){
-                        ly2 -= 30;
+                        ly2 -= padd;
+                        //시작y값이 
+                        if(sp2[1] > ly2){
+                            if(sp2[0] > lx2){
+                                p3 = [nx+nw+padd,ly2];
+                            }else{
+                                p3 = [nx-padd,ly2];
+                            }
+                        }
                     //오른쪽    
-                    }else if(MouseOverNode.data.width === lx){
-                        lx2 += 30;
+                    }else if(nw === lx){
+                        lx2 += padd;
+                        if(sp2[0] < lx2){
+                            if((sp2[1] >= ny-padd && sp2[1]-padd <= ny+nh)){
+                                if(ly2 > ny+(nh/2)){
+                                    let ty = ny+nh+padd;
+                                    p3 = [nx-padd,ty, nx+nw+padd,ty];
+                                }else{
+                                    let ty = ny-padd;
+                                    p3 = [nx-padd, ty, nx+nw+padd,ty];
+                                }
+                            }else{
+                                if(sp2[1] < ny){
+                                    p3 = [nx+nw+padd,ny-padd];
+                                }else{
+                                    p3 = [nx+nw+padd,ny+nh+padd];
+                                }
+                            }
+                        }
                     //아래    
-                    }else if(MouseOverNode.data.height === ly){
-                        ly2 += 30;
+                    }else if(nh === ly){
+                        ly2 += padd;
+                        if(sp2[1] < ly2){
+                            if(sp2[0] > lx2){
+                                p3 = [nx+nw+padd,ly2];
+                            }else{
+                                p3 = [nx-padd,ly2];
+                            }
+                        }
                     //왼쪽    
                     }else{
-                        lx2 -= 30;
+                        lx2 -= padd;
+                        if(sp2[0] > lx2){
+                            if(sp2[1] >= ny && sp2[1] <= ny+nh){
+                                if(ly2 > ny+(nh/2)){
+                                    let ty = ny+nh+padd;
+                                    p3 = [nx+nw+padd,ty, nx-padd,ty];
+                                }else{
+                                    let ty = ny-padd;
+                                    p3 = [nx+nw+padd,ty, nx-padd, ty];
+                                }
+                            }else{
+                                if(sp2[1] < ny){
+                                    p3 = [nx-padd,ny-padd];
+                                }else{
+                                    p3 = [nx-padd,ny+nh+padd];
+                                }
+                            }
+                        }
                     }
 
-
-                    lx = MouseOverNode.data.x + lx;
-                    ly = MouseOverNode.data.y + ly;
-
-                    lPoint = [lx2, ly2, lx, ly];
-                    
+                    lPoint = p3.concat([lx2, ly2, nx+lx, ny+ly]);
                 }
-                line.attr("points", [sp1, sp2, lPoint]);
+                let sp = sp1.concat(sp2);
+
+                //diffX, diffY => 우측 선이면 -, 좌측선이면 +;
+                if(bVertical){
+                    //선이 반대로가는경우
+                    if((sp2[1]-lPoint[1])*diffY > 0){
+                        let x = (sp2[0]>lPoint[0]) ? sData.x-padd : sData.x+sData.width+padd;
+                        lPoint = [x, sp2[1],x, lPoint[1]].concat(lPoint);
+                    }else{
+                        lPoint = [sp2[0], lPoint[1]].concat(lPoint);
+                    }
+                }else{
+                    if((sp2[0]-lPoint[0])*diffX > 0){
+                        lPoint = [sp2[0], lPoint[1]].concat(lPoint);
+                    }else{
+                        lPoint = [lPoint[0], sp2[1]].concat(lPoint);
+                    }
+                }
+                line.attr("points", sp.concat(lPoint));
                 
             })
             .on("end", function(){
@@ -1163,41 +1302,6 @@ function Diagram(){
                 tmpBox.remove();
                 line.remove();
             });
-        
-/*
-        var startNode = data.nodes.filter(function(d, i) {
-            return d.id == TmpVar.startNode;
-        })[0];
-
-            var lx = startNode.x + (startNode.width/2); 
-            var ly = startNode.y + (startNode.height/2);
-
-            line = linksG.append("line")
-                .attr("stroke", "#000000")
-                .attr("stroke-width", "2px")
-                .attr("x1", lx)
-                .attr("y1", ly)
-                .attr("x2", lx)
-                .attr("y2", ly)
-                .attr("marker-end", "url(#arrowhead)");
-
-            function mousemove(){
-                var m = d3.mouse(this);
-                line.attr("x2", m[0]-5)
-                    .attr("y2", m[1]-5);
-            }
-
-            svg.on("mousemove", mousemove)
-                .on("click", function(){
-                    if(TmpVar.bDrawing){
-                        //console.log("svg click");
-                        line.remove();
-                        updateLink(data.links);
-                        svg.on("mousemove", null)
-                            .on("click", null);
-                            TmpVar.bDrawing = false;    
-                    }
-                });*/
     }();
     
 
@@ -1210,7 +1314,7 @@ function Diagram(){
         
         var pathNode = targetNode.select("path").node();
         var points = tPoints.map(function(v,i){
-            return closestPoint(pathNode, v);
+            return closestPoint(pathNode, v).map(function(x){return Math.round(x)});
         });
         
         targetNode.classed('select', true);
@@ -1234,7 +1338,7 @@ function Diagram(){
             .attr("fill", "#FE7F2D")
             .attr("stroke-width", "2")
             .attr("stroke", "#FE7F2D")
-            .style("opacity", "0")
+            .style("opacity", "1")
             .style("cursor", function(d,i){
                 var cursorNm;
                 switch(i) {
@@ -1256,7 +1360,6 @@ function Diagram(){
                 return cursorNm;
             })
             .call(dragSizeCircle)
-            .transition().duration(200).style("opacity", "1")
             ;
         if(!d.nConn){
             TempG.selectAll("line.addline-arrow").data(points).enter()
@@ -1283,18 +1386,18 @@ function Diagram(){
                 .attr("x2", function(data,i){
                     var x2 = data[0]+d.x;
                     if(i === 1){
-                        x2 += 35;
+                        x2 += 25;
                     } else if( i === 3){
-                        x2 -= 35;
+                        x2 -= 25;
                     } 
                     return x2;
                 })
                 .attr("y2", function(data,i){
                     var y2 = data[1]+d.y;
                     if(i === 0){
-                        y2 -= 35;
+                        y2 -= 25;
                     } else if( i === 2){
-                        y2 += 35;
+                        y2 += 25;
                     } 
                     return y2;
                 })
@@ -1302,8 +1405,7 @@ function Diagram(){
                 .attr("stroke", "#000000")
                 .attr("stroke-width", "2px")
                 .attr("marker-end", "url(#arrowhead)")
-                .style("opacity", "0")
-                .transition().duration(200).style("opacity", "0.2");
+                .style("opacity", "0.2");
             
             TempG.selectAll("line.addline-pointer").data(points).enter()
                 .append("line")
@@ -1375,6 +1477,11 @@ function Diagram(){
             point1Y = points[i-1]*1;
             point2X = points[i]*1;
             point2Y = points[i+1]*1;
+            
+            let diffX = Math.abs(point1X - point2X);
+            let diffY = Math.abs(point1Y - point2Y);
+            //if(diffX+diffY < 40){continue;}//대각선 중간점 짧아도 생성
+            if((diffX < 40 && diffY === 0) || (diffY < 40 && diffX === 0)){continue;}
             //신규점
             circlePoints.push(
                 {
@@ -1407,20 +1514,25 @@ function Diagram(){
             .enter()
             .append("circle")
             .attr("class", "temp-point")
-            .attr("r", 3)
+            .attr("r", 5)
             .attr("cx", function(d){return d.x;})
             .attr("cy", function(d){return d.y;})
             .attr("fill", "#FC3")
             //.attr("pointer-events", "none")
             .attr("stroke-width", function(d,i,a){
-                return (a.length-1 == i) ? 4 : 2;
+                return (a.length-1 == i) ? 2 : 0;
             })
             .attr("stroke", "#FC3")
             .call(dragLineCircle)
-            .style("opacity", "0")
-            .transition().duration(100).style("opacity", "1")
+            .style("opacity", function(d){return (d.isNew) ? 0.5 : 1})
+            .on("mouseenter", function(){
+                d3.select(this).style("opacity", 1);
+            })
+            .on("mouseleave", function(){
+                d3.select(this).style("opacity", function(d){return (d.isNew) ? 0.5 : 1});
+            })
             ;
-        TempG.append("image")
+        /*TempG.append("image")
             .attr("x", parseInt(points[0]) + 5)
             .attr("y", parseInt(points[1]) - 5)
             .attr('width', 16)
@@ -1434,31 +1546,30 @@ function Diagram(){
                 DATA.links = links;
                 updateDiagrams();
 
-            })
-            ;  
+            });*/
         if(UserFn)UserFn(d);                
-        //circle.transition().duration(200).style("opacity", "1");
     }
 
     /** lineFunction  */
     function makePoints(l){
         var startPoint = [l.sd.x+(l.sOffsetX || 0), l.sd.y+(l.sOffsetY || 0)];
         var endPoint = [l.td.x+l.tOffsetX, l.td.y+l.tOffsetY];
-        var i,length;
         var points;
         if(l.waypoints.length > 0){
-            var tPoints = startPoint.concat(l.waypoints).concat(endPoint);
+            let tPoints = startPoint.concat(l.waypoints).concat(endPoint);
             l.waypoints = [];
-            length = tPoints.length-1;
-            for(i=2;i<length-2;i += 2){
-                //같은 선이면 포인트 삭제
+            let i = 2;
+            //같은 선이면 포인트 삭제
+            while(i<tPoints.length-2){
                 if(!(tPoints[i] === tPoints[i-2] && tPoints[i-2] === tPoints[i+2]) &&
                    !(tPoints[i+1] === tPoints[i-1] && tPoints[i-1] === tPoints[i+3]))
                 {
                     l.waypoints.push(tPoints[i]);
                     l.waypoints.push(tPoints[i+1]);
+                    i+=2;
+                }else{
+                    tPoints.splice(i, 2);
                 }
-                
             }
             points = startPoint.concat(l.waypoints).concat(endPoint);
             
