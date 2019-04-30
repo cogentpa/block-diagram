@@ -776,6 +776,62 @@ function Diagram(){
         };
     }();
 
+    var addNodeDragHandler = function(){
+        let nowDraging = false;
+        let nodeInitData = {
+            rect : {type:"rect",width:100,height:40},
+            circle : {type:"circle",width:100,height:100},
+            mb : {type:"mb",width:100,height:30,item:{},mb:[[{text:"New"}]]},
+            start : {type:"rect",width:100,height:40,isStart:true},
+            end : {type:"rect",width:100,height:40, isEnd:true},
+            pou : {type:"pou",width:100,height:100},
+            tb : {type:"tb",width:100,height:20},
+            scope : {type:"scope",width:30,height:60},
+            cal : {type:"cal",width:100,height:28}
+        };//기본값 layout과 같이 쓰게 바꿔야 할듯
+        let d3TmpNode;
+        let nData;
+        let scale;
+
+        return {
+            init : function(){
+                let svgNode = D3SVG.node();
+                svgNode.addEventListener("dragenter",this.dragenter, false);
+                svgNode.addEventListener("dragover",this.dragover);
+                svgNode.addEventListener("drop",this.drop);
+            },
+            dragStart : function(id){
+                if(id){
+                    nowDraging = id;
+                }else{
+                    nowDraging = false;
+                }
+            },
+            dragenter : function(e){
+                e.preventDefault();
+                if(nowDraging){
+                    tmpClear();
+                    scale = d3.zoomTransform(D3SVG.node().parentNode).k;
+                    nData = nodeInitData[nowDraging];
+                    d3TmpNode = TempG.append('g').attr('class', 'tmp_add_node')
+                        .attr('transform', 'translate('+(e.offsetX/scale)+','+(e.offsetY/scale)+')');
+                    NodeList[nData.type].draw(d3TmpNode, nData);
+                    nowDraging = false;
+                }
+            },
+            dragover : function(e){
+                e.preventDefault();
+                d3TmpNode.attr('transform', 'translate('+(e.offsetX/scale)+','+(e.offsetY/scale)+')');
+            },
+            drop : function(e){
+                e.preventDefault();
+                nData.x = parseInt(e.offsetX/scale/10)*10;
+                nData.y = parseInt(e.offsetY/scale/10)*10;
+                addBox(JSON.parse(JSON.stringify(nData)));
+            }
+        }
+    }();
+
     var moveNode = function(){
         var targetNode, d;
         var moveEvt = {};
@@ -1636,7 +1692,7 @@ function Diagram(){
         svg.on("click", function(){
             tmpClear();
         });
-
+        addNodeDragHandler.init();
         setDrawingPage();
         setKeyEvent(svg);
         setZoomEvent(svg);
@@ -2137,6 +2193,7 @@ function Diagram(){
         }
     }
 
+
     //set return obj;
     var diagrams = {};
     diagrams.init = init;
@@ -2146,6 +2203,7 @@ function Diagram(){
     diagrams.updateNode = updateDiagrams;
     diagrams.selectItem = selectItem;
     diagrams.deleteItem = deleteItem;
+    diagrams.addNodeDrag = addNodeDragHandler.dragStart;
 
     return diagrams;
 }

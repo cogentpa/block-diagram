@@ -99,6 +99,9 @@ function calUndoCallback(param){
     return calDataString;
 }
 
+function addDiagrams(){
+
+}
 
 $("#newModal_newBtn").on("click", function(){
     Diagrams.setData({});
@@ -454,10 +457,6 @@ $("#prop_calCal").on("click", function(){
 $("#prop_calRev").on("click", function(){
     var selectCal = CalData.getSelect();
     var rc = Cal.reverse(selectCal.id, $("#prop_calValue").val());
-    /*console.log("reverse start");
-    console.log("val : "+$("#prop_calValue").val());
-    console.log(rc);
-    console.log("reverse end");*/
     if(rc){
         $("#"+rc.skey).val(rc.x);
         $("#"+rc.skey).attr("data-formula", rc.x);
@@ -578,6 +577,18 @@ function layout_init(){
             Diagrams.selectItem(selectNode);
         }
     });
+
+    [].forEach.call(document.querySelectorAll(".item-menu"), function(el){
+        el.setAttribute("draggable", "true");
+        el.addEventListener("dragstart",function(e) {
+            let id = e.target.id;
+            if(id){
+                Diagrams.addNodeDrag(id.split("-")[1]);
+                e.dataTransfer.setDragImage(document.createElement("div"), 0, 0);
+            }
+        },false); 
+    });
+
     $(window).on('beforeunload', function() {
         return "?";
     });

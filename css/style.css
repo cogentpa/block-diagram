@@ -20,14 +20,15 @@
     background: black; 
 }
 
-.left:hover {
-    width: 150px; 
+/*.left:hover {
+    width: 150px;
 }  
-
+*/
 .left .item-menu {
     height:40px;
     overflow:hidden;
     color:#fff;
+    cursor: pointer;
 }  
 
 .left a{
