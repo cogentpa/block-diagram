@@ -170,6 +170,17 @@ $("#prop_blockNmInput").on("change", function(e){
         Diagrams.selectItem(selectNode);
     }
 });
+$("#prop_blockDtlTypeInput").on("change", function(e){
+    var selectNode = Layout.getBlock();
+    if(selectNode.type && selectNode.id){
+        selectNode.dtlType = this.value;
+        if(!selectNode.name){
+            selectNode.name = this.value;
+        }    
+        Diagrams.updateNode();
+        Diagrams.selectItem(selectNode);
+    }
+});
 
 $("#prop_blockWidthInput").on("change", function(){
     var selectNode = Layout.getBlock();
@@ -292,6 +303,7 @@ function getDiagramNodeData(bid){
 function initNodeProp(){
     $("#prop_blockIdInput").val("");
     $("#prop_blockNmInput").val("");
+    $("#prop_blockDtlTypeInput").val("");
     $("#prop_blockWidthInput").val("");
     $("#prop_blockHeightInput").val("");
     $("#prop_blockXInput").val("");
@@ -341,6 +353,7 @@ function nodeSelect(obj){
     $("#prop_blockIdInput").val(bid||"");
     if(objType == "node"){
         $("#prop_blockNmInput").val(nodeObj.name||"");
+        $("#prop_blockDtlTypeInput").val(nodeObj.dtlType||"");
         $("#prop_blockWidthInput").val(nodeObj.width||"");
         $("#prop_blockHeightInput").val(nodeObj.height||"");
         $("#prop_blockXInput").val(nodeObj.x||"");
@@ -583,10 +596,13 @@ function layout_init(){
         el.addEventListener("dragstart",function(e) {
             let id = e.target.id;
             if(id){
-                Diagrams.addNodeDrag(id.split("-")[1]);
+                Diagrams.addNodeDrag.dragStart(id.split("-")[1]);
                 e.dataTransfer.setDragImage(document.createElement("div"), 0, 0);
             }
-        },false); 
+        },false);
+        el.addEventListener("dragend",function(e) {
+            Diagrams.addNodeDrag.dragEnd(e);
+        },false);
     });
 
     $(window).on('beforeunload', function() {

@@ -637,7 +637,14 @@ function Diagram(){
                         }
                         e.preventDefault();
                     });
-
+                svgObj.on("dblclick", function(){
+                    var e = d3.event;
+                    if (e.stopPropagation){
+                        e.stopPropagation();
+                    }
+                    e.preventDefault();
+                    text.node().dispatchEvent(new Event("click", {bubbles: true, cancelable: true}));
+                });
 
             };
             
@@ -806,6 +813,9 @@ function Diagram(){
                 }else{
                     nowDraging = false;
                 }
+            },
+            dragEnd : function(e){
+                tmpClear();
             },
             dragenter : function(e){
                 e.preventDefault();
@@ -2203,7 +2213,7 @@ function Diagram(){
     diagrams.updateNode = updateDiagrams;
     diagrams.selectItem = selectItem;
     diagrams.deleteItem = deleteItem;
-    diagrams.addNodeDrag = addNodeDragHandler.dragStart;
+    diagrams.addNodeDrag = addNodeDragHandler;
 
     return diagrams;
 }
