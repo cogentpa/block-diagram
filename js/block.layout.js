@@ -605,9 +605,11 @@ function layout_init(){
         },false);
     });
 
+    /*
     $(window).on('beforeunload', function() {
         return "?";
     });
+    */
     var Scrollbar = window.Scrollbar;
     Scrollbar.init(document.querySelector('#container .right'), {});
 }

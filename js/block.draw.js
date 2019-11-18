@@ -64,6 +64,13 @@ function Diagram(){
         return array.length;
     }
 
+    function getSelNodes () {
+        return Selects.filter(e=>e.type);
+    }
+    function getSelLinks () {
+        return Selects.filter(e=>!(e.type));
+    }
+
     const DWIDTH = 2496;
     const DHEIGHT = 1760;
 
@@ -78,9 +85,10 @@ function Diagram(){
     var NodesInit;
     var UserFn;
     var scrollTimer;
+    var Zoom;
 
-    var clipboard;
-
+    //var clipboard;
+    var Selects = [];
     var MouseOverNode = { node : null, data : null};
 
     var StokeStyle = {
@@ -671,7 +679,7 @@ function Diagram(){
                 this.drawPath(svgObj, points, points2, data);
             };
 
-            scope.drawPath = function(svgObj, points, points2, data){                
+            scope.drawPath = function(svgObj, points, points2, data){
                 //size 조절용 path
                 var sp = [];
                 sp.push({x:0, y:0});
@@ -783,6 +791,7 @@ function Diagram(){
         };
     }();
 
+    //외부 노드목록 드래그 연동
     var addNodeDragHandler = function(){
         let nowDraging = false;
         let nodeInitData = {
@@ -843,156 +852,114 @@ function Diagram(){
     }();
 
     var moveNode = function(){
-        var targetNode, d;
-        var moveEvt = {};
-        var lineObj;
-        moveEvt.start = function(targetId, keyCode){
-            if(targetId){
-                var tmpId = targetId.replace("nd-", "");
-                lineObj = {x : [],y : []};
+        var moveEvt = {stX:0, stY:0, diffX:0, diffY:0};
+        var tempNode;
+        moveEvt.start = function(keyCode){
+            if(Selects.length > 0){
+                tempNode = NodeG.append("g")
+                tempNode.selectAll("use").data(Selects)
+                .enter().append("use")
+                .attr("xlink:href", function(d){
+                    return (d.type ? "#nd-" : "#ln-") + d.id;
+                })
+                .attr("opacity", 0.5);
                 
-                d = DATA.nodes.find(function(e){
-                    return (e.id == tmpId);
-                });
-
-                if(d){
-                    DATA.links.forEach(function(l){
-                        if(l.waypoints.length > 1){
-                            if(l.source === tmpId) {
-                                if(d.x + l.sOffsetX === l.waypoints[0]){
-                                    //x값이 같으면 x값이 같이 움직이게
-                                    lineObj.x.push([l.waypoints,0]);
-                                }else if(d.y + l.sOffsetY === l.waypoints[1]){
-                                    //y값이 같으면 y값이 같이 움직이게
-                                    lineObj.y.push([l.waypoints,1]);
-                                }    
-                            }
-                            if(l.target === tmpId){
-                                if(d.x + l.tOffsetX === l.waypoints[l.waypoints.length-2]){
-                                    lineObj.x.push([l.waypoints,l.waypoints.length-2]);
-                                }else if(d.y + l.tOffsetY === l.waypoints[l.waypoints.length-1]){
-                                    lineObj.y.push([l.waypoints,l.waypoints.length-1]);
-                                } 
-                            }
-                        }
-                    });
-
-                    tmpClear(false);
-                    targetNode = d3.select("#"+targetId);
-                    this.keyDown(keyCode);
-                }
+                this.stX = Selects[0].x;
+                this.stY = Selects[0].y;
+                
+                tmpClear(false);
+                this.keyDown(keyCode);
             }
-            //if(parseInt(window.getComputedStyle(D3SVG.node()).width)-tmp.x-10 > 0){
         };
         moveEvt.keyDown = function(keyCode){
-            if(targetNode){
+            if(Selects.length > 0){
                 d3.event.preventDefault();
                 switch (keyCode) {
                     case 37://left
-                        if(d.x >= 10){
-                            d.x-=10;
-                            lineObj.x.forEach(function(l){
-                                l[0][l[1]]-=10;
-                            });
-                        }
+                        //if(d.x >= 10){
+                            this.diffX -= 10;
+                        //}
                         break;
                     case 38://up
-                        if(d.y >= 10){
-                            d.y-=10;
-                            lineObj.y.forEach(function(l){
-                                l[0][l[1]]-=10;
-                            });
-                        }
+                        //if(d.y >= 10){
+                            this.diffY -= 10;
+                        //}
                         break;
                     case 39://right
-                        d.x+=10;
-                        lineObj.x.forEach(function(l){
-                            l[0][l[1]]+=10;
-                        });
+                        this.diffX += 10;
                         break;
                     case 40://down
-                        d.y+=10;
-                        lineObj.y.forEach(function(l){
-                            l[0][l[1]]+=10;
-                        });
+                        this.diffY += 10;
                         break;
                     default:
                         break;
                 }
-                drawNode();
+                tempNode.attr("transform", "translate("+ this.diffX +","+ this.diffY +")");
             }
         };
         moveEvt.keyUp = function(){
-            if(targetNode){
+            if(Selects.length > 0){
                 d3.event.preventDefault();
-                updateDiagrams();
-                selectNode(targetNode, d);
-                targetNode = null;
-                d = null;
+                tempNode.remove();
+                moveEnd(this.stX, this.stY, this.diffX, this.diffY);
+                this.stX=0
+                this.stY=0
+                this.diffX=0
+                this.diffY=0;
+
+                selectItem();
             }
         };
         
         return moveEvt;
     }();
 
-    var dragNode = function(){
+    var dragItem = function(){
         var tempNode;
-        var targetNode;
-        var stX, stY;
+        var stX, stY, diffX, diffY;
         var dragFlag;
         return d3.drag()
-                  .clickDistance(0)
-                  .on("start",function(d, i){
-                      dragFlag = false;
-                      targetNode = d3.select(this);
-                      stX = d.x;
-                      stY = d.y;
-                      tmpClear(false);
-                  })
-                  .on("drag",function(d, i){
-                      if(!dragFlag){
+                .clickDistance(0)
+                .filter(() => !d3.event.ctrlKey)
+                .on("start",function(d, i){
+                    dragFlag = false;
+                    /**
+                     * 클릭-드래그 경우의 수 정리
+                     * 1. Selects 에 내가 없는경우 => Selects 나만
+                     * 2. Selects 에 내가 있는경우 => 그대로 진행
+                     */
+                    if(!Selects.includes(d)){Selects = [d]};
+                    stX = d.x;
+                    stY = d.y;
+                    tmpClear(false);
+                })
+                .on("drag",function(d, i){
+                    //클릭시에는 안그려지기 위해서 drag에 서 추가
+                    if(!dragFlag){
                         dragFlag = true;
-                        tempNode = NodeG.append("use")
-                            .attr("xlink:href", "#" + targetNode.attr("id"))
-                            .attr("transform", "translate(0,0)")
-                            .attr("opacity", 0.5);
-                      }
-                      d.x = (d3.event.x/10).toFixed(0)*10;
-                      d.y = (d3.event.y/10).toFixed(0)*10;
-                      tempNode.attr("transform", "translate("+(d.x-stX)+","+(d.y-stY)+")");
-                  })
-                  .on("end",function(d, i){
-                      if(dragFlag){
-                        let diffX = d.x - stX;
-                        let diffY = d.y - stY;
-                        DATA.links.forEach(function(l){
-                            if(l.waypoints.length > 1){
-                                if(l.source === d.id) {
-                                    if(stX + l.sOffsetX === l.waypoints[0]){
-                                        //x값이 같으면 x값이 같이 움직이게
-                                        l.waypoints[0] += diffX;
-                                    }else if(stY + l.sOffsetY === l.waypoints[1]){
-                                        //y값이 같으면 y값이 같이 움직이게
-                                        l.waypoints[1] += diffY;
-                                    }    
-                                }
-                                if(l.target === d.id){
-                                    if(stX + l.tOffsetX === l.waypoints[l.waypoints.length-2]){
-                                        l.waypoints[l.waypoints.length-2] += diffX;
-                                    }else if(stY + l.tOffsetY === l.waypoints[l.waypoints.length-1]){
-                                        l.waypoints[l.waypoints.length-1] += diffY;
-                                    } 
-                                }
-                            }
-                        });
-
+                        tempNode = NodeG.append("g")
+                        tempNode.selectAll("use").data(Selects)
+                        .enter().append("use")
+                        .attr("xlink:href", function(d){
+                            return (d.type ? "#nd-" : "#ln-") + d.id;
+                        })
+                        .attr("opacity", 0.5);
+                    }
+                    //console.log(d3.event);
+                    diffX = ((d3.event.x/10).toFixed(0)*10) - stX;
+                    diffY = ((d3.event.y/10).toFixed(0)*10) - stY;
+                    tempNode.attr("transform", "translate("+ diffX +","+ diffY +")");
+                })
+                .on("end",function(d, i){
+                    if(dragFlag){
                         tempNode.remove();
-                        updateDiagrams();
-                      }else{
+                        moveEnd(stX, stY, diffX, diffY);
+                    } else {
+                        Selects = [d];
                         tmpClear(false);
-                      }
-                      selectNode(targetNode, d);
-                  });
+                    }
+                    selectItem();
+                });
              }();
              
     var dragSizeCircle = function(){
@@ -1073,7 +1040,7 @@ function Diagram(){
                 //d3.event.stopPropagation();
                 tmpClear();
                 updateDiagrams();
-                selectNode(targetNode, tData);
+                selectItem(tData);
             })
             ;
     }();
@@ -1086,6 +1053,7 @@ function Diagram(){
         var linkData;
         var startPoint, endPoint, tmpWaypoints;
         var sourceNode, targetNode;
+        var tmpBox;
         //var tx,ty,tx2,ty2;
         return d3.drag()
                 .on("start", function(d){
@@ -1094,28 +1062,32 @@ function Diagram(){
                     var lg = d3.select(d.line);
                     link = lg.selectAll("polyline");
                     linkData = link.datum();
-                    sourceNode = DATA.nodes.filter(function(d) {
+                    sourceNode = DATA.nodes.find(function(d) {
                         return d.id == linkData.source;
-                    })[0];
-                    targetNode = DATA.nodes.filter(function(d) {
+                    });
+                    targetNode = DATA.nodes.find(function(d) {
                         return d.id == linkData.target;
-                    })[0];
+                    });
 
                     //끝
-                    if(d.isLast === 1){
+                    if(d.isLast === 1 && targetNode){
                         node = NodeG.select("#nd-"+linkData.target).select("path").node();
                         nx = targetNode.x;
                         ny = targetNode.y;
                     //시작 
-                    } else if (d.isLast === 2){
+                    } else if (d.isLast === 2 && sourceNode){
                         node = NodeG.select("#nd-"+linkData.source).select("path").node();
                         nx = sourceNode.x;
                         ny = sourceNode.y;
                     }
-
-                    startPoint = [sourceNode.x+(linkData.sOffsetX || 0), sourceNode.y+(linkData.sOffsetY || 0)];
-                    endPoint = [targetNode.x+linkData.tOffsetX, targetNode.y+linkData.tOffsetY];
-                    tmpWaypoints = startPoint.concat(linkData.waypoints).concat(endPoint);
+                    tmpWaypoints = (sourceNode) ? [sourceNode.x+(linkData.sOffsetX || 0), sourceNode.y+(linkData.sOffsetY || 0)].concat(linkData.waypoints) : linkData.waypoints;
+                    if(targetNode){
+                        tmpWaypoints = tmpWaypoints.concat([targetNode.x+linkData.tOffsetX, targetNode.y+linkData.tOffsetY]);
+                    }
+                    //startPoint = [sourceNode.x+(linkData.sOffsetX || 0), sourceNode.y+(linkData.sOffsetY || 0)];
+                    //endPoint = [targetNode.x+linkData.tOffsetX, targetNode.y+linkData.tOffsetY];
+                    //tmpWaypoints = startPoint.concat(linkData.waypoints).concat(endPoint);
+                    
                     if(d.isNew){
                         tmpWaypoints.splice( d.index, 0, d3.mouse(this)[0]);
                         tmpWaypoints.splice( d.index+1, 0, d3.mouse(this)[1]);
@@ -1129,14 +1101,72 @@ function Diagram(){
                         .attr("stroke-width", "2px")
                         .attr("marker-end", "url(#arrowhead)")
                         .attr("opacity", 0.5);
+
+                    tmpBox = NodeG.selectAll(".node")
+                        .append("rect")
+                        .attr("class", "temp-box")
+                        .attr("opacity", 0)
+                        .attr("x", -10)
+                        .attr("y", -10)
+                        .attr("width", function(d){
+                            return d.nConn ? 0 : d.width+20;
+                        })
+                        .attr("height", function(d){
+                            return d.nConn ? 0 : d.height+20;
+                        })
+                        ;
+                    NodeG.style("opacity", 0.8).raise();
                 })
                 .on("drag", function(d){
                     var x = (d3.event.x/10).toFixed(0)*10;
                     var y = (d3.event.y/10).toFixed(0)*10;
                     if(node){
                         var points1 = closestPoint(node, [x-nx,y-ny]);
-                        x = ((nx + points1[0])/10).toFixed(0)*10;
-                        y = ((ny + points1[1])/10).toFixed(0)*10;
+                        var tx = ((nx + points1[0])/10).toFixed(0)*10;
+                        var ty = ((ny + points1[1])/10).toFixed(0)*10;
+                        var distance = Math.hypot(tx-x, ty-y);
+                        
+                        if(distance < 30){
+                            x = tx;
+                            y = ty;
+                        //원 노드와 거리가 멀어지면 연결 끊기
+                        } else {
+                            node = null;
+                            if(d.isLast === 1){
+                                linkData.target = null;
+                                linkData.td = null;
+                                linkData.tOffsetX = 0;
+                                linkData.tOffsetY = 0;
+                            } else if(d.isLast === 2){
+                                linkData.source = null;
+                                linkData.sd = null;
+                                linkData.sOffsetX = 0;
+                                linkData.sOffsetY = 0;
+                            }
+                        }
+                    } else if(d.isLast > 0 && MouseOverNode.node){
+                        nx = MouseOverNode.data.x;
+                        ny = MouseOverNode.data.y;    
+                        let points = closestPoint(MouseOverNode.node, [d3.event.x - nx,d3.event.y-ny]);
+                        node = MouseOverNode.node;
+                        // isLast: 1 => target, 2 => source
+                        if(d.isLast === 1){
+                            targetNode = MouseOverNode.data
+                            linkData.target = MouseOverNode.data.id;
+                            linkData.td = MouseOverNode.data;
+                            linkData.tOffsetX = ((points[0]/10).toFixed(0)*10);
+                            linkData.tOffsetY = ((points[1]/10).toFixed(0)*10);
+                            x = nx+linkData.tOffsetX;
+                            y = ny+linkData.tOffsetY;
+                        } else {
+                            sourceNode = MouseOverNode.data;
+                            linkData.source = MouseOverNode.data.id;
+                            linkData.sd = MouseOverNode.data;
+                            linkData.sOffsetX = ((points[0]/10).toFixed(0)*10);
+                            linkData.sOffsetY = ((points[1]/10).toFixed(0)*10);
+                            x = nx+linkData.sOffsetX;
+                            y = ny+linkData.sOffsetY;
+                        }
                     }
                     tmpWaypoints[d.index] = x;
                     tmpWaypoints[d.index+1] = y;
@@ -1144,16 +1174,25 @@ function Diagram(){
                         .attr("cy", y);
                     link.attr("points", tmpWaypoints);
                 })
-                .on("end", function(){
-                    linkData.waypoints = tmpWaypoints.slice(2, tmpWaypoints.length-2);
-                    linkData.sOffsetX = tmpWaypoints[0]-sourceNode.x;
-                    linkData.sOffsetY = tmpWaypoints[1]-sourceNode.y;
-                    linkData.tOffsetX = tmpWaypoints[tmpWaypoints.length-2]-targetNode.x;
-                    linkData.tOffsetY = tmpWaypoints[tmpWaypoints.length-1]-targetNode.y;
+                .on("end", function(d){
+                    NodeG.style("opacity", 1);
+                    TempG.raise();
+                    if(linkData.target){
+                        linkData.tOffsetX = tmpWaypoints[tmpWaypoints.length-2]-targetNode.x;
+                        linkData.tOffsetY = tmpWaypoints[tmpWaypoints.length-1]-targetNode.y;
+                        tmpWaypoints.splice(tmpWaypoints.length-2, 2)
+                    }
+                    if (linkData.source){
+                        linkData.sOffsetX = tmpWaypoints[0]-sourceNode.x;
+                        linkData.sOffsetY = tmpWaypoints[1]-sourceNode.y;
+                        tmpWaypoints.splice(0, 2)
 
+                    }
+                    linkData.waypoints = tmpWaypoints;
+                    
+                    tmpBox.remove();
                     tmpClear();
                     updateDiagrams();
-                    
                 })
                 ;
     }();
@@ -1171,7 +1210,6 @@ function Diagram(){
         const padd = 20;
         return d3.drag()
             .on("start", function(){
-
                 scrollEl = D3SVG.node().parentNode;
                 conH = scrollEl.clientHeight;
                 conW = scrollEl.clientWidth;
@@ -1200,7 +1238,8 @@ function Diagram(){
                     .transition().duration(200)
                     .attr("opacity", 0)
                     .remove();
-
+                
+                
                 tmpBox = NodeG.selectAll(".node")
                         .append("rect")
                         .attr("class", "temp-box")
@@ -1214,6 +1253,7 @@ function Diagram(){
                             return d.nConn ? 0 : d.height+40;
                         })
                         ;
+                NodeG.style("opacity", 0.8).raise();
 
             })
             .on("drag", function(){
@@ -1348,6 +1388,8 @@ function Diagram(){
             })
             .on("end", function(){
                 clearInterval(scrollTimer);
+                NodeG.style("opacity", 1);
+                TempG.raise();
                 if(MouseOverNode.node){
                     var points = line.attr("points").split(",").map(function(v,i,a){
                         return parseInt(v);
@@ -1370,259 +1412,513 @@ function Diagram(){
             });
     }();
     
+    var dragSelection = function(){
 
-    function selectNode(targetNode, d){
-        var tPoints = [];
-        tPoints.push([d.width/2, 0]);
-        tPoints.push([d.width, d.height/2]);
-        tPoints.push([d.width/2, d.height]);
-        tPoints.push([0, d.height/2]);
-        
-        var pathNode = targetNode.select("path").node();
-        var points = tPoints.map(function(v,i){
-            return closestPoint(pathNode, v).map(function(x){return Math.round(x)});
-        });
-        
-        targetNode.classed('select', true);
+        var dragFlag;
+        var selectionRect;
+        var originX, originY;
 
-        TempG.attr("target_id", targetNode.attr("id"));
+        function getNewAttributes(newX, newY) {
+            var x = newX < originX ? newX : originX;
+            var y = newY < originY? newY : originY;
+            var width = Math.abs(newX - originX);
+            var height = Math.abs(newY - originY);
+            return {
+                x: x,
+                y: y,
+                w: width,
+                h: height
+            };
+        }
 
-        TempG.selectAll("circle").append("circle")
-            .attr("r", 3)
-            .attr("cx", 100)
-            .attr("cy", 100)
-            .attr("fill", "#FE7F2D")
-            .attr("stroke-width", "2")
-            .attr("stroke", "#FE7F2D");
-
-        TempG.selectAll("circle.size-point").data(points).enter()
-            .append("circle")
-            .attr("class", "size-point")
-            .attr("r", 3)
-            .attr("cx", function(data){return data[0]+d.x;})
-            .attr("cy", function(data){return data[1]+d.y;})
-            .attr("fill", "#FE7F2D")
-            .attr("stroke-width", "2")
-            .attr("stroke", "#FE7F2D")
-            .style("opacity", "1")
-            .style("cursor", function(d,i){
-                var cursorNm;
-                switch(i) {
-                    case 0 :
-                        cursorNm = "n-resize";
-                        break;
-                    case 1 :
-                        cursorNm = "e-resize";
-                        break;
-                    case 2 :
-                        cursorNm = "s-resize";
-                        break;
-                    case 3 :
-                        cursorNm = "w-resize";
-                        break;
-                    default :
-                        break;    
-                }    
-                return cursorNm;
+        return d3.drag()
+            .filter(function () {
+                return !d3.event.ctrlKey;
             })
-            .call(dragSizeCircle)
-            ;
-        if(!d.nConn){
-            TempG.selectAll("line.addline-arrow").data(points).enter()
-                .append("line")
-                .attr("class", "addline-arrow")
-                .attr("x1", function(data,i){
-                    var x1 = data[0]+d.x;
-                    if(i === 1){
-                        x1 += 5;
-                    } else if( i === 3){
-                        x1 -= 5;
-                    } 
-                    return x1;
-                })
-                .attr("y1", function(data,i){
-                    var y1 = data[1]+d.y;
-                    if(i === 0){
-                        y1 -= 5;
-                    } else if( i === 2){
-                        y1 += 5;
-                    } 
-                    return y1;
-                })
-                .attr("x2", function(data,i){
-                    var x2 = data[0]+d.x;
-                    if(i === 1){
-                        x2 += 25;
-                    } else if( i === 3){
-                        x2 -= 25;
-                    } 
-                    return x2;
-                })
-                .attr("y2", function(data,i){
-                    var y2 = data[1]+d.y;
-                    if(i === 0){
-                        y2 -= 25;
-                    } else if( i === 2){
-                        y2 += 25;
-                    } 
-                    return y2;
-                })
-                .attr("fill", "none")
-                .attr("stroke", "#000000")
-                .attr("stroke-width", "2px")
-                .attr("marker-end", "url(#arrowhead)")
-                .style("opacity", "0.2");
-            
-            TempG.selectAll("line.addline-pointer").data(points).enter()
-                .append("line")
-                .attr("class", "addline-arrow")
-                .attr("x1", function(data,i){
-                    var x1 = data[0]+d.x;
-                    if(i === 1){
-                        x1 += 5;
-                    } else if( i === 3){
-                        x1 -= 5;
-                    } 
-                    return x1;
-                })
-                .attr("y1", function(data,i){
-                    var y1 = data[1]+d.y;
-                    if(i === 0){
-                        y1 -= 5;
-                    } else if( i === 2){
-                        y1 += 5;
-                    } 
-                    return y1;
-                })
-                .attr("x2", function(data,i){
-                    var x2 = data[0]+d.x;
-                    if(i === 1){
-                        x2 += 35;
-                    } else if( i === 3){
-                        x2 -= 35;
-                    } 
-                    return x2;
-                })
-                .attr("y2", function(data,i){
-                    var y2 = data[1]+d.y;
-                    if(i === 0){
-                        y2 -= 35;
-                    } else if( i === 2){
-                        y2 += 35;
-                    } 
-                    return y2;
-                })
-                .attr("fill", "none")
-                .attr("stroke", "#000000")
-                .attr("stroke-width", "10px")
-                .style("cursor", "pointer")
-                .style("opacity", "0")
-                .call(dragNewLink)
-            /*.classed("flowline", true)
-            .on("mousemove", lineMousepoint)
-            .on("mouseover", lineMouseover)*/
-                ;
-        }    
-        if(UserFn)UserFn(d); 
+            .on("start",function(d, i){
+                //d3.event.sourceEvent.stopPropagation();
+                //d3.event.sourceEvent.stopImmediatePropagation();
+                dragFlag = false;
+            })
+            .on("drag",function(d, i){
+                let p = d3.mouse(this);
+                let scale = Zoom.getScale();
+                if(!dragFlag){
+                    dragFlag = true;
+                    originX = parseInt(p[0]/scale);
+                    originY = parseInt(p[1]/scale);
+                    selectionRect = TempG.append("rect")
+                        .attr("x", originX)
+                        .attr("y", originY)
+                        .attr("width", 0)
+                        .attr("height", 0)
+                        .classed("selection", true)
+                        .attr("style", "fill:rgba(72,83,255,0.1);stroke-width:1;stroke:rgb(72,83,255)")
+                    ;
+                } else {
+                    let s = getNewAttributes(parseInt(p[0]/scale),parseInt(p[1]/scale));
+                    selectionRect
+                        .attr("x", s.x)
+                        .attr("y", s.y)
+                        .attr("width", s.w)
+                        .attr("height", s.h)
+                    ;
+                }
+            })
+            .on("end",function(d, i){
+                if(dragFlag){
+                    let scale = Zoom.getScale();
+                    let p = d3.mouse(this);
+                    let s = getNewAttributes(parseInt(p[0]/scale),parseInt(p[1]/scale));
+                    let sX = s.x;
+                    let sY = s.y;
+                    let eX = s.x + s.w;
+                    let eY = s.y + s.h;
+                    
+                    let ns = DATA.nodes.filter( e => {                        
+                        return (e.x >= sX && e.x + e.width <= eX) && (e.y >= sY && e.y + e.height <= eY);
+                    })
+                    let ls = DATA.links.filter( e => {
+                        let way = e.waypoints;
+                        for(let i = 0; i < way.length; i += 2){
+                            //범위안에 없으면 return false
+                            if(way[i] < sX || way[i] > eX || way[i+1] < sY || way[i+1] > eY){
+                                return false;
+                            }
+                        }
+                        //시작 노드가 있으면
+                        if(e.sd){
+                            let x = e.sd.x + e.sOffsetX;
+                            let y = e.sd.y + e.sOffsetY;
+                            if(x < sX || x > eX || y < sY || y > eY){
+                                return false;
+                            }
+                        }
+                        //종료 노드가 있으면
+                        if(e.td){
+                            let x = e.td.x + e.tOffsetX;
+                            let y = e.td.y + e.tOffsetY;
+                            if(x < sX || x > eX || y < sY || y > eY){
+                                return false;
+                            }
+                        }
 
+                        return true
+                    })
+
+                    Selects = [...ns, ...ls];
+
+                    selectionRect.remove();
+                    selectItem();
+                } else {
+                    tmpClear();
+                }
+            })
+        ;
+    }();
+
+    function selectNode () {
+        //tmpClear(false);
+        TempG.selectAll(".size-point").remove();
+        TempG.selectAll(".addline-arrow").remove();
+
+        var points = [];
+        var sNodes = getSelNodes();
+        var d;
+        //In-Progress 일단 다중/개별 선택 분리
+        if(Selects.length > 1){
+            sNodes.forEach(function(d){
+                points.push([d.width/2 + d.x, 0 + d.y]);
+                points.push([d.width + d.x, d.height/2 + d.y]);
+                points.push([d.width/2 + d.x, d.height + d.y]);
+                points.push([0 + d.x, d.height/2 + d.y]);
+            });
+            /*TempG.selectAll("circle").append("circle")
+                .attr("r", 3)
+                .attr("cx", 100)
+                .attr("cy", 100)
+                .attr("fill", "#AE7F2D")
+                .attr("stroke-width", "2")
+                .attr("stroke", "#AE7F2D");*/
+            TempG.selectAll("circle.size-point").data(points).enter()
+                .append("circle")
+                .attr("class", "size-point")
+                .attr("r", 3)
+                .attr("cx", function(data){return data[0];})
+                .attr("cy", function(data){return data[1];})
+                .attr("fill", "#4853FF")
+                .attr("stroke-width", "2")
+                .attr("stroke", "#4853FF")
+                .style("opacity", "1")
+                ;
+        } else if(Selects.length === 1 && sNodes.length === 1){
+            d = sNodes[0];
+
+            var target = NodeG.select("#nd-"+d.id);
+            var pathNode = target.select("path").node();
+            var tPoints = [];
+            tPoints.push([d.width/2, 0]);
+            tPoints.push([d.width, d.height/2]);
+            tPoints.push([d.width/2, d.height]);
+            tPoints.push([0, d.height/2]);
+            
+            points = tPoints.map(function(v,i){
+                return closestPoint(pathNode, v).map(function(x){return Math.round(x)});
+            });
+            target.classed('select', true);
+            TempG.attr("target_id", target.attr("id"));
+            /*
+            TempG.selectAll("circle").append("circle")
+                .attr("r", 3)
+                .attr("cx", 100)
+                .attr("cy", 100)
+                .attr("fill", "#FE7F2D")
+                .attr("stroke-width", "2")
+                .attr("stroke", "#FE7F2D");
+            */
+            TempG.selectAll("circle.size-point").data(points).enter()
+                .append("circle")
+                .attr("class", "size-point")
+                .attr("r", 3)
+                .attr("cx", function(data){return data[0]+d.x;})
+                .attr("cy", function(data){return data[1]+d.y;})
+                .attr("fill", "#FE7F2D")
+                .attr("stroke-width", "2")
+                .attr("stroke", "#FE7F2D")
+                .style("opacity", "1")
+                .style("cursor", function(d,i){
+                    var cursorNm;
+                    switch(i) {
+                        case 0 :
+                            cursorNm = "n-resize";
+                            break;
+                        case 1 :
+                            cursorNm = "e-resize";
+                            break;
+                        case 2 :
+                            cursorNm = "s-resize";
+                            break;
+                        case 3 :
+                            cursorNm = "w-resize";
+                            break;
+                        default :
+                            break;    
+                    }    
+                    return cursorNm;
+                })
+                .call(dragSizeCircle)
+                ;
+
+            if(!d.nConn){
+                TempG.selectAll("line.addline-arrow").data(points).enter()
+                    .append("line")
+                    .attr("class", "addline-arrow")
+                    .attr("x1", function(data,i){
+                        var x1 = data[0]+d.x;
+                        if(i === 1){
+                            x1 += 5;
+                        } else if( i === 3){
+                            x1 -= 5;
+                        } 
+                        return x1;
+                    })
+                    .attr("y1", function(data,i){
+                        var y1 = data[1]+d.y;
+                        if(i === 0){
+                            y1 -= 5;
+                        } else if( i === 2){
+                            y1 += 5;
+                        } 
+                        return y1;
+                    })
+                    .attr("x2", function(data,i){
+                        var x2 = data[0]+d.x;
+                        if(i === 1){
+                            x2 += 25;
+                        } else if( i === 3){
+                            x2 -= 25;
+                        } 
+                        return x2;
+                    })
+                    .attr("y2", function(data,i){
+                        var y2 = data[1]+d.y;
+                        if(i === 0){
+                            y2 -= 25;
+                        } else if( i === 2){
+                            y2 += 25;
+                        } 
+                        return y2;
+                    })
+                    .attr("fill", "none")
+                    .attr("stroke", "#000000")
+                    .attr("stroke-width", "2px")
+                    .attr("marker-end", "url(#arrowhead)")
+                    .style("opacity", "0.2");
+                
+                TempG.selectAll("line.addline-pointer").data(points).enter()
+                    .append("line")
+                    .attr("class", "addline-arrow")
+                    .attr("x1", function(data,i){
+                        var x1 = data[0]+d.x;
+                        if(i === 1){
+                            x1 += 5;
+                        } else if( i === 3){
+                            x1 -= 5;
+                        } 
+                        return x1;
+                    })
+                    .attr("y1", function(data,i){
+                        var y1 = data[1]+d.y;
+                        if(i === 0){
+                            y1 -= 5;
+                        } else if( i === 2){
+                            y1 += 5;
+                        } 
+                        return y1;
+                    })
+                    .attr("x2", function(data,i){
+                        var x2 = data[0]+d.x;
+                        if(i === 1){
+                            x2 += 35;
+                        } else if( i === 3){
+                            x2 -= 35;
+                        } 
+                        return x2;
+                    })
+                    .attr("y2", function(data,i){
+                        var y2 = data[1]+d.y;
+                        if(i === 0){
+                            y2 -= 35;
+                        } else if( i === 2){
+                            y2 += 35;
+                        } 
+                        return y2;
+                    })
+                    .attr("fill", "none")
+                    .attr("stroke", "#000000")
+                    .attr("stroke-width", "10px")
+                    .style("cursor", "pointer")
+                    .style("opacity", "0")
+                    .call(dragNewLink)
+                /*.classed("flowline", true)
+                .on("mousemove", lineMousepoint)
+                .on("mouseover", lineMouseover)*/
+                    ;
+            }
+        }
     }
 
-    function selectLine(d){
-        if(arguments.length > 1)d3.event.stopPropagation();
-        tmpClear();
-        TempG.attr("target_id", "ln-"+d.id);
-        var points = LinkG.select("#ln-"+d.id).attr("points").split(",");
+    function selectLink(){
+        //tmpClear(false);
+        TempG.selectAll(".temp-point").remove();
+        
+        var sLinks = getSelLinks();
         var circlePoints = [];
-
-        var i;
-        var length = points.length;
-        var point1X, point1Y, point2X, point2Y;
-        //[1,2,3,4]
-        for(i=2;i<length;i=i+2){
-            point1X = points[i-2]*1;
-            point1Y = points[i-1]*1;
-            point2X = points[i]*1;
-            point2Y = points[i+1]*1;
-            
-            let diffX = Math.abs(point1X - point2X);
-            let diffY = Math.abs(point1Y - point2Y);
-            //if(diffX+diffY < 40){continue;}//대각선 중간점 짧아도 생성
-            if((diffX < 40 && diffY === 0) || (diffY < 40 && diffX === 0)){continue;}
-            //신규점
-            circlePoints.push(
-                {
-                    index:i,
-                    isNew:true,
-                    line:this,
-                    x:(point1X + point2X)/2,
-                    y:(point1Y + point2Y)/2
+        var d;
+        
+        if(Selects.length > 1){
+            sLinks.forEach(link => {
+                if(link.sd){
+                    circlePoints.push([link.sd.x+(link.sOffsetX || 0), link.sd.y+(link.sOffsetY || 0)]);
                 }
-            );
-        }
-        //기존점
-        if(length > 3){
-            for(i=0;i<length;i=i+2){
+                if(link.waypoints){
+                    for(let i = 0; i < link.waypoints.length; i += 2){
+                        circlePoints.push([link.waypoints[i], link.waypoints[i+1]])
+                    }
+                }
+                if(link.td){
+                    circlePoints.push([link.td.x+(link.tOffsetX || 0), link.td.y+(link.tOffsetY || 0)]);
+                }
+            });
+
+            TempG.selectAll(".temp-point").data(circlePoints).enter()
+                .append("circle")
+                .attr("class", "size-point")
+                .attr("r", 3)
+                .attr("cx", function(data){return data[0];})
+                .attr("cy", function(data){return data[1];})
+                .attr("fill", "#4853FF")
+                .attr("stroke-width", "2")
+                .attr("stroke", "#4853FF")
+                .style("opacity", "1")
+                ;
+
+        } else if(Selects.length === 1 && sLinks.length === 1){
+            d = sLinks[0];
+
+            TempG.attr("target_id", "ln-"+d.id);
+            var points = LinkG.select("#ln-"+d.id).attr("points").split(",");
+            var pNode = d3.select("#ln-"+d.id).node().parentNode;
+            
+            var i;
+            var length = points.length;
+            var point1X, point1Y, point2X, point2Y;
+            //[1,2,3,4]
+            for(i=2;i<length;i=i+2){
+                point1X = points[i-2]*1;
+                point1Y = points[i-1]*1;
+                point2X = points[i]*1;
+                point2Y = points[i+1]*1;
+                
+                let diffX = Math.abs(point1X - point2X);
+                let diffY = Math.abs(point1Y - point2Y);
+                //if(diffX+diffY < 40){continue;}//대각선 중간점 짧아도 생성
+                if((diffX < 40 && diffY === 0) || (diffY < 40 && diffX === 0)){continue;}
+                //신규점
                 circlePoints.push(
                     {
                         index:i,
-                        isNew:false,
-                        isLast : (i == length-2) ? 1 : (i == 0) ? 2 : 0,  //0: 중간, 1:마지막, 2:시작
-                        line:this,
-                        x:points[i]*1,
-                        y:points[i+1]*1,
+                        isNew:true,
+                        line:pNode,
+                        x:(point1X + point2X)/2,
+                        y:(point1Y + point2Y)/2
                     }
                 );
             }
+            //기존점
+            if(length > 3){
+                for(i=0;i<length;i=i+2){
+                    circlePoints.push(
+                        {
+                            index:i,
+                            isNew:false,
+                            isLast : (i == length-2) ? 1 : (i == 0) ? 2 : 0,  //0: 중간, 1:마지막, 2:시작
+                            line:pNode,
+                            x:points[i]*1,
+                            y:points[i+1]*1,
+                        }
+                    );
+                }
+            }
+            //d.circlePoints = circlePoints;
+            TempG.selectAll(".temp-point")
+                .data(circlePoints)
+                .enter()
+                .append("circle")
+                .attr("class", "temp-point")
+                .attr("r", 5)
+                .attr("cx", function(d){return d.x;})
+                .attr("cy", function(d){return d.y;})
+                .attr("fill", "#FC3")
+                //.attr("pointer-events", "none")
+                .attr("stroke-width", function(d,i,a){
+                    return (a.length-1 == i) ? 2 : 0;
+                })
+                .attr("stroke", "#FC3")
+                .call(dragLineCircle)
+                .style("cursor", "pointer")
+                .style("opacity", function(d){return (d.isNew) ? 0.5 : 1})
+                .on("mouseenter", function(){
+                    d3.select(this).style("opacity", 1);
+                })
+                .on("mouseleave", function(){
+                    d3.select(this).style("opacity", function(d){return (d.isNew) ? 0.5 : 1});
+                })
+                ;
         }
-        //d.circlePoints = circlePoints;
-        TempG.selectAll(".temp-point")
-            .data(circlePoints)
-            .enter()
-            .append("circle")
-            .attr("class", "temp-point")
-            .attr("r", 5)
-            .attr("cx", function(d){return d.x;})
-            .attr("cy", function(d){return d.y;})
-            .attr("fill", "#FC3")
-            //.attr("pointer-events", "none")
-            .attr("stroke-width", function(d,i,a){
-                return (a.length-1 == i) ? 2 : 0;
-            })
-            .attr("stroke", "#FC3")
-            .call(dragLineCircle)
-            .style("opacity", function(d){return (d.isNew) ? 0.5 : 1})
-            .on("mouseenter", function(){
-                d3.select(this).style("opacity", 1);
-            })
-            .on("mouseleave", function(){
-                d3.select(this).style("opacity", function(d){return (d.isNew) ? 0.5 : 1});
-            })
-            ;
-        /*TempG.append("image")
-            .attr("x", parseInt(points[0]) + 5)
-            .attr("y", parseInt(points[1]) - 5)
-            .attr('width', 16)
-            .attr('height', 16)
-            .attr("xlink:href", "/resources/hts/css/icon/trash-alt-solid.svg")
-            .style("cursor", "pointer")
-            .on("click", function(){
-                var links = DATA.links.filter(function(e,i,a){
-                    return e.id !== d.id;
-                });
-                DATA.links = links;
-                updateDiagrams();
+    }
 
-            });*/
-        if(UserFn)UserFn(d);                
+    function selectItem (data) {
+        if(data && !Array.isArray(data)){Selects = [data];}
+        TempG.attr("target_id", null);
+        selectNode();
+        selectLink();
+        let d = Selects.length === 1 ? Selects[0] : null;
+        if(UserFn)UserFn(d);
+    }
+
+    function moveEnd (stX, stY, diffX, diffY){
+        if(Math.abs(diffX) + Math.abs(diffY) >= 10){
+            let selNodes = getSelNodes();
+            let selLinks = getSelLinks();
+            let selNodeIds = selNodes.map(e=>e.id);
+            let notMovedLinks = [];
+
+            /*
+            // 1. 선택된 선이 아니어도 시작과 끝이 모두 선택된 노드에 연결되어 있으면 같이 움직인다.
+            DATA.links.forEach(function(l){
+                if(selNodeIds.includes(l.source) && selNodeIds.includes(l.target)){
+                    for(let i = 0; i< l.waypoints.length;  i += 2){
+                        l.waypoints[i] += diffX;
+                        l.waypoints[i+1] += diffY;
+                    }
+                } else {
+                    //이동되지 않은 링크는 이후처리를 위해 따로 담아둔다.
+                    notMovedLinks.push(l);
+                }
+            });
+            */
+            // 1. 링크를 이동한다.
+            DATA.links.forEach(function(l){
+                //선택되지 않은 링크는 이후처리를 위해 따로 담아둔다.
+                if(!selLinks.includes(l)){
+                    notMovedLinks.push(l);
+                    return;
+                }
+
+                // 1-1. 선택된 선은 모두 같이 움직인다.
+                for(let i = 0; i< l.waypoints.length;  i += 2){
+                    l.waypoints[i] += diffX;
+                    l.waypoints[i+1] += diffY;
+                }
+                // 1-2. 소스 노드가 있고, 소스 노드가 선택되어 있지 않다면, 연결을 끊는다.
+                if(l.source && !selNodeIds.includes(l.source)){
+                    l.waypoints = [l.sd.x + l.sOffsetX + diffX, l.sd.y + l.sOffsetY + diffY].concat(l.waypoints);
+                    l.source = null;
+                    l.sd = null;
+                    l.sOffsetX = 0;
+                    l.sOffsetY = 0;
+                }
+
+                // 1-3. 타겟 노드가 있고, 타겟 노드가 선택되어 있지 않다면, 연결을 끊는다.
+                if(l.target && !selNodeIds.includes(l.target)){
+                    l.waypoints = l.waypoints.concat([l.td.x + l.tOffsetX + diffX, l.td.y + l.tOffsetY + diffY]);
+                    l.target = null;
+                    l.td = null;
+                    l.tOffsetX = 0;
+                    l.tOffsetY = 0;
+                }
+            });
+
+            // 2. 노드를 이동한다.
+            selNodes.forEach(node => {
+                node.x += diffX;
+                node.y += diffY;
+                // 2-1 이동되지 않은 선 중 노드와 연관된 선 처리를 한다
+                notMovedLinks.forEach(function(l){
+                    if(l.waypoints.length > 1){
+                        if(l.source === node.id) {
+                            if(stX + l.sOffsetX === l.waypoints[0]){
+                                //x값이 같으면 x값이 같이 움직이게
+                                l.waypoints[0] += diffX;
+                            }else if(stY + l.sOffsetY === l.waypoints[1]){
+                                //y값이 같으면 y값이 같이 움직이게
+                                l.waypoints[1] += diffY;
+                            }    
+                        }
+                        if(l.target === node.id){
+                            if(stX + l.tOffsetX === l.waypoints[l.waypoints.length-2]){
+                                l.waypoints[l.waypoints.length-2] += diffX;
+                            }else if(stY + l.tOffsetY === l.waypoints[l.waypoints.length-1]){
+                                l.waypoints[l.waypoints.length-1] += diffY;
+                            } 
+                        }
+                    }
+                });
+            })
+            updateDiagrams();
+        }
     }
 
     /** lineFunction  */
     function makePoints(l){
-        var startPoint = [l.sd.x+(l.sOffsetX || 0), l.sd.y+(l.sOffsetY || 0)];
-        var endPoint = [l.td.x+l.tOffsetX, l.td.y+l.tOffsetY];
+        var startPoint = (l.sd) ? [l.sd.x+(l.sOffsetX || 0), l.sd.y+(l.sOffsetY || 0)] : null;
+        var endPoint = (l.td) ? [l.td.x+l.tOffsetX, l.td.y+l.tOffsetY] : null;
         var points;
         if(l.waypoints.length > 0){
-            let tPoints = startPoint.concat(l.waypoints).concat(endPoint);
+            let tPoints = startPoint ? startPoint.concat(l.waypoints) : l.waypoints;
+            if(endPoint) tPoints = tPoints.concat(endPoint);
+
             l.waypoints = [];
             let i = 2;
             //같은 선이면 포인트 삭제
@@ -1637,7 +1933,16 @@ function Diagram(){
                     tPoints.splice(i, 2);
                 }
             }
-            points = startPoint.concat(l.waypoints).concat(endPoint);
+            //points = startPoint.concat(l.waypoints).concat(endPoint);
+            //points = startPoint ? startPoint.concat(l.waypoints) : [tPoints[0], tPoints[1]].concat(l.waypoints);
+            //points = endPoint ? points.concat(endPoint) : points.concat([tPoints[tPoints.length-2], tPoints[tPoints.length-1]]);
+            points = tPoints;
+            if(!startPoint) {
+                l.waypoints = [tPoints[0], tPoints[1]].concat(l.waypoints);
+            }
+            if(!endPoint) {
+                l.waypoints = l.waypoints.concat([tPoints[tPoints.length-2], tPoints[tPoints.length-1]]);
+            }
             
         } else {
             points = startPoint.concat(endPoint);
@@ -1699,42 +2004,64 @@ function Diagram(){
         
         initNodeList(tmpExtNodes);
 
-        svg.on("click", function(){
-            tmpClear();
-        });
+        svg.call(dragSelection); //클릭 통합
+
         addNodeDragHandler.init();
+        Zoom = setZoomEvent(svg);
         setDrawingPage();
         setKeyEvent(svg);
-        setZoomEvent(svg);
+        
+        Zoom.reset();
     }
     
     function setKeyEvent(d3Svg){
+        var clipNode, clipLink;
         d3Svg.on("keydown", function(){
             if(d3.event.srcElement.nodeName !== "svg")return;
             var keyCode = d3.event.keyCode;
-            var tmpId, tmp;
             //ctrl + key 
             if(d3.event.ctrlKey){
                 switch (keyCode) {
+                    case 65: //ctrl + a
+                        d3.event.preventDefault();
+                        Selects = DATA.nodes.concat(DATA.links);
+                        if(Selects.length > 0){
+                            selectItem();
+                        }
+                        break;
                     case 67: //ctrl + c
-                        tmpId = TempG.attr("target_id");
-                        if(tmpId){
-                            tmpId = tmpId.replace("nd-", "");
-                            tmp = DATA.nodes.find(function(e){
-                                return (e.id == tmpId);
-                            });
-                            if(tmp){
-                                clipboard = JSON.parse(JSON.stringify(tmp));
-                            }
+                        if(Selects.length > 0){
+                            let clipboard = JSON.parse(JSON.stringify(Selects));
+                            clipNode = clipboard.filter(e=>e.type);
+                            clipLink = clipboard.filter(e=>!e.type);
+                            clipLink.forEach(e => {
+                                delete e.sd;
+                                delete e.td;
+                            })
                         }else{
-                            clipboard = null;
+                            //clipboard = null;
+                            clipNode = null;
+                            clipLink = null;
                         }
                         break;
                     case 86://ctrl + v 
-                        if(clipboard){
-                            clipboard.x += 10;
-                            clipboard.y += 10;
-                            addBox(JSON.parse(JSON.stringify(clipboard)));
+                        if(clipNode || clipLink){
+                            let copyOrgId = {};
+                            clipNode.forEach(e => {
+                                e.x +=10;
+                                e.y +=10;
+                                copyOrgId[e.id] = addBox(JSON.parse(JSON.stringify(e)), false); //복사하고 id 저장;
+                            });
+                            clipLink.forEach(e => {
+                                e.waypoints.forEach((p,i) => e.waypoints[i] += 10 );
+                                
+                                let link = JSON.parse(JSON.stringify(e));
+                                if(link.source)link.source = copyOrgId[e.source];
+                                if(link.target)link.target = copyOrgId[e.target];
+                                link.id = new Date().getTime();
+                                DATA.links.push(link);
+                            });
+                            updateDiagrams(); //다 복사한 후 한번에 그린다.
                         }
                         break;
                     case 90: //ctrl + z 
@@ -1751,18 +2078,15 @@ function Diagram(){
             }
             //delete
             if(keyCode === 46){
-                tmpId = TempG.attr("target_id");
-                if(tmpId){
-                    var id = tmpId.replace("nd-", "").replace("ln-", "");
-                    deleteItem(id);
-                }
+                Selects.forEach(e=>deleteItem(e, false));
+                updateDiagrams(); //다 삭제한 후 한번에 그린다.
             }
             //left:37 up:38 right:39 down:40
             if(keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40 ){
                 if(d3.event.repeat){
                     moveNode.keyDown(keyCode);
                 }else{
-                    moveNode.start(TempG.attr("target_id"), keyCode);
+                    moveNode.start(keyCode);
                 }
             }
         });
@@ -1777,9 +2101,10 @@ function Diagram(){
 
     function setZoomEvent(d3Svg){
         const wrapper = d3Svg.node().parentNode;
-        const wrapperD3 = d3.select(wrapper); 
+        const wrapperD3 = d3.select(wrapper);
         const scaleG = d3Svg.select('.viewport');
         const pInfo = DATA.page;
+        let scale;
 
         const zoom = d3.zoom()
             .scaleExtent([0.25, 2])
@@ -1788,10 +2113,9 @@ function Diagram(){
             })
             .translateExtent([[0,0],[pInfo.width,pInfo.height]])
             .on("zoom", function(){
-                const scale = d3.event.transform.k;
-
-                d3Svg.attr('width', pInfo.width*scale)
-                    .attr('height', pInfo.height*scale);
+                scale = d3.event.transform.k;
+                d3Svg.attr('width', DATA.page.width*scale)
+                    .attr('height', DATA.page.height*scale);
 
                 scaleG.attr('transform', 'scale('+scale+')');
                 wrapper.scrollLeft = -d3.event.transform.x;
@@ -1846,7 +2170,19 @@ function Diagram(){
             if(d3.event.ctrlKey)d3.event.preventDefault();
         });
 
-        zoom.scaleTo(wrapperD3, 1);
+        //zoom.scaleTo(wrapperD3, 1);
+
+        return {
+            reset: function () {
+                zoom.scaleTo(wrapperD3, 1);
+            },
+            reZoom: function () {
+                zoom.scaleTo(wrapperD3, slider.property("value"));
+            },
+            getScale: function () {
+                return scale;
+            }
+        }
     }
 
     function appendDef(d3Svg){
@@ -1926,12 +2262,16 @@ function Diagram(){
     }
 
     function tmpClear(notSelect){
+        
         NodeG.selectAll("g.select").classed('select', false);
         TempG.selectAll("*").remove();
         TempG.attr("target_id", null);
-        if(notSelect !== false && UserFn)UserFn();
-        
+        if(notSelect !== false) {
+            Selects = [];
+            if(UserFn)UserFn();
+        }
     }
+
     function clearAll(){
         DATA.links = [];
         DATA.nodes = [];
@@ -1939,9 +2279,9 @@ function Diagram(){
     }
 
     function updateDiagrams(){
-        tmpClear();
+        tmpClear(false);
         setDrawingPage();
-        drawLine();
+        drawLink();
         drawNode();
 
         UndoManager.add(DATA);
@@ -1949,11 +2289,18 @@ function Diagram(){
 
     function setDrawingPage() {
         var pInfo = DATA.page;
-        PageRect.attr("width", parseInt(pInfo.width)+1)
-                .attr("height", parseInt(pInfo.height)+1);
+        var currW = parseInt(PageRect.attr("width"));
+        var currH = parseInt(PageRect.attr("height"));
+        var newW = parseInt(pInfo.width)+1;
+        var newH = parseInt(pInfo.height)+1;
+        if(currW !== newW || currH !== newH) {
+            PageRect.attr("width", parseInt(pInfo.width)+1)
+                    .attr("height", parseInt(pInfo.height)+1);
+            Zoom.reZoom();
+        }
     }
 
-    function drawLine(){
+    function drawLink(){
         var links = LinkG.selectAll(".link").data(DATA.links);
 
         links.exit().remove();
@@ -1961,12 +2308,12 @@ function Diagram(){
         var lg = links.enter()
             .append("g")
             .datum(function(d,i){
-                var sourceNode = DATA.nodes.filter(function(n, i) {
+                var sourceNode = DATA.nodes.find(function(n, i) {
                     return n.id == d.source;
-                })[0];
-                var targetNode = DATA.nodes.filter(function(n, i) {
+                });
+                var targetNode = DATA.nodes.find(function(n, i) {
                     return n.id == d.target;
-                })[0];
+                });
                 d.sd = sourceNode;
                 d.td = targetNode;
                 return d;
@@ -1978,7 +2325,21 @@ function Diagram(){
             .on("mouseleave", function(){
                 d3.select(this).select(".line_back").attr("opacity", 0);
             })
-            .on("click", selectLine);
+            .on("click", function(d){
+                if(arguments.length > 1)d3.event.stopPropagation();
+                if(d3.event.ctrlKey) {
+                    let idx = Selects.indexOf(d);
+                    if(idx > -1) {
+                        Selects.splice(idx, 1);
+                    } else {
+                        Selects.push(d);
+                    }
+                    selectItem();
+                } else {
+                    selectItem(d);
+                }
+                
+            });
         
         lg.append("polyline")
             .attr("class", "line_back")
@@ -2004,7 +2365,8 @@ function Diagram(){
         lg.select(".line_back").datum(function(d){
             return d;
         })
-        .attr("points", makePoints);
+        .attr("points", makePoints)
+        .call(dragItem);
 
         lg.select(".line").datum(function(d){
             return d;
@@ -2021,7 +2383,12 @@ function Diagram(){
         .attr("stroke-dasharray", function(d){
             return (d.stroke) ? StokeStyle[d.stroke] : 0;
         })
-        .attr("points", makePoints)
+        .attr("points", function(d){
+            let p = makePoints(d);
+            d.x = p[0];
+            d.y = p[1];
+            return p;
+        })
         .attr("marker-end", function(d){
             if(d.color){
                 var color = d.color.replace("#", "");
@@ -2030,9 +2397,10 @@ function Diagram(){
             }else{
                 return "url(#arrowhead)";
             }
-        });
+        })
+        .call(dragItem);
     }
-    function drawNode(){       
+    function drawNode(){
         var nodes = NodeG.selectAll(".node").data(DATA.nodes);
         nodes.exit().remove();
 
@@ -2042,8 +2410,17 @@ function Diagram(){
             .attr("class", "node")
             .on("click", function(d){
                 d3.event.stopPropagation();
+                if(d3.event.ctrlKey) {
+                    let idx = Selects.indexOf(d);
+                    if(idx > -1) {
+                        Selects.splice(idx, 1);
+                    } else {
+                        Selects.push(d);
+                    }
+                    selectItem();
+                }
             })
-            .call(dragNode)
+            .call(dragItem)
             .on("mouseenter", function(){
                 var data = d3.select(this).datum();
                 if(!data.nConn){
@@ -2079,15 +2456,21 @@ function Diagram(){
             if(!v.tOffsetY) v.tOffsetY = 0;
             if(!v.sOffsetX) v.sOffsetX = 0;
             if(!v.sOffsetY) v.sOffsetY = 0;
+            if(v.sd){
+                v.sd = DATA.nodes.find(function(n, i) {
+                    return n.id == v.sd.id;
+                });
+            } else {
+                v.sd = undefined;
+            }
 
-            var sourceNode = DATA.nodes.filter(function(n, i) {
-                return n.id == v.sd.id;
-            })[0];
-            var targetNode = DATA.nodes.filter(function(n, i) {
-                return n.id == v.td.id;
-            })[0];
-            v.sd = sourceNode;
-            v.td = targetNode;
+            if(v.td){
+                v.td = DATA.nodes.find(function(n, i) {
+                    return n.id == v.td.id;
+                });
+            } else {
+                v.td = undefined;
+            }
         });
     }
 
@@ -2121,7 +2504,7 @@ function Diagram(){
         return DATA;
     }
 
-    function addBox(node){
+    function addBox(node, draw = true){
         if(!node) node = {};
         if(!node.width)node.width = 100;
         if(!node.height)node.height = 100;
@@ -2136,8 +2519,9 @@ function Diagram(){
                 maxNum = maxNum > parseInt(num) ? maxNum : parseInt(num);
             }
         });
+        var nodeId = node.type + "-" + (parseInt(maxNum)+1);
 
-        if(node.type !== "cal")node.id = node.type + "-" + (parseInt(maxNum)+1);
+        if(node.type !== "cal")node.id = nodeId;
         
         if(node.type == "mb"){
             if(!node.mb || node.mb.length === 0){
@@ -2166,10 +2550,12 @@ function Diagram(){
                 return 1;
             }
         });
-        updateDiagrams();
+        if(draw)updateDiagrams();
+        
+        return nodeId;
     }
 
-    function deleteItem(data){
+    function deleteItem(data, draw = true){
         var id = (typeof data === "string") ? data : data.id;
         var links = DATA.links;
         var nodes = DATA.nodes;
@@ -2190,16 +2576,15 @@ function Diagram(){
             }
         }
         
-        updateDiagrams();
+        if(draw)updateDiagrams();
     }
 
-    function selectItem(data){
+    function selectExternal(data){
         if(!data){tmpClear();return;}
-        if(data.source){
-            selectLine(data);
+        if(!data.type){
+            selectLink(data);
         }else{
-            var node = NodeG.select("#nd-"+data.id);
-            selectNode(node, data);
+            selectNode(data);
         }
     }
 
@@ -2211,7 +2596,7 @@ function Diagram(){
     diagrams.getData = getData;
     diagrams.addBox = addBox;
     diagrams.updateNode = updateDiagrams;
-    diagrams.selectItem = selectItem;
+    diagrams.selectItem = selectExternal;
     diagrams.deleteItem = deleteItem;
     diagrams.addNodeDrag = addNodeDragHandler;
 
