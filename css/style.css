@@ -286,6 +286,9 @@ label{margin-bottom:1px;}
 #svg-container.view .minus{
     display:none;
 }
+#svg-container.view .circle{
+    display:none;
+}
 #svg-container.view .addline-arrow {
     display:none;
 }
@@ -315,7 +318,7 @@ label{margin-bottom:1px;}
 }
 
 /*cal Node style*/
-.calNo {
+.calNo, .id-bg {
     fill:#595959cb;
     stroke: #595959cb;
 }
@@ -328,15 +331,42 @@ label{margin-bottom:1px;}
     stroke: #fa9090;
 }
 
-.select>.calNo {
+.select>.calNo,.select .selected>.calNo {
     fill:#000000;
 }
 .select>.calNo.cal_start {
-    fill:#322eff;
+    fill:#5452eb;
 }
 .select>.calNo.cal_end {
     fill:#f33c3c;
 }
+.select>g>.calNo {
+    fill:#000000;
+}
+.table-body .cell-bg{
+    fill:#ffffff;
+}
+.select>.table-body>.dragged>.cell-bg{
+    fill:rgb(64, 75, 228);
+}
+
+.select>.table-body>.selected>.cell-bg{
+    stroke:rgb(64, 75, 228)!important;
+    stroke-width:3px!important;
+}
+
+.select>.cols>.selected>.calNo, .select>.rows>.selected>.calNo {
+    fill: #555!important;
+    stroke: #555!important;
+}
+.tb-input {
+    margin: 0;
+    padding: 0 2px;
+    width: calc(100% - 1px);
+    height: calc(100% - 1px);
+    border: 2px solid rgb(64, 75, 228);
+}
+
 #svg-container.view .cal_id, #svg-container.view .calNo, #svg-container.view .cal_rect{
     opacity: 0;
 }
@@ -429,3 +459,15 @@ input[type=range] {
   }
   
 /* input range end */
+
+/* print */
+body.A3               .sheet { width: 297mm; height: 419mm }
+body.A3.landscape     .sheet { width: 420mm; height: 296mm }
+body.A4               .sheet { width: 210mm; height: 296mm }
+body.A4.landscape     .sheet { width: 297mm; height: 209mm }
+body.A5               .sheet { width: 148mm; height: 209mm }
+body.A5.landscape     .sheet { width: 210mm; height: 147mm }
+body.letter           .sheet { width: 216mm; height: 279mm }
+body.letter.landscape .sheet { width: 280mm; height: 215mm }
+body.legal            .sheet { width: 216mm; height: 356mm }
+body.legal.landscape  .sheet { width: 357mm; height: 215mm }

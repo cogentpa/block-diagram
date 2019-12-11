@@ -87,7 +87,7 @@ var Cal = function(){
             }
         }
         if(!startKey){
-            alert("No Start");
+            alert("시작 Calculation이 지정되지 않았습니다.");
             return;
         }
         if(calKey)endKey = calKey;

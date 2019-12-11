@@ -4,8 +4,8 @@ var Layout = function (){
         page : {
             id:"page_123456",
             name:"",
-            width:2496,
-            height:1760
+            width:3170,
+            height:2230
         },
         block : {
             selectId:"",
@@ -63,38 +63,23 @@ var Layout = function (){
     function getId(t){
         return t+"_"+parseInt(Math.random()*1000);
     }
-    function removeNode(id){
-        var diagramData = Diagrams.getData();
-        var links = diagramData.links;
-        var nodes = diagramData.nodes;
-        var i, d;
-
-        for(i = links.length - 1; i >= 0; i--) {
-            d = links[i];
-            if(d.target == id || d.source == id || d.id == id) {
-                links.splice(i, 1);
-            }
+    function removeNode(){
+        var selects = getBlock();
+        if(selects && selects.length > 0){
+            selects.forEach(e=>Diagrams.deleteItem(e, false));
+            Diagrams.updateNode();
         }
-
-        for(i = nodes.length - 1; i >= 0; i--) {
-            d = nodes[i];
-            if(d.id == id) {
-                nodes.splice(i, 1);
-            }
-        }
-
-        Diagrams.updateNode();
     }
     api.setPageInfo = setPageInfo;
     api.getPageInfo = getPageInfo;
-    api.setBlockNm = setBlockNm;
-    api.getBlockNm = getBlockNm;
-    api.getBlockInfo = getBlockInfo;
-    api.setBlockId = setBlockId;
-    api.getBlockId = getBlockId;
+    api.setBlockNm = setBlockNm;    //안씀
+    api.getBlockNm = getBlockNm;    //안씀
+    api.getBlockInfo = getBlockInfo;//안씀
+    api.setBlockId = setBlockId;    //안씀
+    api.getBlockId = getBlockId;    //안씀
     api.setBlock = setBlock;
     api.getBlock = getBlock;
-    api.getId = getId;
+    api.getId = getId;              //안씀
     api.removeNode = removeNode;
     return api;
 }();
@@ -103,7 +88,9 @@ var CalData = function(){
     var api = {};
     var data = {
         cnt : 0,
+        preCnt : 0,
         no : makeCalName(),
+        prefix: makePreFix(),
         selectCal : {},
         types : {cal0:{nm:"DI Tank"},cal1:{nm:"UV-ox-2"},cal3:{nm:"UDI Tank"}},
         cals : {}
@@ -111,16 +98,31 @@ var CalData = function(){
     function makeCalName(){
         var cell = String.fromCharCode(65);
         var rtnNm = [];
-        for(var i=65;i<80;i++){
+        for(var i=65;i<91;i++){
             cell = String.fromCharCode(i);
             for(var j=1;j<10;j++){
                 rtnNm.push(cell+""+j);
             }
         }
         return rtnNm;
-    } 
+    }
+    function nextChar(c){
+        return c ? String.fromCharCode(c.charCodeAt(0)+1) : 'A';
+    }
+    function nextCol(s){
+        return s.replace(/([^Z]?)(Z*)$/, (_,a,z)=>nextChar(a) + z.replace(/Z/g,'A'));
+    }
+    function makePreFix(){
+        var rtnPre = [];
+        for(var i=0, s=''; i<702; i++){
+            s = nextCol(s);
+            rtnPre.push(s);
+        }
+        return rtnPre;
+    }
     function init(){
         data.cnt = 0;
+        data.preCnt = 0;
         data.selectCal = {};
         data.cals = {};
     }
@@ -130,21 +132,29 @@ var CalData = function(){
         }
         var s = {};
         s["cnt"] = data.cnt;
+        s["preCnt"] = data.preCnt;
         s["cals"] = data.cals;
         return s;
     }
     function open(d){
         init();
         data.cals = d.cals;
+        data.preCnt = d.preCnt;
         data.cnt = d.cnt;
     }
     function setCnt(cnt){
         data.cnt = cnt;
     }
     function getCalNo(){
+        if(!data.no[data.cnt]){
+            makeCalName();
+        }
         var rtnNo = data.no[data.cnt];
         data.cnt++;
         return rtnNo;
+    }
+    function getPrefix(){
+        return data.prefix[data.preCnt++];
     }
     function getCalById(id){
         return data.cals[id];
@@ -204,6 +214,7 @@ var CalData = function(){
     api.getSelect = getSelect;
     api.setSelect = setSelect;
     api.getCalNo = getCalNo;
+    api.getPrefix = getPrefix;
     api.getCalById = getCalById;
     api.setCalById = setCalById;
     api.getName = getName;

@@ -1,6 +1,18 @@
 /** node */
 function Node(){}
 
+var StokeStyle = {
+    "dash1" : "5,5",
+    "dash2" : "10,5",
+    "dash3" : "15, 10, 5, 10",
+};
+
+var HeadStyle = {
+    "head1": "M 0 0 6 3 0 6 1.5 3",
+    "head2": "M 0, 3 a 2.5, 2.5 0 1,0 5, 0 a 2.5,2.5 0 1,0 -5, 0",
+    "head3": "M 0 0",
+};
+
 function Diagram(){
     "use strict";
     /** Util Fnc */
@@ -71,8 +83,8 @@ function Diagram(){
         return Selects.filter(e=>!(e.type));
     }
 
-    const DWIDTH = 2496;
-    const DHEIGHT = 1760;
+    const DWIDTH = 3170;
+    const DHEIGHT = 2230;
 
     /** variables */
     var D3SVG;
@@ -91,37 +103,31 @@ function Diagram(){
     var Selects = [];
     var MouseOverNode = { node : null, data : null};
 
-    var StokeStyle = {
-        "dash1" : "5,5",
-        "dash2" : "10,5",
-        "dash3" : "15, 10, 5, 10",
-    };
-
     Node.prototype = {
-        genPath : d3.line().x(function(d) { return d.x; })
-                            .y(function(d) { return d.y; }),
+        genPath: d3.line().x(function(d) { return d.x; })
+                          .y(function(d) { return d.y; }),
         drawPath : function(svgObj, points, data){                
-                    var path = svgObj.append("path");
-                    path.attr("d", this.genPath(points))
-                        .attr("stroke", data.color || "black")
-                        .attr("stroke-width", data.strokeWidth||2)
-                        .attr("fill", data.fill || "#fff");
-                    if(data.stroke){
-                        path.attr("stroke-dasharray", StokeStyle[data.stroke]);
-                        
-                    }
-                    data.nConn = (data.fill) === "none" ? true : false;//연결 끄기;
-               },
+            var path = svgObj.append("path");
+            path.attr("d", this.genPath(points))
+                .attr("stroke", data.color || "black")
+                .attr("stroke-width", data.strokeWidth||2)
+                .attr("fill", data.fill || "#fff");
+            if(data.stroke){
+                path.attr("stroke-dasharray", StokeStyle[data.stroke]);
+            }
+            data.nConn = (data.fill) === "none" ? true : false;//연결 끄기;
+        },
         drawText : function(svgObj, data){
-                    var text = svgObj.append("text");
-                    text.attr("x", data.width/2)
-                        .attr("y", data.height/2)
-                        .attr("text-anchor", "middle")
-                        .attr("dominant-baseline", "middle")
-                        .text(data.name)
-                        .attr("fill", "black")
-                        ;
-
+            svgObj.append("text")
+                .attr("x", data.width/2)
+                .attr("y", data.height/2)
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "middle")
+                .text(data.name)
+                .attr("fill", "black");
+        },
+        addUndo: function(){
+            UndoManager.add(DATA);
        }
     };
 
@@ -162,6 +168,7 @@ function Diagram(){
                 
             };
 
+            //사용 안하는듯
             rect.getPathData = function(data){
                 var points = [];
                 points.push({x:0, y:0});
@@ -268,147 +275,307 @@ function Diagram(){
                             //itemG.attr("transform", "translate("+x+","+y+")")
                             
                             var rect = item.append("rect");
-                            
-                            rect.attr("x", x)
-                                .attr("y", y)
-                                .attr("width", itemWidth)
-                                .attr("height", itemHeight)
-                                .attr("stroke", "black")
-                                .attr("stroke-width", 2)
-                                .attr("fill", "#fff");
-                            
-                            var classNm = "mb_"+i+"-"+j;
-                            var text = item.append("text").attr("class", classNm);
-                            text.attr("x", x+(itemWidth/2))
-                                .attr("y", y+(itemHeight/2))
-                                .attr("text-anchor", "middle")
-                                .attr("dominant-baseline", "middle")
-                                .text(b["text"])
-                                .attr("fill", "black")
-                                .on("mouseover", function() {
-                                    d3.select(this).attr("fill", "red");
-                                })
-                                .on("mouseout", function() {
-                                    d3.select(this).attr("fill", "black");
-                                })
-                                .on("click", function(d) {
-                                    var p = this.parentNode.parentNode.parentNode.parentNode;
-                                    var xy = this.getBBox();
-                                    var p_xy = p.getBBox();
-                                    var el = d3.select(this);
-                                    var p_el = d3.select(p);
-                                    var frm = p_el.append("foreignObject");
-                                    var _this = this;
-                                    var classNm = d3.select(_this).attr("class")||"";
-                                    var mbPos = classNm.replace("mb_","").split("-");
-                                    var mbPosX = mbPos[0]||0;
-                                    var mbPosY = mbPos[1]||0;
-                                    
-                                    var inp = frm
-                                        .attr("x", x+d.x)
-                                        .attr("y", y+d.y+6)
-                                        .attr("width", 100)
-                                        .attr("height", 25)
-                                        .append("xhtml:form")
-                                        .append("input")
-                                        .attr("xmlns","http://www.w3.org/1999/xhtml")
-                                        .attr("value", function() {
-                                            this.focus();
-                                            var val = d3.select(_this).text();
-                                            return val;
-                                        })
-                                        .attr("style", "width: 94px;")   
-                                        .on("click", function(){
-                                            this.select();
-                                        })                
-                                        .on("blur", function() {
-                                            var txt = inp.node().value;
-                                            if(d.mb){
-                                                if(d.mb[mbPosX][mbPosY]){
-                                                    d.mb[mbPosX][mbPosY]["text"] = txt;
-                                                }
-                                            }
-                                            el.text(function(d) { return txt; });
-                                            if(p_el.select("foreignObject").empty() === false){
-                                                p_el.select("foreignObject").remove();
-                                            }
-                                        })
-                                        .on("keypress", function() {
-                                            // IE fix   
-                                            if (!d3.event){
-                                                d3.event = window.event;
-                                            }
-                                            var e = d3.event;
-                                            if (e.keyCode == 13){
-                                                if (typeof(e.cancelBubble) !== 'undefined'){ // IE
-                                                    e.cancelBubble = true;
-                                                }
-                                                if (e.stopPropagation){
-                                                    e.stopPropagation();
-                                                }
-                                                e.preventDefault();
-                                                e.target.blur();
-                                            }
-                                        });
-                                    var e = d3.event;
-                                    if (e.stopPropagation){
-                                        e.stopPropagation();
-                                    }
-                                    e.preventDefault();
-                                });
-                            if(y == 0){
-                                mb.addIcon(svgObj,data,{type:"down",x:x+itemWidth/2+20,y:-5,index:i});
+                            if (data["mb"][i][j].merge == "X") {
+                                if (i == 0) {
+                                    itemWidth = itemWidth * maxX;
+                                }
+                            } else if (data["mb"][i][j].merge == "Y"){
+                                if (j == 0) {
+                                    itemHeight = itemHeight * data["mb"][0].length;
+                                }
                             }
+
+                            if (data["mb"][i][j].merge == "X" && i != 0) {
+                                //console.log("병합데이터. 그리지않음");
+                            } else if(data["mb"][i][j].merge == "Y" && j != 0) {
+                                //console.log("병합데이터. 그리지않음");
+                            } else {
+                                rect.attr("x", x)
+                                    .attr("y", y)
+                                    .attr("width", itemWidth)
+                                    .attr("height", itemHeight)
+                                    .attr("stroke", "black")
+                                    .attr("stroke-width", data.strokeWidth || 2)
+                                    .attr("fill", "#fff")//;
+                                    .attr("borderBottom", 10)
+                                    .on("dblclick", function(d){
+                                    		var classNm = "mb_" + i + "-" + j;
+                                    		var selectText = this.parentNode.getElementsByClassName(classNm)[0];
+                                    		var p = this.parentNode.parentNode.parentNode.parentNode;
+                                    		var xy = this.getBBox();
+                                    		var p_xy = p.getBBox();
+                                    		var _this = selectText;
+                                    		var p_el = d3.select(p);
+                                    		var frm = p_el.append("foreignObject");
+                                    		var el = d3.select(_this);
+                                    		var classNm = d3.select(_this).attr("class") || "";
+                                    		var mbPos = classNm.replace("mb_", "").split("-");
+                                    		var mbPosX = mbPos[0] || 0;
+                                    		var mbPosY = mbPos[1] || 0;
+
+                                    		var inp = frm
+                                    				.attr("x", x + d.x)
+                                    				.attr("y", y + d.y + 6)
+                                    				.attr("width", itemWidth)
+                                    				.attr("height", itemHeight)
+                                    				.append("xhtml:form")
+                                    				.append("input")
+                                    				.attr("xmlns", "http://www.w3.org/1999/xhtml")
+                                    				.attr("value", function () {
+                                    						this.focus();
+                                    						var val = d3.select(_this).text();
+                                    						if (val == "New" || val == "new") val = "";
+                                    						return val;
+                                    				})
+                                    				.attr("style", "width:"+ itemWidth + "px; height:" + itemHeight + "px;")
+                                    				.on("click", function () {
+                                    						this.select();
+                                    				})
+                                    				.on("blur", function () {
+                                    						var txt = inp.node().value;
+                                    						if (d.mb) {
+                                    								if (d.mb[mbPosX][mbPosY]) {
+                                    										d.mb[mbPosX][mbPosY]["text"] = txt;
+                                    								}
+                                    						}
+                                    						el.text(function (d) {
+                                    								return txt
+                                    						});
+                                    						if (p_el.select("foreignObject").empty() === false) {
+                                    								p_el.select("foreignObject").remove();
+                                    						}
+                                    					})
+                                    				.on("keypress", function () {
+                                    						// IE fix
+                                    						if (!d3.event) {
+                                    								d3.event = window.event;
+                                    						}
+                                    						var e = d3.event;
+                                    						if (e.keyCode == 13) {
+                                    								if (typeof (e.cancelBubble) !== 'undefined') { // IE
+                                    										e.cancelBubble = true;
+                                    								}
+                                    								if (e.stopPropagation) {
+                                    										e.stopPropagation();
+                                    								}
+                                    								e.preventDefault();
+                                    								e.target.blur();
+                                    						}
+                                    					});
+                                    		var e = d3.event;
+                                    		if (e.stopPropagation) {
+                                    				e.stopPropagation();
+                                    			}
+                                    		e.preventDefault();
+                                      });
+
+                                var classNm = "mb_" + i + "-" + j;
+                                var text = item.append("text").attr("class", classNm);
+                                text.attr("x", x + (itemWidth / 2))
+                                    .attr("y", y + (itemHeight / 2))
+                                    .attr("text-anchor", "middle")
+                                    .attr("dominant-baseline", "middle")
+                                    .text(b["text"])
+                                    .attr("fill", "black")
+                                    .on("mouseover", function () {
+                                        d3.select(this).attr("fill", "red");
+                                    })
+                                    .on("mouseout", function () {
+                                        d3.select(this).attr("fill", "black");
+                                    })
+                                    .on("dblclick", function (d) {
+                                        var p = this.parentNode.parentNode.parentNode.parentNode;
+                                        var xy = this.getBBox();
+                                        var p_xy = p.getBBox();
+                                        var el = d3.select(this);
+                                        var p_el = d3.select(p);
+                                        var frm = p_el.append("foreignObject");
+                                        var _this = this;
+                                        var classNm = d3.select(_this).attr("class") || "";
+                                        var mbPos = classNm.replace("mb_", "").split("-");
+                                        var mbPosX = mbPos[0] || 0;
+                                        var mbPosY = mbPos[1] || 0;
+                                        var inp = frm
+                                            .attr("x", x + d.x)
+                                            .attr("y", y + d.y + 6)
+                                            .attr("width", itemWidth)
+                                            .attr("height", itemHeight)
+                                            .append("xhtml:form")
+                                            .append("input")
+                                            .attr("xmlns", "http://www.w3.org/1999/xhtml")
+                                            .attr("value", function () {
+                                                this.focus();
+                                                var val = d3.select(_this).text();
+                                                if (val == "New" || val == "new") val = "";
+                                                return val;
+                                            })
+                                            .attr("style", "width:"+ itemWidth + "px; height:" + itemHeight + "px;")
+                                            .on("click", function () {
+                                                this.select();
+                                            })
+                                            .on("blur", function () {
+                                                var txt = inp.node().value;
+                                                if (d.mb) {
+                                                    if (d.mb[mbPosX][mbPosY]) {
+                                                        d.mb[mbPosX][mbPosY]["text"] = txt;
+                                                    }
+                                                }
+                                                el.text(function (d) { return txt; });
+                                                if (p_el.select("foreignObject").empty() === false) {
+                                                    p_el.select("foreignObject").remove();
+                                                }
+                                            })
+                                            .on("keypress", function () {
+                                                // IE fix
+                                                if (!d3.event) {
+                                                    d3.event = window.event;
+                                                }
+                                                var e = d3.event;
+                                                if (e.keyCode == 13) {
+                                                    if (typeof (e.cancelBubble) !== 'undefined') { // IE
+                                                        e.cancelBubble = true;
+                                                    }
+                                                    if (e.stopPropagation) {
+                                                        e.stopPropagation();
+                                                    }
+                                                    e.preventDefault();
+                                                    e.target.blur();
+                                                }
+                                            });
+                                        var e = d3.event;
+                                        if (e.stopPropagation) {
+                                            e.stopPropagation();
+                                        }
+                                        e.preventDefault();
+                                    });
+                            }
+                            
+                            itemWidth = data["item"]["width"];
+                            itemHeight = data["item"]["height"];
+                            if (y == 0) {
+                                mb.addIcon(svgObj, data, { type: "down", x: x + itemWidth / 2 + 20, y: -5, index: i, indexY: j });
+                            }
+                                if (maxX == i + 1) {
+                                    mb.addIcon(svgObj, data, { type: "right", x: x + itemWidth + 5 + maxX, y: 10 + y, index: i, indexY: j });
+                                }
+
                         });
-                        if(i == maxX-1){
-                            mb.addIcon(svgObj,data,{type:"right",x:x+itemWidth+5,y:10});
-                        }
                     });
                 }
                 return item;
             };
-            mb.addIcon = function(svgObj, data, pos){
-                var iconG = svgObj.append("g").attr("class","mbIcon");
-                iconG.attr("transform", "translate("+pos.x+","+pos.y+")");
-                var plusIcon = iconG.append("text").attr("class","plus");
-                plusIcon.attr("x", 0)
+            mb.addIcon = function (svgObj, data, pos) {
+            	var iconG = svgObj.append("g").attr("class", "mbIcon");
+                iconG.attr("transform", "translate(" + pos.x + "," + pos.y + ")");
+                if(data["mb"].length-1 == pos.index && pos.indexY == '0'){
+                    var plusIcon = iconG.append("text").attr("class", "plus");
+                    plusIcon.attr("x", 15)
+                        .attr("y", 0)
+                        .text("+")
+                        .attr("stroke", "blue")
+                        .attr("stroke-width", 1)
+                        .style("cursor", "pointer")
+                        .on("mousedown", function () {
+                            if (pos.type == "right") {
+                                data["mb"].push([{ text: "new", merge: "" }]);
+                                for (var h = 0; h <= data["mb"][0].length - 2; h++) {
+                                    data["mb"][data["mb"].length - 1].push({ text: "new", merge: "" });
+                                }
+                                updateDiagrams();
+                            } else if (pos.type == "down") {
+                                for (var g = 0; g <= data["mb"].length - 1; g++) {
+                                    data["mb"][g].push({ text: "new", merge: "" });
+                                }
+                                updateDiagrams();
+                            }
+                        });
+
+                    var minusIcon = iconG.append("text").attr("class", "minus");
+                    minusIcon.attr("x", 30)
+                        .attr("y", 0)
+                        .text("-")
+                        .attr("stroke", "red")
+                        .attr("stroke-width", 1)
+                        .style("cursor", "pointer")
+                        .on("mousedown", function () {
+                            if (pos.type == "right") {
+                                var len = data["mb"].length;
+                                if (len < 2) {
+                                    return;
+                                }
+                                data["mb"].splice(len - 1, 1);
+                                updateDiagrams();
+                            } else if (pos.type == "down") {
+                                var len = data["mb"][pos.index].length;
+                                if (len < 2) {
+                                    return;
+                                }
+                                for (var g = 0; g <= data["mb"].length; g++) {
+                                    data["mb"][g].splice(len - 1, 1);
+                                }
+                                updateDiagrams();
+                            }
+                        });
+                    }
+
+                var circleIcon = iconG.append("text").attr("class", "circle");
+                circleIcon.attr("x", 0)
                     .attr("y", 0)
-                    .text("+")
-                    .attr("stroke", "blue")
+                    .text("o")
+                    .attr("stroke", "black")
                     .attr("stroke-width", 1)
                     .style("cursor", "pointer")
-                    .on("mousedown", function(){
-                        if(pos.type == "right"){
-                            data["mb"].push([{text:"new"}]);
-                            updateDiagrams();
-                            /*data.width += data.item.width;
-                            mb.draw(svgObj, data);*/
-                        }else if(pos.type == "down"){
-                            data["mb"][pos.index].push({text:"new"});
-                            updateDiagrams();
-                        }
-                    });
-                var minusIcon = iconG.append("text").attr("class","minus");
-                minusIcon.attr("x", 15)
-                    .attr("y", 0)
-                    .text("-")
-                    .attr("stroke", "red")
-                    .attr("stroke-width", 1)
-                    .style("cursor", "pointer")
-                    .on("mousedown", function(){
-                        if(pos.type == "right"){
+                    .on("mousedown", function () {
+                        if (pos.type == "right") {
                             var len = data["mb"].length;
-                            if(len < 2){
+                            var flag = true;
+                            if (len < 2) {
                                 return;
                             }
-                            data["mb"].splice(len-1, 1);
+                            for (var a = 0; a < len; a++) {
+                                if (data["mb"][a][pos.indexY].merge == "X") {
+                                    flag = false
+                                    break;
+                                } else if (data["mb"][a][pos.indexY].merge == "Y"){
+                                    return;
+                                }
+                            }
+                            if (flag) {
+                                for (var m = 0; m < data["mb"].length; m++) {
+                                    data["mb"][m][pos.indexY].merge = "X";
+                                }
+                            } else {
+                                for (var m = 0; m < data["mb"].length; m++) {
+                                    data["mb"][m][pos.indexY].merge = "";
+                                }
+                            } 
                             updateDiagrams();
-                        }else if(pos.type == "down"){
+
+                        } else if (pos.type == "down") {
                             var len = data["mb"][pos.index].length;
-                            if(len < 2){
+                            var flag = true;
+                            if (len < 2) {
                                 return;
                             }
-                            data["mb"][pos.index].splice(len-1, 1);
+                            for (var a = 0; a < data["mb"].length; a++) {
+                                for (var b = 0; b < data["mb"][a].length; b++) {
+                                    if (data["mb"][pos.index][b].merge == "X") {
+                                        return;
+                                    } else if(data["mb"][pos.index][b].merge == "Y"){
+                                        flag = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (flag) {
+                                for (var m = 0; m < data["mb"][pos.index].length; m++) {
+                                    data["mb"][pos.index][m].merge = "Y";
+                                }
+                            } else {
+                                for (var m = 0; m < data["mb"][pos.index].length; m++) {
+                                    data["mb"][pos.index][m].merge = "";
+                                }
+                            }
                             updateDiagrams();
                         }
                     });
@@ -797,13 +964,14 @@ function Diagram(){
         let nodeInitData = {
             rect : {type:"rect",width:100,height:40},
             circle : {type:"circle",width:100,height:100},
-            mb : {type:"mb",width:100,height:30,item:{},mb:[[{text:"New"}]]},
+            mb : {type:"mb",width:100,height:30,item:{},mb:[[{text:"New", merge: ""}]]},
             start : {type:"rect",width:100,height:40,isStart:true},
             end : {type:"rect",width:100,height:40, isEnd:true},
             pou : {type:"pou",width:100,height:100},
             tb : {type:"tb",width:100,height:20},
             scope : {type:"scope",width:30,height:60},
-            cal : {type:"cal",width:100,height:28}
+            cal : {type:"cal",width:100,height:28},
+            table : {type:"table",width:200,height:40,name:"Calc Table",cols:2,rows:2,currCols:0,currRows:0,cells:[]}
         };//기본값 layout과 같이 쓰게 바꿔야 할듯
         let d3TmpNode;
         let nData;
@@ -831,7 +999,7 @@ function Diagram(){
                 if(nowDraging){
                     tmpClear();
                     scale = d3.zoomTransform(D3SVG.node().parentNode).k;
-                    nData = nodeInitData[nowDraging];
+                    nData = JSON.parse(JSON.stringify(nodeInitData[nowDraging]));
                     d3TmpNode = TempG.append('g').attr('class', 'tmp_add_node')
                         .attr('transform', 'translate('+(e.offsetX/scale)+','+(e.offsetY/scale)+')');
                     NodeList[nData.type].draw(d3TmpNode, nData);
@@ -839,14 +1007,21 @@ function Diagram(){
                 }
             },
             dragover : function(e){
-                e.preventDefault();
-                d3TmpNode.attr('transform', 'translate('+(e.offsetX/scale)+','+(e.offsetY/scale)+')');
+                if(nData){
+                    e.preventDefault();
+                    d3TmpNode.attr('transform', 'translate('+(e.offsetX/scale)+','+(e.offsetY/scale)+')');
+                } else {
+                    e.dataTransfer.dropEffect = "none"
+                }
             },
             drop : function(e){
-                e.preventDefault();
-                nData.x = parseInt(e.offsetX/scale/10)*10;
-                nData.y = parseInt(e.offsetY/scale/10)*10;
-                addBox(JSON.parse(JSON.stringify(nData)));
+                if(nData){
+                    e.preventDefault();
+                    nData.x = parseInt(e.offsetX/scale/10)*10;
+                    nData.y = parseInt(e.offsetY/scale/10)*10;
+                    addBox(nData);
+                    nData = null; 
+                }
             }
         }
     }();
@@ -856,13 +1031,15 @@ function Diagram(){
         var tempNode;
         moveEvt.start = function(keyCode){
             if(Selects.length > 0){
-                tempNode = NodeG.append("g")
+                if(tempNode)tempNode.remove();
+                tempNode = NodeG.append("g");
                 tempNode.selectAll("use").data(Selects)
                 .enter().append("use")
                 .attr("xlink:href", function(d){
                     return (d.type ? "#nd-" : "#ln-") + d.id;
                 })
-                .attr("opacity", 0.5);
+                .attr("opacity", 0.5)
+                ;
                 
                 this.stX = Selects[0].x;
                 this.stY = Selects[0].y;
@@ -931,7 +1108,7 @@ function Diagram(){
                     if(!Selects.includes(d)){Selects = [d]};
                     stX = d.x;
                     stY = d.y;
-                    tmpClear(false);
+                    //tmpClear(false);
                 })
                 .on("drag",function(d, i){
                     //클릭시에는 안그려지기 위해서 drag에 서 추가
@@ -945,20 +1122,19 @@ function Diagram(){
                         })
                         .attr("opacity", 0.5);
                     }
-                    //console.log(d3.event);
+                    //diffX = (((d3.event.x/10) << 1) >> 1)*10 - stX;
+                    //diffY = (((d3.event.y/10) << 1) >> 1)*10 - stY;
                     diffX = ((d3.event.x/10).toFixed(0)*10) - stX;
                     diffY = ((d3.event.y/10).toFixed(0)*10) - stY;
                     tempNode.attr("transform", "translate("+ diffX +","+ diffY +")");
+                    //tempNode.attr("transform", "translate("+ d3.event.x +","+ d3.event.y +")");
                 })
                 .on("end",function(d, i){
                     if(dragFlag){
                         tempNode.remove();
                         moveEnd(stX, stY, diffX, diffY);
-                    } else {
-                        Selects = [d];
-                        tmpClear(false);
+                        selectItem();
                     }
-                    selectItem();
                 });
              }();
              
@@ -1038,7 +1214,7 @@ function Diagram(){
             })
             .on("end", function(){
                 //d3.event.stopPropagation();
-                tmpClear();
+                //tmpClear();
                 updateDiagrams();
                 selectItem(tData);
             })
@@ -1092,6 +1268,7 @@ function Diagram(){
                         tmpWaypoints.splice( d.index, 0, d3.mouse(this)[0]);
                         tmpWaypoints.splice( d.index+1, 0, d3.mouse(this)[1]);
                     }
+                    let ah = ((linkData.color || "").replace("#", ""))+(linkData.arrow || "")
                     //waypoints = linkData.waypoints;
                     TempG.append("polyline")
                         .attr("class", "temp-line")
@@ -1099,7 +1276,7 @@ function Diagram(){
                         .attr("fill", "none")
                         .attr("stroke", "#999")
                         .attr("stroke-width", "2px")
-                        .attr("marker-end", "url(#arrowhead)")
+                        .attr("marker-end", "url(#arrowhead"+(ah ? "-"+ah:"")+")")
                         .attr("opacity", 0.5);
 
                     tmpBox = NodeG.selectAll(".node")
@@ -1403,6 +1580,7 @@ function Diagram(){
                         tOffsetX : points[points.length-2] - MouseOverNode.data.x,
                         tOffsetY : points[points.length-1] - MouseOverNode.data.y,
                         waypoints : waypoints,
+                        strokeWidth : 2,
                         id : new Date().getTime()
                     });
                     updateDiagrams();
@@ -1466,6 +1644,7 @@ function Diagram(){
                 }
             })
             .on("end",function(d, i){
+                tmpClear();
                 if(dragFlag){
                     let scale = Zoom.getScale();
                     let p = d3.mouse(this);
@@ -1505,13 +1684,11 @@ function Diagram(){
 
                         return true
                     })
-
+                    
                     Selects = [...ns, ...ls];
 
                     selectionRect.remove();
                     selectItem();
-                } else {
-                    tmpClear();
                 }
             })
         ;
@@ -1818,13 +1995,24 @@ function Diagram(){
         }
     }
 
-    function selectItem (data) {
+    function selectItem (data, bUserfn) {
         if(data && !Array.isArray(data)){Selects = [data];}
+        if(data && Array.isArray(data)){Selects = data;}
+        if(Selects.length === 0){
+            tmpClear();
+            return;
+        }
+        NodeG.selectAll("g.select").classed('select', false);
         TempG.attr("target_id", null);
         selectNode();
         selectLink();
-        let d = Selects.length === 1 ? Selects[0] : null;
-        if(UserFn)UserFn(d);
+        
+        Selects.forEach(d =>{
+            if(NodeList[d.type] && NodeList[d.type]["fnSelect"]){
+                NodeList[d.type]["fnSelect"](d);
+            }
+        });
+        if(UserFn && bUserfn !== false)UserFn(Selects);
     }
 
     function moveEnd (stX, stY, diffX, diffY){
@@ -1950,13 +2138,7 @@ function Diagram(){
         return points;
     }
 
-    function makeOrthogonalPoints(p1, p2){
-
-        var points = [];
-
-        return points;
-        
-    }
+    //function makeOrthogonalPoints(p1, p2){}
 
     /** function */
     function init(trgtId, option){
@@ -2034,6 +2216,9 @@ function Diagram(){
                             let clipboard = JSON.parse(JSON.stringify(Selects));
                             clipNode = clipboard.filter(e=>e.type);
                             clipLink = clipboard.filter(e=>!e.type);
+                            clipNode.forEach(e => {
+                                if(NodeList[e.type]["fnCopy"]){NodeList[e.type]["fnCopy"](e);}
+                            })
                             clipLink.forEach(e => {
                                 delete e.sd;
                                 delete e.td;
@@ -2230,20 +2415,21 @@ function Diagram(){
                 .attr("stroke-width", 1);
     }
 
-    function makeArrowhead(d3Svg, color){
+    function makeArrowhead(d3Svg, color, head){
         var defs = d3Svg.select("defs");
+        var id = "arrowhead-"+color+head;
         
-        if(defs.select("#arrowhead-"+color).empty()){
+        if(defs.select("#"+id).empty()) {
             defs.append("marker")
-                .attr("id", "arrowhead-"+color)
+                .attr("id", id)
                 .attr("refX", 5)
                 .attr("refY", 3)
                 .attr("markerWidth", 15)
                 .attr("markerHeight", 15)
                 .attr("orient", "auto")
                 .append("path")
-                .attr("d", "M 0 0 6 3 0 6 1.5 3")
-                .style("fill", "#"+color);
+                .attr("d", HeadStyle[head])
+                .style("fill", "#" + color);
         }
     }
 
@@ -2262,7 +2448,6 @@ function Diagram(){
     }
 
     function tmpClear(notSelect){
-        
         NodeG.selectAll("g.select").classed('select', false);
         TempG.selectAll("*").remove();
         TempG.attr("target_id", null);
@@ -2293,6 +2478,7 @@ function Diagram(){
         var currH = parseInt(PageRect.attr("height"));
         var newW = parseInt(pInfo.width)+1;
         var newH = parseInt(pInfo.height)+1;
+
         if(currW !== newW || currH !== newH) {
             PageRect.attr("width", parseInt(pInfo.width)+1)
                     .attr("height", parseInt(pInfo.height)+1);
@@ -2390,10 +2576,11 @@ function Diagram(){
             return p;
         })
         .attr("marker-end", function(d){
-            if(d.color){
-                var color = d.color.replace("#", "");
-                makeArrowhead(D3SVG, color);
-                return "url(#arrowhead-"+color+")";
+            if(d.color || d.head){
+                var color = (d.color || "").replace("#", "");
+                var head = d.head || (d.head = "head1");
+                makeArrowhead(D3SVG, color, head);
+                return "url(#arrowhead-"+color+head+")";
             }else{
                 return "url(#arrowhead)";
             }
@@ -2409,7 +2596,7 @@ function Diagram(){
             .append("g")
             .attr("class", "node")
             .on("click", function(d){
-                d3.event.stopPropagation();
+                //d3.event.stopPropagation();
                 if(d3.event.ctrlKey) {
                     let idx = Selects.indexOf(d);
                     if(idx > -1) {
@@ -2418,8 +2605,10 @@ function Diagram(){
                         Selects.push(d);
                     }
                     selectItem();
+                } else {
+                    selectItem(d);
                 }
-            })
+            }, true)
             .call(dragItem)
             .on("mouseenter", function(){
                 var data = d3.select(this).datum();
@@ -2431,7 +2620,7 @@ function Diagram(){
             .on("mouseleave", function(){
                 MouseOverNode.node = null;
                 MouseOverNode.data = null;
-            })
+            }, true)
             ;
         
         ng = ng.merge(nodes);
@@ -2489,12 +2678,22 @@ function Diagram(){
             DATA.page.name = "";
         }
         
+        // 수정으로 구조 변경시 데이터 불러올때 이전 데이터 수정(임시)
+        DATA.nodes.forEach(e => {
+            if(!e.strokeWidth)e.strokeWidth = 2;
+        })
+        DATA.links.forEach(e => {
+            if(!e.strokeWidth)e.strokeWidth = 2;
+        })
+        
         UndoManager.clear();
         updateDiagrams();
     }
-
     function getData(mode){
         if("save" === mode){
+            DATA.nodes.forEach(function(v){
+                if(NodeList[node.type]["fnSave"]){NodeList[node.type]["fnSave"](node);}
+            });
             DATA.links.forEach(function(v){
                 delete v.circlePoints;
                 //delete v.sd;
@@ -2511,6 +2710,7 @@ function Diagram(){
         if(!node.type)node.type = "rect";
         if(!node.x)node.x = 10;
         if(!node.y)node.y = 10;
+        if(!node.strokeWidth)node.strokeWidth = 2;
         
         var maxNum = 0;
         DATA.nodes.forEach(function(n){
@@ -2588,15 +2788,18 @@ function Diagram(){
         }
     }
 
+    function getSelects() {return Selects;}
+
 
     //set return obj;
     var diagrams = {};
     diagrams.init = init;
     diagrams.setData = setData;
     diagrams.getData = getData;
+    diagrams.getSelects = getSelects
     diagrams.addBox = addBox;
     diagrams.updateNode = updateDiagrams;
-    diagrams.selectItem = selectExternal;
+    diagrams.selectItem = selectItem//selectExternal;
     diagrams.deleteItem = deleteItem;
     diagrams.addNodeDrag = addNodeDragHandler;
 

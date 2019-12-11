@@ -22080,7 +22080,7 @@ var ruleJS = (function (root) {
     		  });
     		  
     		  var formatFn = function(num){
-        		  var fn = num;
+              var fn = num || 0;
         		  if(formatObj.fixed || formatObj.fixed === 0){
         			  fn = fn.toFixed(formatObj.fixed);
         		  } else if(!isNaN(formatObj.precision)){
@@ -23025,9 +23025,8 @@ var ruleJS = (function (root) {
     instance.matrix.recalculate();
   }
   var updateFormulas = function(map){
-    var id;
-    for(id in map){
-      instance.matrix.updateItem(id, {formula:map[id]});
+    for(var id in map){
+      instance.matrix.updateItem(id, {formula:(typeof map[id] === "undefined" || map[id] === null ) ? "" : map[id]+""});
     }
     /*
     //먼저 formula 다 등록하고 대상 Id 관련 재 계산

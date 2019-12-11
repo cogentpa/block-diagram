@@ -98,9 +98,13 @@
                         <i class="fas fa-font"></i>
                         <span class="menu">Text</span>
                     </li>
-                    <li class="item-menu itemC" id="item-cal" title="Calculate">
+                    <li class="item-menu itemC" id="item-cal" title="Calculator">
                         <i class="fas fa-calculator"></i>
-                        <span class="menu">Calculate</span>
+                        <span class="menu">Calculator</span>
+                    </li>
+                    <li class="item-menu itemTable" id="item-table" title="Calculation Table">
+                        <i class="fas fa-table"></i>
+                        <span class="menu">Calculation Table</span>
                     </li>
                 </ul>
                                 
@@ -146,24 +150,24 @@
                         </div>
                         <div class="tab-pane" id="right-tab0">
                             <div class="p-1 pl-2 border-secondary panel-title" id="prop_blockInfo">BLOCK</div>
-                            <div class="penal-item-group">
+                            <div class="penal-item-group" id="prop_block_general">
                                 <div class="text-light item-group-title">GENERAL</div>
                                 <div class="item-v mb-1">
                                     <label for="prop_blockIdInput" class="item-name">Id <span class="text-danger">*</span></label>
                                     <input type="text" class="item-input" id="prop_blockIdInput" readonly>
                                 </div>
-                                <div class="item-v mb-1">
+                                <div class="item-v mb-1 block_prop">
                                     <label for="prop_blockNmInput" class="item-name">Name <span class="text-danger">*</span></label>
                                     <input type="text" class="item-input" id="prop_blockNmInput" autocomplete="off">
                                 </div>
-                                <div class="item-v mb-1">
+                                <div class="item-v mb-1 block_prop">
                                     <label for="prop_blockDtlTypeInput" class="item-name">Type <span class="text-danger">*</span></label>
                                     <select class="item-input p-0" id="prop_blockDtlTypeInput">
                                         <option value="">--선택하세요--</option>
                                         <option value="SCT">SCT</option>
                                     </select>    
                                 </div>
-                                <div class="item-subgroup mb-1">
+                                <div class="item-subgroup mb-1 block_prop">
                                     <label for="" class="item-subgroup-name item-name pb-1">Size and Position <span class="text-danger">*</span></label>
                                     <div class="col-6 d-inline-block border-right border-secondary" style="width:48%">
                                         <div class="row">
@@ -189,7 +193,7 @@
                             </div>
                             <div class="penal-item-group">
                                 <div class="text-light item-group-title">STYLE</div>
-                                <div class="row">
+                                <div class="row block_prop">
                                     <div class="col-8">
                                         <input class="" type="checkbox" value="1" id="prop_fill" checked>
                                         <label class="item-name" for="prop_fill" title="배경">Background</label>
@@ -225,16 +229,19 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="row  link_prop">
+                                            <label for="prop_lineHead" class="col-3 p-1 col-form-label item-name">LineHead</label>
+                                            <div class="col-sm-9 pl-2">
+                                                <select class="item-input p-0" id="prop_lineHead">
+                                                    <option value="head1" selected>Head Style 1</option>
+                                                    <option value="head2">Head Style 2</option>
+                                                    <option value="head3">Head Style 3</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>        
                             </div>              
-                            <div class="col-lg-12 col-md-12 mx-auto" >
-                                <form>
-                                    <div class="form-group" style="margin:10px 0;">
-                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_blockRemove">Remove</button>
-                                    </div>
-                                </form>
-                            </div>
                         </div>
                         <div class="tab-pane" id="right-tab1">
                             <div class="p-1 pl-2 border-secondary panel-title" id="prop_calTypeAdd">CALCULATION</div>
@@ -246,10 +253,10 @@
                                 </div>
                             </div>        
                             <div class="penal-item-group">
-                                <div class="text-light item-group-title" >CALC</div>
+                                <div class="text-light item-group-title" >CALC : <span id="calc-id-text"></span></div>
                                 <div class="item-v mb-1">
                                     <label for="prop_calFormula" class="item-name">Formula <span class="text-danger">*</span></label>
-                                    <textarea class="form-control item-textarea" id="prop_calFormula" rows=8></textarea>
+                                    <textarea class="form-control item-textarea" id="prop_calFormula" rows=4></textarea>
                                 </div>
                                 <div class="row">
                                     <label for="prop_calValue" class="col-sm-3 col-form-label item-name">Value</label>
@@ -258,7 +265,13 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <label for="prop_blockSelect" class="col-sm-3 col-form-label item-name">With Block</label>
+                                    <label for="prop_calFixed" class="col-sm-6 col-form-label item-name">Decimal Point</label>
+                                    <div class="col-sm-6 pl-2">
+                                        <input type="number" class="item-input" id="prop_calFixed" autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label for="prop_blockSelect" class="col-sm-3 col-form-label item-name">Block</label>
                                     <div class="col-sm-9 pl-2">
                                         <select class="item-input p-0" id="prop_blockSelect">
                                             <option value="">Select</option>
@@ -279,9 +292,40 @@
                                     </div>
                                 </div>
                             </div>    
-                            <div class="col-lg-12 col-md-12 mx-auto">
+                            <!-- <div class="col-lg-12 col-md-12 mx-auto">
+                                <div class="list-group" id="prop_calTypeList" style="height:250px;width:100%;overflow:auto"></div>
+                            </div> -->
+                        </div>
+                        <div class="common-pane">
+                            <div class="penal-item-group" id="prop-table-group" style="display:none;">
+                                <div class="text-light item-group-title">TABLE</div>
+                                <div class="item-subgroup mb-1 block_prop">
+                                    <label for="" class="item-subgroup-name item-name pb-1">Rows and Cols <span class="text-danger">*</span></label><br/>
+                                    <div class="col-6 d-inline-block border-right border-secondary" style="width:48%">
+                                        <div class="row">
+                                            <label for="prop_tableRows" class="col-5 p-1 col-form-label item-name" title="width">Row</label>
+                                            <input type="number" class="col-6 item-input" id="prop_tableRows" autocomplete="off" min="1" max="20">
+                                        </div>
+                                    </div>
+                                    <div class="col-6 d-inline-block" style="width:48%">
+                                        <div class="row">
+                                            <label for="prop_tableCols" class="col-5 p-1 col-form-label item-name">Col</label>
+                                            <input type="number" class="col-6 item-input" id="prop_tableCols" autocomplete="off" min="1" max="20">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item-v mb-1 block_prop">
+                                    <label for="prop_blockNmInput" class="item-name">Merge</label>
+                                    <button class="btn btn-light btn-sm" id="prop_tableMerge" title="셀병합 합니다. Shift+Drag로 병합 할 셀을 선택하세요.">merge</button>
+                                    <button class="btn btn-light btn-sm" id="prop_tableUnMerge"title="셀병합 해제 합니다. Shift+Drag로 해제 할 셀을 선택하세요.">unmerge</button>
+                                </div>
+                            </div>
+                            <div class="penal-item-group col-lg-12 col-md-12 mx-auto">
                                 <form>
                                     <div class="form-group" style="margin:10px 0;">
+                                        <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_blockRemove" style="display:none;">Remove</button>
+                                    </div>
+                                    <div class="form-group" style="margin:50px 0 10px">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calCal" title="전체 Calcaulate의 Formula를 계산합니다.">Calculate</button>
                                     </div> 
                                     <div class="form-group" style="margin:10px 0;">
@@ -290,7 +334,7 @@
                                     <div class="form-group" style="margin:10px 0;">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calCal2" title="선택된 Calcaulate의 Value값을 기준으로 이후 Calcaulate를 계산합니다.">Calculate 2</button>
                                     </div> 
-                                    <div class="form-group" style="margin:10px 0;">
+                                    <div class="form-group" style="margin:10px 0;display:none;">
                                         <button type="button" class="btn btn-outline-light btn-sm btn-block" id="prop_calRemove">Remove</button>
                                     </div> 
                                     <div class="form-group" style="margin:10px 0;display:none;">
@@ -301,9 +345,6 @@
                                     </div> 
                                 </form>
                             </div>
-                            <!-- <div class="col-lg-12 col-md-12 mx-auto">
-                                <div class="list-group" id="prop_calTypeList" style="height:250px;width:100%;overflow:auto"></div>
-                            </div> -->
                         </div>
                     </div>   
                 </div>           
@@ -448,6 +489,7 @@
     <script>
         var Diagrams = Diagram();
         Diagrams.init("#diagram", {extNodes:extNodes, extUndoCallback:calUndoCallback, fn:nodeSelect, pageInfo:Layout.getPageInfo()});
+        $("#firstLoading").hide();
     </script>
     </body>
 </html>
