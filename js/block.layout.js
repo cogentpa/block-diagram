@@ -35,14 +35,16 @@ var extNodes = {
             if(!isNaN(value) && data.fixed){
                 value = (value*1).toFixed(data.fixed);
             }
-
+            
             svgObj.append("rect")
                 .attr("x", data.height)
                 .attr("y", 0)
                 .attr("width", data.width-data.height)
                 .attr("height", data.height)
                 .attr("class", "cal_rect")
-                .attr("fill", "#FFF");
+                .attr("fill", "#FFF")
+                .classed("input-number", data.isInputNum)
+                ;
             svgObj.append("text")
                 .attr("x", data.height/2)
                 .attr("y", data.height/2)
@@ -56,7 +58,7 @@ var extNodes = {
                 .attr("x", data.height+5)
                 .attr("y", data.height/2)
                 .attr("dominant-baseline", "middle")
-                .attr("fill", "#000")
+                .attr("fill", data.fColor || "#000")
                 .style("font-size", "14px")
                 .text(value);
         };
@@ -158,7 +160,6 @@ var extNodes = {
         }
 
         function cellClick(d, pId, d3El){
-            //d3.event.defaultPrevented 이값으로 이벤트 컨트롤 할수 있나...
             if(d3.event && d3.event.ctrlKey) return true;
             //if (d3.event.defaultPrevented) d3.event.stopPropagation();
             //d3.event.stopPropagation();
@@ -167,14 +168,17 @@ var extNodes = {
             tableD3.selectAll(".row-"+d.rIdx).classed("selected", true);
             d3El.classed("selected", true);
             calSelect(d.id);
+
+            //if(d.fColor)$("#prop_fontColor").spectrum("set", d.fColor); //따로 빼야될듯
         }
         
         function cellDblClick(d, data, d3El){
             var width =  data.width / data.cols;
-            var height = data.height / data.rows
-            var frm = d3El.append("foreignObject")
+            var height = data.height / data.rows;
+            var frm = d3El.append("foreignObject");
             var cal = CalData.getSelect();
             var value = (cal) ? "=" + cal.fm : cal.val; // TO-DO Cal "=" 기호 관련 fm 개선 
+            
             if(!isNaN(value) && d.fixed){
                 value = (value*1).toFixed(d.fixed);
             }
@@ -195,10 +199,12 @@ var extNodes = {
                     var value = (this.value || "").toUpperCase();
                     setFormula(value);
                     d.name = value;
+                    d.isInputNum = isNumber(value.replace("=", ""));
                     if(!isNaN(value) && d.fixed){
                         value = (value*1).toFixed(d.fixed);
                     }
                     d3El.select("text").text(value);
+                    d3El.select("rect").classed("input-number", d.isInputNum);
                     table.addUndo(); // redraw 안하고 undo에만 저장
                 })
                 .on("blur", function(){
@@ -213,13 +219,11 @@ var extNodes = {
                         this.blur();
                     }
                 })
-                ;
+            ;
 
-                var inputNode = input.node();
-                inputNode.focus();
-                inputNode.setSelectionRange(value.length, value.length);
-                
-
+            var inputNode = input.node();
+            inputNode.focus();
+            inputNode.setSelectionRange(value.length, value.length);
         }
 
         table.draw = function(svgObj, data){
@@ -364,18 +368,20 @@ var extNodes = {
                 .attr("height", d=>(d.rSpan || 1 ) * height)
                 .attr("stroke", data.color || "#595959cb")
                 .attr("stroke-width", data.strokeWidth)
+                .classed("input-number", d=>d.isInputNum)
                 //.attr("fill", "#fff")
             ;
             if(data.stroke){
                 rect.attr("stroke-dasharray", StokeStyle[data.stroke]);
             }
+
             //text
             cellG.append("text")
                 .attr("x", d=>d.x + ((d.cSpan || 1) * width/2))
                 .attr("y", d=>d.y + ((d.rSpan || 1) * height/2))
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
-                .attr("fill", "#000")
+                .attr("fill", d=>d.fColor || data.fColor || "#000")
                 .style("font-size", "14px")
                 .text(d=>{
                     var value = d.name;
@@ -505,6 +511,7 @@ function setCalNodeValue(){
         for(let i = 0; i< calList.length; i++){
             if(calList[i].id == id){
                 calList[i].name = value;
+                calList[i].isInputNum = CalData.isfmNum(id); //임시, 기존 데이터 변환후 주석 처리 해도 될듯;
                 return;
             }
         }
@@ -527,6 +534,11 @@ function calUndoCallback(param){
         Cal.open(JSON.parse(param));
     }
     return calDataString;
+}
+
+function isNumber(param){
+    var reg = /^-?\d+\.?\d*$/;
+    return reg.test(param);
 }
 
 $("#newModal_newBtn").on("click", function(){
@@ -604,6 +616,13 @@ function setNodeProp(key, value, fn){
 
     Diagrams.updateNode();
     Diagrams.selectItem(null, nodes !== currNodes);
+}
+
+function setCalcProp(key, value){
+    var cal = calSelect();
+    if(cal){
+        cal[key] = value;
+    }
 }
 
 var svg = d3.select("#diagram");
@@ -740,6 +759,7 @@ function initNodeProp(){
     
     $("#prop_fill").prop("checked", true);
     $("#prop_blockColor").spectrum("set", "#000000");
+    $("#prop_fontColor").spectrum("set", "#000000");
     $("#prop_blockStroke").val("");
     $("#prop_blockStrokeWidth").val(2);
     $("#prop_lineHead").val("head1");
@@ -766,10 +786,10 @@ function diagramChange(){
 
 function nodeSelect(obj){
     hideCommonProps();
-
+    calSelect();
+    
     if(!obj){
         initNodeProp();
-        calSelect();
         diagramSelect();
         return;
     }
@@ -804,10 +824,14 @@ function hideCommonProps(){
     $('#prop_calCal2').hide();
     $("#prop-table-group").hide();
     $("#prop_blockRemove").hide();
+    $("#prop-text-group").hide();
     
 }
 function showCommonProps(nodeObj){
     $("#prop_blockRemove").show();
+    $("#prop-text-group").show();
+    $("#prop_fontColor").spectrum("set", nodeObj.fColor || "#000000");
+
     if(nodeObj.type === "table"){
         $("#prop-table-group").show();
         $("#prop_tableRows").val(nodeObj.rows||1);
@@ -949,10 +973,12 @@ $("#prop_calFormula").on("change", function(e){
             var cell = selectNode.cells.find(d => d.id === calId);
             if(cell){
                 cell.name = value;
+                cell.isInputNum = isNumber(value.replace("=", ""));
                 selectNode.selectedCell = cell.id;
             }
         } else {
             selectNode.name = value;
+            selectNode.isInputNum = isNumber(value.replace("=", ""));
         }
     }
     
@@ -1157,7 +1183,8 @@ function printArea()
 
 function layout_init(){
     Cal.destory();
-    $("#prop_blockColor").spectrum({
+    //$("#prop_blockColor").spectrum({
+    $("#prop_blockColor, #prop_fontColor").spectrum({
         color: "#000000",
         showPalette: true,
         palette: [
@@ -1175,6 +1202,27 @@ function layout_init(){
     $("#prop_blockColor").on("change", function(){
         setNodeProp("color", $(this).spectrum("get").toHexString());
     });
+    $("#prop_fontColor").on("change", function(){
+        var selectNode = Layout.getBlock()[0];
+        var currNode = Diagrams.getSelects()[0];
+        var calId = CalData.getSelect().id;
+        var color = $(this).spectrum("get").toHexString();
+        if(selectNode.type === "table"){
+            var cell = selectNode.cells.find(d => d.id === calId);
+            if(cell){
+                cell.fColor = color;
+                selectNode.selectedCell = cell.id;
+            } else {
+                selectNode.fColor = color;
+            }
+        } else {
+            selectNode.fColor = color;
+        }
+        
+        Diagrams.updateNode();
+        Diagrams.selectItem(null, selectNode !== currNode);
+    });
+    
 
     [].forEach.call(document.querySelectorAll(".item-menu"), function(el){
         el.setAttribute("draggable", "true");

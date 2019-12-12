@@ -205,6 +205,14 @@ var CalData = function(){
     function delCalById(cid){
         delete data.cals[cid];
     }
+    function isfmNum(id){
+        if(data.cals[id]){
+            var fm = data.cals[id].fm || "";
+            var reg = /^-?\d+\.?\d*$/
+            return reg.test(fm);
+        }
+        return "";
+    }
     api.init = init;
     api.save = save;
     api.open = open;
@@ -225,5 +233,6 @@ var CalData = function(){
     api.getBlockById = getBlockById;
     api.addBlockById = addBlockById;
     api.delCalById = delCalById;
+    api.isfmNum = isfmNum;
     return api;
 }();

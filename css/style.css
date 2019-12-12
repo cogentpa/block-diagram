@@ -308,6 +308,14 @@ label{margin-bottom:1px;}
     fill:none;
 }
 
+#svg-container:not(.view) .cell-bg.input-number {
+    stroke: #fa9090;
+}
+#svg-container:not(.view) .cal_rect.input-number {
+    stroke: #fa9090;
+}
+
+
 #custom-handle {
     width: 3em;
     height: 1.6em;
