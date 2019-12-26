@@ -106,7 +106,7 @@ function Diagram(){
     Node.prototype = {
         genPath: d3.line().x(function(d) { return d.x; })
                           .y(function(d) { return d.y; }),
-        drawPath : function(svgObj, points, data){                
+        drawPath: function(svgObj, points, data){                
             var path = svgObj.append("path");
             path.attr("d", this.genPath(points))
                 .attr("stroke", data.color || "black")
@@ -117,18 +117,19 @@ function Diagram(){
             }
             data.nConn = (data.fill) === "none" ? true : false;//연결 끄기;
         },
-        drawText : function(svgObj, data){
+        drawText: function(svgObj, data){
             svgObj.append("text")
                 .attr("x", data.width/2)
                 .attr("y", data.height/2)
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
                 .text(data.name)
-                .attr("fill", "black");
+                .attr("fill", data.fColor || "black");
         },
         addUndo: function(){
             UndoManager.add(DATA);
-       }
+        },
+        DECIMAL: 2,
     };
 
     NodesInit = {
@@ -146,8 +147,8 @@ function Diagram(){
                     points.push({x:0, y:data.height});
                     points.push({x:0, y:0});
                     
-                    mdData = {name : data.name, width : data.width*0.9, height: data.height};
-                }else if(data.isEnd){
+                    mdData = {name : data.name, width : data.width*0.9, height: data.height, fColor:data.fColor};
+                } else if(data.isEnd) {
                     points.push({x:0+data.width/5, y:0});
                     points.push({x:data.width, y:0});
                     points.push({x:data.width, y:data.height});
@@ -155,8 +156,8 @@ function Diagram(){
                     points.push({x:0, y:data.height/2});
                     points.push({x:0+data.width/5, y:0});
                     
-                    mdData = {name : data.name, width : data.width*1.1, height: data.height};
-                }else {
+                    mdData = {name : data.name, width : data.width*1.1, height: data.height, fColor:data.fColor};
+                } else {
                     points.push({x:0, y:0});
                     points.push({x:data.width, y:0});
                     points.push({x:data.width, y:data.height});
@@ -294,7 +295,7 @@ function Diagram(){
                                     .attr("y", y)
                                     .attr("width", itemWidth)
                                     .attr("height", itemHeight)
-                                    .attr("stroke", "black")
+                                    .attr("stroke", data.color || "black")
                                     .attr("stroke-width", data.strokeWidth || 2)
                                     .attr("fill", "#fff")//;
                                     .attr("borderBottom", 10)
@@ -376,7 +377,7 @@ function Diagram(){
                                     .attr("text-anchor", "middle")
                                     .attr("dominant-baseline", "middle")
                                     .text(b["text"])
-                                    .attr("fill", "black")
+                                    .attr("fill", data.fColor || "black")
                                     .on("mouseover", function () {
                                         d3.select(this).attr("fill", "red");
                                     })
@@ -2466,8 +2467,8 @@ function Diagram(){
     function updateDiagrams(){
         tmpClear(false);
         setDrawingPage();
-        drawLink();
-        drawNode();
+        drawLinks();
+        drawNodes();
 
         UndoManager.add(DATA);
     }
@@ -2486,7 +2487,7 @@ function Diagram(){
         }
     }
 
-    function drawLink(){
+    function drawLinks(){
         var links = LinkG.selectAll(".link").data(DATA.links);
 
         links.exit().remove();
@@ -2587,7 +2588,7 @@ function Diagram(){
         })
         .call(dragItem);
     }
-    function drawNode(){
+    function drawNodes(){
         var nodes = NodeG.selectAll(".node").data(DATA.nodes);
         nodes.exit().remove();
 
@@ -2672,10 +2673,12 @@ function Diagram(){
             DATA.page.width = d.page.width || DWIDTH;
             DATA.page.height = d.page.height || DHEIGHT;
             DATA.page.name = d.page.name || "";
+            Node.prototype.DECIMAL = d.page.decimal || 2;
         }else{
             DATA.page.width = DWIDTH;
             DATA.page.height = DHEIGHT;
             DATA.page.name = "";
+            Node.prototype.DECIMAL = 2;
         }
         
         // 수정으로 구조 변경시 데이터 불러올때 이전 데이터 수정(임시)
@@ -2692,7 +2695,7 @@ function Diagram(){
     function getData(mode){
         if("save" === mode){
             DATA.nodes.forEach(function(v){
-                if(NodeList[node.type]["fnSave"]){NodeList[node.type]["fnSave"](node);}
+                if(NodeList[v.type]["fnSave"]){NodeList[v.type]["fnSave"](node);}
             });
             DATA.links.forEach(function(v){
                 delete v.circlePoints;
