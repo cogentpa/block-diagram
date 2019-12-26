@@ -1,3 +1,7 @@
+function roundTo(value, places) {
+    return +(Math.round(value + "e+" + places)  + "e-" + places);
+}
+
 var rules = Cal.init();
 
 var extNodes = {
@@ -32,8 +36,8 @@ var extNodes = {
                     return classStr;
                 });
             var value = data.name;
-            if(!isNaN(value) && data.fixed){
-                value = (value*1).toFixed(data.fixed);
+            if(!isNaN(value)){
+                value = roundTo(value*1, data.fixed || 2);
             }
             
             svgObj.append("rect")
@@ -77,87 +81,168 @@ var extNodes = {
     },
     table : function(){
         var table = new Node();
-        var cellDragHandler = {
-            dragged: false,
-            startCell: null,
-            startRowIdx: 0,
-            endRowIdx: 0,
-            startColIdx: 0,
-            endColIdx: 0,
-            Unpainted: true,   //드래그시 그려진지 체크
-            cellMouseEnter: function(d){
-                if(this.startCell){
-                    this.Unpainted = true;
+        var cellDragHandler = function(){
+            var dragged = false,
+                startCell = null,
+                startRowIdx = 0,
+                endRowIdx = 0,
+                startColIdx = 0,
+                endColIdx = 0,
+                Unpainted = true;   //드래그시 그려진지 체크
+            var tdata, cellGs;
+
+            var cellMouseEnter =  function(d){
+                if(startCell){
+                    Unpainted = true;
                     
-                    if(d.rIdx < this.startCell.rIdx){
-                        cellDragHandler.startRowIdx = d.rIdx;
-                        cellDragHandler.endRowIdx = this.startCell.rIdx;
+                    if(d.rIdx < startCell.rIdx){
+                        startRowIdx = d.rIdx;
+                        endRowIdx = startCell.rIdx;
 
                     } else {
-                        cellDragHandler.endRowIdx = d.rIdx;
+                        endRowIdx = d.rIdx;
                     }
 
-                    if(d.cIdx < this.startCell.cIdx){
-                        cellDragHandler.startColIdx = d.cIdx;
-                        cellDragHandler.endColIdx = this.startCell.cIdx;
+                    if(d.cIdx < startCell.cIdx){
+                        startColIdx = d.cIdx;
+                        endColIdx = startCell.cIdx;
                     } else {
-                        cellDragHandler.endColIdx = d.cIdx;
+                        endColIdx = d.cIdx;
                     }
 
-                    if(cellDragHandler.startRowIdx > this.startCell.rIdx || cellDragHandler.startColIdx > this.startCell.cIdx){
-                        this.startCell = d;
+                    if(startRowIdx > startCell.rIdx || startColIdx > startCell.cIdx){
+                        startCell = d;
                     }
                 }
             }
-        }
-
-        function cellDragStartFn(d, data){
-            cellDragHandler.dragged = false;
-            cellDragHandler.startCell = d;
-            cellDragHandler.startRowIdx = d.rIdx;
-            cellDragHandler.endRowIdx = d.rIdx + (d.rSpan || 1) - 1;
-            cellDragHandler.startColIdx = d.cIdx;
-            cellDragHandler.endColIdx = d.cIdx + (d.cSpan || 1) - 1;
-            cellDragHandler.Unpainted = true;
-        }
-        function cellDragFn(d, data, cellG){
-            if(cellDragHandler.Unpainted){
-                if(!cellDragHandler.dragged){
-                    Diagrams.selectItem(data);
-                    cellDragHandler.dragged = true;
-                }
-                let sRowIdx = cellDragHandler.startRowIdx;
-                let sColIdx = cellDragHandler.startColIdx;
-                let eRowIdx = cellDragHandler.endRowIdx;
-                let eColIdx = cellDragHandler.endColIdx;
-                //셀 범위 재설정.
-                data.cells.forEach(d =>{
-                    if((d.rIdx >= sRowIdx && d.rIdx <= eRowIdx) && (d.cIdx >= sColIdx && d.cIdx <= eColIdx)){
-                        let tmpRowIdx = d.rIdx + (d.rSpan || 1) - 1;
-                        let tmpColIdx = d.cIdx + (d.cSpan || 1) - 1;
-                        eRowIdx = tmpRowIdx > eRowIdx ? tmpRowIdx : eRowIdx;
-                        eColIdx = tmpColIdx > eColIdx ? tmpColIdx : eColIdx;
+            var drag = d3.drag()
+                .on("start", function(d, i ,list){
+                    dragged = false;
+                    startCell = d;
+                    startRowIdx = d.rIdx;
+                    endRowIdx = d.rIdx + (d.rSpan || 1) - 1;
+                    startColIdx = d.cIdx;
+                    endColIdx = d.cIdx + (d.cSpan || 1) - 1;
+                    Unpainted = true;
+                    tdata = d3.select(this.parentNode.parentNode).datum();
+                    cellGs = d3.selectAll(list);
+                })
+                .on("drag", function(d, i, list){
+                    if(Unpainted){
+                        if(!dragged){
+                            Diagrams.selectItem(tdata);
+                            dragged = true;
+                        }
+                        //셀 범위 재설정.
+                        tdata.cells.forEach(d =>{
+                            if((d.rIdx >= startRowIdx && d.rIdx <= endRowIdx) && (d.cIdx >= startColIdx && d.cIdx <= endColIdx)){
+                                let tmpRowIdx = d.rIdx + (d.rSpan || 1) - 1;
+                                let tmpColIdx = d.cIdx + (d.cSpan || 1) - 1;
+                                endRowIdx = tmpRowIdx > endRowIdx ? tmpRowIdx : endRowIdx;
+                                endColIdx = tmpColIdx > endColIdx ? tmpColIdx : endColIdx;
+                            }
+                        })
+                        cellGs.classed("dragged", d=>{
+                            return ((d.rIdx >= startRowIdx && d.rIdx <= endRowIdx) && (d.cIdx >= startColIdx && d.cIdx <= endColIdx))
+                        });
+                        endRowIdx = endRowIdx;
+                        endColIdx = endColIdx;
+                        Unpainted = false;
                     }
                 })
-                cellG.classed("dragged", d=>{
-                    return ((d.rIdx >= sRowIdx && d.rIdx <= eRowIdx) && (d.cIdx >= sColIdx && d.cIdx <= eColIdx))
-                });
-                cellDragHandler.endRowIdx = eRowIdx;
-                cellDragHandler.endColIdx = eColIdx;
-                cellDragHandler.Unpainted = false;
+                .on("end", function(){
+                    if(dragged){
+                        dragged = false;
+                    }
+                    startCell = null;
+                    tdata.draggedCell = [ startRowIdx, startColIdx, endRowIdx, endColIdx ];
+                })
+
+            return {
+                cellMouseEnter: cellMouseEnter,
+                drag: drag
             }
-        }
-        function cellDragEndFn(d, data){
-            if(cellDragHandler.dragged){
-                //var table = d3.select("#nd-"+data.id)
-                //table.selectAll(".col-"+d.cIdx).classed("selected", true);
-                //table.selectAll(".row-"+d.rIdx).classed("selected", true);
-                cellDragHandler.dragged = false;
-            }
-            cellDragHandler.startCell = null;
-            data.draggedCell = [ cellDragHandler.startRowIdx, cellDragHandler.startColIdx
-                               , cellDragHandler.endRowIdx, cellDragHandler.endColIdx ];
-        }
+        }();
+
+        var cellLineDragHandler = function(){
+            var isVertical, prevCell, currCell, d3TmpLine, tdata, cx, minX, maxX, cy, minY, maxY;
+            return d3.drag()
+                .on("start", function(d, i){
+                    var body = d3.select(this.parentNode.parentNode);
+                    tdata = body.datum();
+                    var cells = tdata.cells;
+                    isVertical = d3.select(this).classed("cell-v-line");
+                    //width, height 값을 갖고있는 rIdx 0, cIdx 0 셀 데이터를 갖고온다.
+                    //세로 선일시 rIdx=0, cIdx=d.cIdx, d.cIdx-1
+                    if(isVertical){
+                        prevCell = cells.find(cell => cell.rIdx === 0 && cell.cIdx === d.cIdx-1);
+                        currCell = cells.find(cell => cell.rIdx === 0 && cell.cIdx === d.cIdx);
+                        cx = currCell.x;
+                        minX = prevCell.x + 10;
+                        maxX = cx + currCell.width - 10;
+
+                        d3TmpLine = body.append("line")
+                            .attr("x1", cx)
+                            .attr("x2", cx)
+                            .attr("y1", 0)
+                            .attr("y2", tdata.height);
+                    //가로 선일시 cIdx=0, rIdx=d.rIdx, d.rIdx-1
+                    } else {
+                        prevCell = cells.find(cell => cell.cIdx === 0 && cell.rIdx === d.rIdx-1);
+                        currCell = cells.find(cell => cell.cIdx === 0 && cell.rIdx === d.rIdx);
+                        cy = currCell.y;
+                        minY = prevCell.y + 10;
+                        maxY = cy + currCell.height - 10;
+
+                        d3TmpLine = body.append("line")
+                            .attr("x1", 0)
+                            .attr("x2", tdata.width)
+                            .attr("y1", cy)
+                            .attr("y2", cy);
+                    }
+                    d3TmpLine.attr("stroke", "#007bff")
+                        .attr("stroke-width", 2)
+                })
+                .on("drag", function(){
+                    var event = d3.event;
+                    if(isVertical){
+                        cx += event.dx;
+                        if(cx < minX) cx = minX;
+                        if(cx > maxX) cx = maxX;
+                        d3TmpLine.attr("x1", cx).attr("x2", cx);
+                    }else{
+                        cy += event.dy;
+                        if(cy < minY) cy = minY;
+                        if(cy > maxY) cy = maxY;
+                        d3TmpLine.attr("y1", cy).attr("y2", cy);
+                    }
+                    
+    
+                })
+                .on("end", function(){
+                    //d3.event.stopPropagation();
+                    let diff = 0;
+                    let key1 = "x";
+                    let key2 = "width";
+                    if(isVertical){
+                        diff = cx - currCell.x;
+                    } else {
+                        diff = cy - currCell.y;
+                        key1 = "y";
+                        key2 = "height";
+                    }
+                    if(Math.abs(diff)>=1){
+                        currCell[key1] += diff;
+                        currCell[key2] -= diff;
+                        prevCell[key2] += diff;
+                        Diagrams.updateNode();
+                        Diagrams.selectItem(tdata, false);
+                    } else {
+                        d3TmpLine.remove();
+                    }
+                })
+                ;
+        }();
 
         function cellClick(d, pId, d3El){
             if(d3.event && d3.event.ctrlKey) return true;
@@ -169,24 +254,23 @@ var extNodes = {
             d3El.classed("selected", true);
             calSelect(d.id);
 
-            //if(d.fColor)$("#prop_fontColor").spectrum("set", d.fColor); //따로 빼야될듯
+            if(d.fColor)$("#prop_fontColor").spectrum("set", d.fColor); //따로 빼야될듯
         }
         
-        function cellDblClick(d, data, d3El){
-            var width =  data.width / data.cols;
-            var height = data.height / data.rows;
+        function cellDblClick(d){
+            var d3El = d3.select(this);
             var frm = d3El.append("foreignObject");
             var cal = CalData.getSelect();
             var value = (cal) ? "=" + cal.fm : cal.val; // TO-DO Cal "=" 기호 관련 fm 개선 
             
-            if(!isNaN(value) && d.fixed){
-                value = (value*1).toFixed(d.fixed);
+            if(!isNaN(value)){
+                value = roundTo(value*1, d.fixed || 2);
             }
             
-            frm.attr("x", (d)=>d.x = d.cIdx*width)
-                .attr("y", (d)=>d.y = d.rIdx*height)
-                .attr("width", (d.cSpan || 1) * width)
-                .attr("height", (d.rSpan || 1)* height);
+            frm.attr("x", d.x)
+                .attr("y", d.y)
+                .attr("width", d.dw)
+                .attr("height", d.dh);
 
             
             var input = frm.append("xhtml:input");
@@ -200,8 +284,8 @@ var extNodes = {
                     setFormula(value);
                     d.name = value;
                     d.isInputNum = isNumber(value.replace("=", ""));
-                    if(!isNaN(value) && d.fixed){
-                        value = (value*1).toFixed(d.fixed);
+                    if(value && !isNaN(value)){
+                        value = roundTo(value*1, d.fixed || 2);
                     }
                     d3El.select("text").text(value);
                     d3El.select("rect").classed("input-number", d.isInputNum);
@@ -226,15 +310,26 @@ var extNodes = {
             inputNode.setSelectionRange(value.length, value.length);
         }
 
+        function cellDispatchClick(data, cellData){
+            if(cellData){
+                var node = d3.select("#nd-"+data.id);
+                var gNode = node.selectAll(".table-body>g[data-id="+cellData.id+"]").node();
+                var evt = new MouseEvent('click', {bubbles: false, cancelable: true, view: window});
+                gNode.dispatchEvent(evt);
+                //cellClick(cellData, data, );
+            }
+        }
+
         table.draw = function(svgObj, data){
             //data.nConn = true;
             //최소 사이즈 설정
-            data.height = data.height < data.rows*10 ? data.rows*10 : data.height;
-            data.width = data.width < data.cols*20 ? data.cols*20 : data.width;
+            //data.height = data.height < data.rows*10 ? data.rows*10 : data.height;
+            //data.width = data.width < data.cols*20 ? data.cols*20 : data.width;
 
             if(!data.prefix)data.prefix = CalData.getPrefix();
 
             this.setCells(data);
+            this.setCellSize(data)//TO-DO 그릴때마다 하지 않고, 특정 시점에 한번만 하게 변경해야 할듯
             this.drawTitle(svgObj, data);
             this.drawCellIds(svgObj, data);
             this.drawCells(svgObj, data);
@@ -256,7 +351,8 @@ var extNodes = {
             var path = svgObj.append("path");
             path.attr("d", this.getPathData(data))
                 .attr("fill", "none")
-                //.attr("stroke", "red");
+                .attr("stroke", data.color || "black")
+                .attr("stroke-width", data.strokeWidth || 1)
         };
 
         table.drawTitle = function(svgObj, data){
@@ -269,7 +365,7 @@ var extNodes = {
                 .attr("width", data.width+18)
                 .attr("height", 20)
                 .attr("stroke", "#595959cb")
-                .attr("stroke-width", data.strokeWidth)
+                .attr("stroke-width", 1)
                 .style("opacity", 0.7)
                 .classed("calNo", true)
                 ;
@@ -290,114 +386,143 @@ var extNodes = {
             var hHalf = height / 2;
             var width = data.width / data.cols;
             var wHalf = width / 2;
-            var colsData = Array.from(Array(data.cols).keys());
-            var rowsData = Array.from(Array(data.rows).keys())//Array.from(Array(data.rows), (e,i)=>i+1);
+            //var colsData = Array.from(Array(data.cols).keys());
+            //var rowsData = Array.from(Array(data.rows).keys())//Array.from(Array(data.rows), (e,i)=>i+1);
+            var colsData = data.cells.filter(cell => cell.rIdx === 0);
+            var rowsData = data.cells.filter(cell => cell.cIdx === 0);
             var prefix = data.prefix;
 
             //corner
             svgObj.append("g").classed("cal_rect", true)
                     .append("rect").attr("x", -18).attr("y", -18).attr("width",18).attr("height",18).classed("id-bg", true);
             //cols
-            var col = cols.selectAll("g").data(colsData).enter().append("g").attr("class", d=>"col-"+d);
+            var col = cols.selectAll("g").data(colsData).enter().append("g").attr("class", (d,i)=>"col-"+i);
 
             col.append("rect")
-                .attr("x", d=>d*width)
+                .attr("x", d=>d.x)
                 .attr("y", -18)
-                .attr("width", width)
+                .attr("width", d=>d.width)
                 .attr("height", 18)
                 .attr("stroke", "#595959cb")
                 .attr("stroke-width", 1)
                 .classed("calNo", true)
             ;
             col.append("text")
-                .attr("x", d=>d*width+wHalf)
+                .attr("x", d=>d.x + (d.width/2))
                 .attr("y", -8)
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
                 .attr("fill", "#fff")
                 .attr("class", "cal_id")
                 .style("font-size", "12px")
-                .text(d=>prefix + String.fromCharCode(65+d))
+                .text((d,i)=>prefix + String.fromCharCode(65+i))
             ;
 
             //rows
-            var row = rows.selectAll("g").data(rowsData).enter().append("g").attr("class", d=>"row-"+d);;
+            var row = rows.selectAll("g").data(rowsData).enter().append("g").attr("class", (d,i)=>"row-"+i);;
             row.append("rect")
                 .attr("x", -18)
-                .attr("y", (d)=>d*height)
+                .attr("y", d=>d.y)
                 .attr("width", 18)
-                .attr("height", height)
+                .attr("height", d=>d.height)
                 .attr("stroke", "#595959cb")
                 .attr("stroke-width", 1)
                 .classed("calNo", true)
             ;
             row.append("text")
                 .attr("x", -9)
-                .attr("y", (d)=>d*height+hHalf)
+                .attr("y", d=>d.y + (d.height/2))
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
                 .attr("fill", "#fff")
                 .attr("class", "cal_id")
                 .style("font-size", "12px")
-                .text(d=>d+1)
+                .text((d,i)=>i+1)
             ;
 
         }
         table.drawCells = function(svgObj, data){
             var body = svgObj.append("g").attr("class","table-body");
             var cells = data.cells.filter(cell=>!cell.merge);
-            var width =  data.width / data.cols;
-            var height = data.height / data.rows
 
             var cellG = body.selectAll(".cell").data(cells).enter().append("g");
             // TO-DO 요청시 tab key로 셀 이동 개발
             //.attr("tabindex", 0); 
-
-            var cellDrag = d3.drag()
-                //.filter(() => d3.event.shiftKey)
-                .on("start", function(d){cellDragStartFn(d, data)})
-                .on("drag", function(d){cellDragFn(d, data, cellG)})
-                .on("end", function(d){cellDragEndFn(d, data)});
                 
             //셀 기본
             var rect = cellG.append("rect")
                 .attr("class", "cell-bg")
-                .attr("x", (d)=>d.x = d.cIdx*width)
-                .attr("y", (d)=>d.y = d.rIdx*height)
-                .attr("width", d=>(d.cSpan || 1) * width)
-                .attr("height", d=>(d.rSpan || 1 ) * height)
-                .attr("stroke", data.color || "#595959cb")
-                .attr("stroke-width", data.strokeWidth)
+                .attr("x", (d)=>d.x)
+                .attr("y", (d)=>d.y)
+                .attr("width", d=>d.dw - (data.strokeWidth/2))
+                .attr("height", d=>d.dh)
+                //.attr("stroke", data.color || "#595959cb")
+                .attr("stroke-width", 0)//data.strokeWidth 내부는 1로 고정
                 .classed("input-number", d=>d.isInputNum)
                 //.attr("fill", "#fff")
             ;
             if(data.stroke){
-                rect.attr("stroke-dasharray", StokeStyle[data.stroke]);
+                //rect.attr("stroke-dasharray", StokeStyle[data.stroke]);
             }
+
+            var vLine = cellG.append("line")
+                .attr("class", "cell-v-line")
+                .attr("x1", d=>d.x)
+                .attr("x2", d=>d.x)
+                .attr("y1", d=>d.y)
+                .attr("y2", d=>d.y+d.dh)
+                .attr("stroke", data.color || "black")
+                .attr("stroke-width", data.strokeWidth)
+                .style("display",d=>d.cIdx === 0 ? "none" : "initial")
+                .style("cursor", "e-resize")
+                .call(cellLineDragHandler);
+            ;
+            var hLine = cellG.append("line")
+                .attr("x1", d=>d.x)
+                .attr("x2", d=>d.x+d.dw)
+                .attr("y1", d=>d.y)
+                .attr("y2", d=>d.y)
+                .attr("stroke", data.color || "black")
+                .attr("stroke-width", data.strokeWidth)
+                .style("display",d=>d.rIdx === 0 ? "none" : "initial")
+                .style("cursor", "s-resize")
+                .call(cellLineDragHandler);
+            ;
 
             //text
             cellG.append("text")
-                .attr("x", d=>d.x + ((d.cSpan || 1) * width/2))
-                .attr("y", d=>d.y + ((d.rSpan || 1) * height/2))
+                .attr("x", d=>d.x + (d.dw/2))
+                .attr("y", d=>d.y + (d.dh/2))
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
                 .attr("fill", d=>d.fColor || data.fColor || "#000")
                 .style("font-size", "14px")
                 .text(d=>{
                     var value = d.name;
-                    if(value !=="" && !isNaN(value) && d.fixed){
-                        value = (value*1).toFixed(d.fixed);
+                    if(value !=="" && !isNaN(value)){
+                        value = roundTo(value*1, d.fixed || 2);
                     }
                     return value;
                 })
             ;
 
             cellG.attr("data-id", d=>d.id)
-                .call(cellDrag)
+                .attr("tabindex", -1)
+                .call(cellDragHandler.drag)
                 .on("mouseenter", function(d){cellDragHandler.cellMouseEnter(d)})
                 .on("click", function(d){cellClick(d, data.id, d3.select(this))}, true)
-                .on("dblclick", function(d){cellDblClick(d, data, d3.select(this))}, true)
-                .on("keypress", function(d){})
+                .on("dblclick", cellDblClick, true)
+                .on("keydown", function(d){
+                    var keyCode = d3.event.keyCode;
+                    if(keyCode === 9 ){
+                        d3.event.preventDefault();
+                        console.log(d, data);
+                        console.log("keydown", d3.event.keyCode);
+                    }
+                    
+
+                    //cellDispatchClick();
+                });
                 ;
         }
 
@@ -447,6 +572,109 @@ var extNodes = {
             data.currRows = data.rows;
         }
 
+        table.setCellSize = function(data){
+            /**
+             * 셀 사이즈 변경 관련 확인할것
+             * 파워포인트의 테이블 처럼 한다면
+             * 셀 크기는 나의 최소 너비/높이~다음 셀의 최소 너비/높이 사이
+             * 전체 크기가 변경 된다면, 크기 비율에 맞춰서 셀 크기 변화
+             * 
+             * 기본 cell size는 갖고 있고, merge시 size는 따로
+             * */
+            var cells = data.cells;
+            var rowZero = cells.filter(cell => cell.rIdx === 0);
+            var colZero = cells.filter(cell => cell.cIdx === 0);
+            var cellsWidth = 0, rowsHeight = 0, diffW = 0, diffH = 0;
+            var newCols = [], newRows = [];
+            
+            //셀 너비 합 + 셀분류
+            rowZero.forEach(cell => {
+                if(cell.width){
+                    cellsWidth += cell.width;
+                } else {
+                    newCols.push(cell);
+                }
+            });
+
+            //셀 높이 합 + 셀분류
+            colZero.forEach(cell => {
+                if(cell.height){
+                    rowsHeight += cell.height;
+                } else {
+                    newRows.push(cell);
+                }
+            });
+
+            diffW = data.width - cellsWidth;
+            diffH = data.height - rowsHeight;
+
+            if(newCols.length > 0){
+                let width = 100;
+                if(diffW < newCols.length * 100) {
+                    data.width = cellsWidth + (newCols.length * 100);
+                } else {
+                    width = diffW / newCols.length;
+                }
+                newCols.forEach(cell => cell.width = width);
+            } else if (diffW !== 0) {
+                let offsetW = diffW/data.cols;
+                rowZero.forEach(cell => {
+                    let w = cell.width + offsetW;
+                    cell.width = w < 10 ? 10 : w;
+                });
+                cellsWidth = rowZero.reduce((a,c)=>a+c.width, 0);
+                data.width = cellsWidth;
+            }
+
+            if(newRows.length > 0){
+                let height = 20;
+                if(diffH < newRows.length * 20) {
+                    data.height = rowsHeight + (newRows.length * 20);
+                } else {
+                    height = diffH / newRows.length;
+                }
+                newRows.forEach(cell => cell.height = height);
+            } else if (diffH !== 0) {
+                let offsetH = diffH/data.rows;
+                colZero.forEach(cell => {
+                    let h = cell.height + offsetH;
+                    cell.height = h < 10 ? 10 : h;
+                });
+                rowsHeight = colZero.reduce((a,c)=>a+c.height, 0);
+                data.height = rowsHeight;
+            }
+
+            //x,y 설정
+            rowZero.reduce((a,c)=>{
+                c.x = a;
+                return a+c.width;
+            }, 0);
+            colZero.reduce((a,c)=>{
+                c.y = a;
+                return a+c.height;
+            }, 0);
+
+            //cell 기본 size 설정
+            cells.forEach(cell => {
+                cell.x = rowZero[cell.cIdx].x;
+                cell.y = colZero[cell.rIdx].y;
+                cell.dw = rowZero[cell.cIdx].width;
+                cell.dh = colZero[cell.rIdx].height;
+            });
+
+            //merge cell 설정
+            cells.forEach(cell => {
+                if(cell.cSpan > 1){
+                    let endCell = rowZero[cell.cIdx+cell.cSpan-1];
+                    cell.dw = endCell.x -cell.x + endCell.width;
+                }
+                if(cell.rSpan > 1){
+                    let endCell = colZero[cell.rIdx+cell.rSpan-1];
+                    cell.dh = endCell.y - cell.y +endCell.height;
+                }
+            });
+        }
+
         table.calAdd = function(prefix, rIdx, cIdx){
             var calNo = prefix + String.fromCharCode(65+cIdx)+(rIdx+1);
             CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
@@ -476,12 +704,7 @@ var extNodes = {
             if(data.selectedCell){
                 var cellData = data.cells.find(cell => cell.id === data.selectedCell);
                 data.selectedCell = "";
-                if(cellData){
-                    var gNode = node.selectAll(".table-body>g[data-id="+cellData.id+"]").node();
-                    var evt = new MouseEvent('click', {bubbles: true, cancelable: true,view: window});
-                    gNode.dispatchEvent(evt);
-                    //cellClick(cellData, data, );
-                }
+                cellDispatchClick(data, cellData);
             }
         }
         table.fnSave = function(data){
@@ -1203,24 +1426,26 @@ function layout_init(){
         setNodeProp("color", $(this).spectrum("get").toHexString());
     });
     $("#prop_fontColor").on("change", function(){
-        var selectNode = Layout.getBlock()[0];
-        var currNode = Diagrams.getSelects()[0];
+        var nodes = Layout.getBlock();
+        var currNodes = Diagrams.getSelects();
         var calId = CalData.getSelect().id;
         var color = $(this).spectrum("get").toHexString();
-        if(selectNode.type === "table"){
-            var cell = selectNode.cells.find(d => d.id === calId);
-            if(cell){
-                cell.fColor = color;
-                selectNode.selectedCell = cell.id;
+        nodes.forEach(function(selectNode){
+            if(selectNode.type === "table"){
+                var cell = selectNode.cells.find(d => d.id === calId);
+                if(cell){
+                    cell.fColor = color;
+                    selectNode.selectedCell = cell.id;
+                } else {
+                    selectNode.fColor = color;
+                }
             } else {
                 selectNode.fColor = color;
             }
-        } else {
-            selectNode.fColor = color;
-        }
+        })
         
         Diagrams.updateNode();
-        Diagrams.selectItem(null, selectNode !== currNode);
+        Diagrams.selectItem(null, nodes !== currNodes);
     });
     
 
