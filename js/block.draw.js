@@ -129,7 +129,6 @@ function Diagram(){
         addUndo: function(){
             UndoManager.add(DATA);
         },
-        DECIMAL: 2,
     };
 
     NodesInit = {
@@ -1097,7 +1096,7 @@ function Diagram(){
         var stX, stY, diffX, diffY;
         var dragFlag;
         return d3.drag()
-                .clickDistance(0)
+                .clickDistance(0)   //해당 거리이하로 이동하면 클릭 이벤트도 발동.
                 .filter(() => !d3.event.ctrlKey)
                 .on("start",function(d, i){
                     dragFlag = false;
@@ -1618,6 +1617,7 @@ function Diagram(){
                 //d3.event.sourceEvent.stopPropagation();
                 //d3.event.sourceEvent.stopImmediatePropagation();
                 dragFlag = false;
+                getSelection().removeAllRanges();
             })
             .on("drag",function(d, i){
                 let p = d3.mouse(this);
@@ -1655,7 +1655,7 @@ function Diagram(){
                     let eX = s.x + s.w;
                     let eY = s.y + s.h;
                     
-                    let ns = DATA.nodes.filter( e => {                        
+                    let ns = DATA.nodes.filter( e => {
                         return (e.x >= sX && e.x + e.width <= eX) && (e.y >= sY && e.y + e.height <= eY);
                     })
                     let ls = DATA.links.filter( e => {
@@ -1812,18 +1812,18 @@ function Diagram(){
                     .attr("x2", function(data,i){
                         var x2 = data[0]+d.x;
                         if(i === 1){
-                            x2 += 25;
+                            x2 += 35;
                         } else if( i === 3){
-                            x2 -= 25;
+                            x2 -= 35;
                         } 
                         return x2;
                     })
                     .attr("y2", function(data,i){
                         var y2 = data[1]+d.y;
                         if(i === 0){
-                            y2 -= 25;
+                            y2 -= 35;
                         } else if( i === 2){
-                            y2 += 25;
+                            y2 += 35;
                         } 
                         return y2;
                     })
@@ -2673,12 +2673,10 @@ function Diagram(){
             DATA.page.width = d.page.width || DWIDTH;
             DATA.page.height = d.page.height || DHEIGHT;
             DATA.page.name = d.page.name || "";
-            Node.prototype.DECIMAL = d.page.decimal || 2;
         }else{
             DATA.page.width = DWIDTH;
             DATA.page.height = DHEIGHT;
             DATA.page.name = "";
-            Node.prototype.DECIMAL = 2;
         }
         
         // 수정으로 구조 변경시 데이터 불러올때 이전 데이터 수정(임시)
@@ -2695,7 +2693,7 @@ function Diagram(){
     function getData(mode){
         if("save" === mode){
             DATA.nodes.forEach(function(v){
-                if(NodeList[v.type]["fnSave"]){NodeList[v.type]["fnSave"](node);}
+                if(NodeList[v.type]["fnSave"]){NodeList[v.type]["fnSave"](v);}
             });
             DATA.links.forEach(function(v){
                 delete v.circlePoints;

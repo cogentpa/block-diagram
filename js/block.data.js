@@ -139,7 +139,7 @@ var CalData = function(){
     function open(d){
         init();
         data.cals = d.cals;
-        data.preCnt = d.preCnt;
+        data.preCnt = d.preCnt || 0;
         data.cnt = d.cnt;
     }
     function setCnt(cnt){
@@ -155,6 +155,9 @@ var CalData = function(){
     }
     function getPrefix(){
         return data.prefix[data.preCnt++];
+    }
+    function getPrefixByIdx(idx){
+        return data.prefix[idx];
     }
     function getCalById(id){
         return data.cals[id];
@@ -223,6 +226,7 @@ var CalData = function(){
     api.setSelect = setSelect;
     api.getCalNo = getCalNo;
     api.getPrefix = getPrefix;
+    api.getPrefixByIdx = getPrefixByIdx;
     api.getCalById = getCalById;
     api.setCalById = setCalById;
     api.getName = getName;

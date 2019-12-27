@@ -82,6 +82,7 @@ var extNodes = {
     table : function(){
         var table = new Node();
         var cellDragHandler = function(){
+            var dragCnt = 0;
             var dragged = false,
                 startCell = null,
                 startRowIdx = 0,
@@ -116,6 +117,7 @@ var extNodes = {
                 }
             }
             var drag = d3.drag()
+                .clickDistance(3)
                 .on("start", function(d, i ,list){
                     dragged = false;
                     startCell = d;
@@ -126,9 +128,11 @@ var extNodes = {
                     Unpainted = true;
                     tdata = d3.select(this.parentNode.parentNode).datum();
                     cellGs = d3.selectAll(list);
+                    dragCnt = 0;
                 })
                 .on("drag", function(d, i, list){
-                    if(Unpainted){
+                    
+                    if(Unpainted &&  dragCnt > 3){
                         if(!dragged){
                             Diagrams.selectItem(tdata);
                             dragged = true;
@@ -148,6 +152,8 @@ var extNodes = {
                         endRowIdx = endRowIdx;
                         endColIdx = endColIdx;
                         Unpainted = false;
+                    } else {
+                        dragCnt++;
                     }
                 })
                 .on("end", function(){
@@ -327,6 +333,7 @@ var extNodes = {
             //data.width = data.width < data.cols*20 ? data.cols*20 : data.width;
 
             if(!data.prefix)data.prefix = CalData.getPrefix();
+            if(!data.strokeWidth)data.strokeWidth = 2;
 
             this.setCells(data);
             this.setCellSize(data)//TO-DO 그릴때마다 하지 않고, 특정 시점에 한번만 하게 변경해야 할듯
@@ -352,7 +359,7 @@ var extNodes = {
             path.attr("d", this.getPathData(data))
                 .attr("fill", "none")
                 .attr("stroke", data.color || "black")
-                .attr("stroke-width", data.strokeWidth || 1)
+                .attr("stroke-width", data.strokeWidth)
         };
 
         table.drawTitle = function(svgObj, data){
@@ -415,11 +422,11 @@ var extNodes = {
                 .attr("fill", "#fff")
                 .attr("class", "cal_id")
                 .style("font-size", "12px")
-                .text((d,i)=>prefix + String.fromCharCode(65+i))
+                .text((d,i)=>prefix + CalData.getPrefixByIdx(i))
             ;
 
             //rows
-            var row = rows.selectAll("g").data(rowsData).enter().append("g").attr("class", (d,i)=>"row-"+i);;
+            var row = rows.selectAll("g").data(rowsData).enter().append("g").attr("class", (d,i)=>"row-"+i);
             row.append("rect")
                 .attr("x", -18)
                 .attr("y", d=>d.y)
@@ -676,7 +683,7 @@ var extNodes = {
         }
 
         table.calAdd = function(prefix, rIdx, cIdx){
-            var calNo = prefix + String.fromCharCode(65+cIdx)+(rIdx+1);
+            var calNo = prefix + CalData.getPrefixByIdx(cIdx)+(rIdx+1);
             CalData.setCalById(calNo, {id:calNo,val:"",fm:""});
             Cal.add(calNo, {x:0,y:0});
             return calNo;

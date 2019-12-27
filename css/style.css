@@ -309,10 +309,10 @@ label{margin-bottom:1px;}
 }
 
 #svg-container:not(.view) .cell-bg.input-number {
-    stroke: #fa9090;
+    fill: #f7c2c2;
 }
 #svg-container:not(.view) .cal_rect.input-number {
-    stroke: #fa9090;
+    fill: #f7c2c2;
 }
 
 
@@ -358,7 +358,7 @@ label{margin-bottom:1px;}
     fill:rgb(64, 75, 228);
 }
 
-.select>.table-body>.selected>.cell-bg{
+.select>.table-body>.selected>.cell-bg, .select>.table-body>.selected>line{
     stroke:rgb(64, 75, 228)!important;
     stroke-width:3px!important;
 }
