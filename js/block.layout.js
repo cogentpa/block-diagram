@@ -212,12 +212,14 @@ var extNodes = {
                 .on("drag", function(){
                     var event = d3.event;
                     if(isVertical){
-                        cx += event.dx;
+                        //cx += event.dx;
+                        cx = event.x;
                         if(cx < minX) cx = minX;
                         if(cx > maxX) cx = maxX;
                         d3TmpLine.attr("x1", cx).attr("x2", cx);
                     }else{
-                        cy += event.dy;
+                        //cy += event.dy;
+                        cy = event.y;
                         if(cy < minY) cy = minY;
                         if(cy > maxY) cy = maxY;
                         d3TmpLine.attr("y1", cy).attr("y2", cy);

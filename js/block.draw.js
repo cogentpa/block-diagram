@@ -101,12 +101,12 @@ function Diagram(){
 
     //var clipboard;
     var Selects = [];
-    var MouseOverNode = { node : null, data : null};
+    var MouseOverNode = { node : null, data : null };
 
     Node.prototype = {
         genPath: d3.line().x(function(d) { return d.x; })
                           .y(function(d) { return d.y; }),
-        drawPath: function(svgObj, points, data){                
+        drawPath: function(svgObj, points, data){
             var path = svgObj.append("path");
             path.attr("d", this.genPath(points))
                 .attr("stroke", data.color || "black")
